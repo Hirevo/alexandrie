@@ -1,0 +1,12 @@
+[package]
+name = "alexandrie"
+version = "0.1.0"
+authors = ["Nicolas Polomack <nicolas.polomack@its-future.com>"]
+edition = "2018"
+
+[dependencies]
+rocket = "0.4.1"
+git2 = "0.9.1"
+serde = { version = "1.0.94", features = ["derive"] }
+json = { package = "serde_json", version = "1.0.40" }
+byteorder = "1.3.2"
