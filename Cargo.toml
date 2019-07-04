@@ -6,9 +6,12 @@ edition = "2018"
 
 [dependencies]
 rocket = "0.4.1"
-rocket_contrib = "0.4.2"
+rocket_contrib = { version = "0.4.2", default-features = false, features = ["json", "diesel_mysql_pool"] }
 git2 = "0.9.1"
 serde = { version = "1.0.94", features = ["derive"] }
 json = { package = "serde_json", version = "1.0.40" }
-byteorder = "1.3.2"
 semver = { version = "0.9.0", features = ["serde"] }
+diesel = { version = "1.4.2", features = ["mysql", "chrono"] }
+chrono = { version = "0.4.7", features = ["serde"] }
+sha2 = "0.8.0"
+byteorder = "1.3.2"

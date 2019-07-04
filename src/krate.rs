@@ -21,12 +21,12 @@ pub struct Dependency {
     pub optional: bool,
     pub default_features: bool,
     pub target: Option<String>,
-    pub kind: Option<Kind>,
+    pub kind: Option<DependencyKind>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Kind {
+pub enum DependencyKind {
     Normal,
     Build,
     Dev,

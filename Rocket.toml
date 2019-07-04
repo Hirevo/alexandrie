@@ -1,0 +1,2 @@
+[global.databases]
+alexandrie = { url = "mysql://alexandrie:egypt@localhost:3306/alexandrie" }
