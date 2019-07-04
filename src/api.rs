@@ -82,7 +82,7 @@ pub fn api_publish(
     let crate_size = stream.read_u32::<LittleEndian>()?;
     let mut crate_bytes = vec![0u8; crate_size as usize];
     stream.read_exact(&mut crate_bytes)?;
-    let hash = String::from_utf8(Sha256::digest(&crate_bytes).to_vec()).unwrap();
+    let hash = hex::encode(&Sha256::digest(&crate_bytes));
 
     let state = state.lock().unwrap();
     let krate: Result<CrateRegistration, SQLError> = crates::table
