@@ -41,6 +41,7 @@ use crate::{CLIIndex, Indexer};
 fn main() -> Result<(), Error> {
     rocket::ignite()
         .mount("/api/v1", routes![api_publish, api_search, api_download])
+        .register(catchers![catch_401, catch_404, catch_500])
         .attach(DbConn::fairing())
         .manage(Arc::new(Mutex::new(AppState::new(
             Index::CLIIndex(CLIIndex::new("crate-index")?),
