@@ -210,7 +210,6 @@ pub fn api_publish(
 #[get("/crates?<q>&<per_page>")]
 pub fn api_search(
     state: State<Arc<Mutex<AppState>>>,
-    _auth: Auth,
     conn: DbConn,
     q: String,
     per_page: Option<u32>,
