@@ -117,6 +117,7 @@ pub fn api_publish(
             json::to_writer(&mut file, &crate_desc)?;
             write!(file, "\n")?;
             file.flush()?;
+            state.index().commit_and_push(&format!("Updating crate `{}#{}`", &crate_desc.name, &crate_desc.vers))?;
 
             let new_crate = ModifyCrateRegistration {
                 id: krate.id,
@@ -132,6 +133,8 @@ pub fn api_publish(
             Ok(Json(APIPublishResponse {}))
         }
         Err(Error::AlexError(AlexError::CrateNotFound(_))) => {
+            state.storage().store_crate(&metadata.name, metadata.vers.clone(), crate_bytes.as_slice())?;
+
             let path = state.index().index_crate(metadata.name.as_str());
             let crate_desc = Crate {
                 name: metadata.name,
@@ -160,6 +163,7 @@ pub fn api_publish(
             json::to_writer(&mut file, &crate_desc)?;
             write!(file, "\n")?;
             file.flush()?;
+            state.index().commit_and_push(&format!("Adding crate `{}#{}`", &crate_desc.name, &crate_desc.vers))?;
 
             let new_crate = NewCrateRegistration {
                 name: crate_desc.name.as_str(),
