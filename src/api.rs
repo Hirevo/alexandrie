@@ -125,6 +125,8 @@ pub fn api_publish(
                     features: metadata.features,
                     yanked: Some(false),
                 };
+                let parent = path.parent().unwrap();
+                fs::create_dir_all(parent)?;
                 let mut file = fs::OpenOptions::new().write(true).append(true).open(path)?;
                 json::to_writer(&mut file, &crate_desc)?;
                 write!(file, "\n")?;
@@ -176,6 +178,8 @@ pub fn api_publish(
                 features: metadata.features,
                 yanked: Some(false),
             };
+            let parent = path.parent().unwrap();
+            fs::create_dir_all(parent)?;
             let mut file = fs::OpenOptions::new()
                 .write(true)
                 .create_new(true)
