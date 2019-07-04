@@ -98,7 +98,6 @@ pub struct CrateAuthor {
     pub author_id: u64,
 }
 
-
 #[derive(
     Debug,
     Clone,
