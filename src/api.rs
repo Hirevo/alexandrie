@@ -31,7 +31,7 @@ pub struct APISearchResponse {
 pub struct APISearchResult {
     pub name: String,
     pub max_version: Version,
-    pub description: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -92,11 +92,11 @@ pub fn api_publish(
         Ok(krate) => {
             let max_version = state.index().max_version(krate.name.as_str())?;
             if metadata.vers <= max_version {
-                Err(Error::from(AlexError::VersionTooLow(
-                    krate.name,
-                    max_version,
-                    metadata.vers,
-                )))
+                Err(Error::from(AlexError::VersionTooLow {
+                    krate: krate.name,
+                    hosted: max_version,
+                    published: metadata.vers,
+                }))
             } else {
                 state.storage().store_crate(
                     &metadata.name,
@@ -234,7 +234,7 @@ pub fn api_search(
             Ok(APISearchResult {
                 name,
                 max_version,
-                description: description.unwrap_or_else(|| String::default()),
+                description,
             })
         })
         .collect::<Result<Vec<APISearchResult>, Error>>()?;

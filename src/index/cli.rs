@@ -8,12 +8,17 @@ use serde::{Serialize, Deserialize};
 
 use crate::{AlexError, Crate, Error, Indexer};
 
+/// The CLI crate index management strategy type.
+/// 
+/// It manages the crate index through the invocation of "git" shell commands.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CLIIndex {
+    /// The path of the crate index.
     path: PathBuf,
 }
 
 impl CLIIndex {
+    /// Create a CLIIndex instance with the given path.
     pub fn new<P: Into<PathBuf>>(dir: P) -> Result<CLIIndex, Error> {
         let path = dir.into();
 

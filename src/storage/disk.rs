@@ -7,16 +7,23 @@ use semver::Version;
 
 use crate::{Store, Error};
 
+/// The local on-disk storage strategy.  
+/// 
+/// It stores the crates as files in the given directory.  
+/// It names the crates as `"{name}-{version}.crate"`.  
+/// As there will not be any duplicated names, it doesn't create any subdirectories.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DiskStorage {
     path: PathBuf,
 }
 
 impl DiskStorage {
+    /// Create an DiskStorage instance with the specified path.
     pub fn new<P: Into<PathBuf>>(path: P) -> Result<DiskStorage, Error> {
         Ok(DiskStorage { path: path.into() })
     }
 
+    /// Generate a unique filename for the given crate name and version.
     pub fn format_name(name: &str, version: Version) -> String {
         format!("{}-{}.crate", name, version)
     }

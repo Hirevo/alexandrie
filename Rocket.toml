@@ -1,2 +1,10 @@
-[global.databases]
-alexandrie = { url = "mysql://alexandrie:egypt@localhost:3306/alexandrie" }
+[global.databases.alexandrie]
+url = "mysql://alexandrie:egypt@localhost:3306/alexandrie"
+
+[global.crate-index]
+type = "cli"
+path = "crate-index"
+
+[global.crate-storage]
+type = "disk"
+path = "crate-storage"

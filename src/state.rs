@@ -3,9 +3,12 @@ use serde::{Serialize, Deserialize};
 
 use crate::{Index, Storage};
 
+/// The application state for the web server.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AppState {
+    /// The current crate indexer used.
     index: Index,
+    /// The current crate storage strategy used.
     storage: Storage,
 }
 

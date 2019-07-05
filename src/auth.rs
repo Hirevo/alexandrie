@@ -9,6 +9,8 @@ use crate::db::models::Author;
 use crate::db::schema::*;
 use crate::{AlexError, DbConn, Error};
 
+/// The Auth request guard.  
+/// It checks that the incoming request is from an authenticated user.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Auth(Author, String);
 
