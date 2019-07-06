@@ -5,7 +5,6 @@ use std::sync::{Arc, Mutex};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use diesel::prelude::*;
-use diesel::result::Error as SQLError;
 use rocket::{Data, State};
 use rocket_contrib::json::Json;
 use semver::{Version, VersionReq};

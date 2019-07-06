@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use diesel::result::Error as SQLError;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;

@@ -6,7 +6,6 @@
     result_map_or_else,
     bind_by_move_pattern_guards
 )]
-#![type_length_limit = "500000000"]
 
 #[macro_use]
 extern crate rocket;
@@ -16,8 +15,6 @@ extern crate rocket_contrib;
 extern crate diesel;
 
 use std::sync::{Arc, Mutex};
-
-use toml::toml;
 
 mod api;
 pub use api::*;
