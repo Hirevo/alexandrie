@@ -1,2 +1,4 @@
 /target
 **/*.rs.bk
+/crate-index
+/crate-storage

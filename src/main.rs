@@ -61,10 +61,6 @@ fn main() -> Result<(), Error> {
             |value| Ok(value.clone().try_into()?),
         )?;
 
-    println!("config: {:?}", config.extras);
-    println!("index: {:?}", index);
-    println!("storage: {:?}", storage);
-
     instance
         .mount("/api/v1", routes![api_publish, api_search, api_download])
         .register(catchers![catch_401, catch_404, catch_500])

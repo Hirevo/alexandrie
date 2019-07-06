@@ -6,7 +6,7 @@ use json::{json, Value};
 pub fn catch_404() -> Json<Value> {
     Json(json!({
         "errors": [{
-            "detail": "resource not found",
+            "detail": "route not found",
         }]
     }))
 }

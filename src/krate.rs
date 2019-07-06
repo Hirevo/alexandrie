@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use semver::{Version, VersionReq};
 use serde::{Serialize, Deserialize};
 
-/// Represents a crate.  
+/// Represents a crate.
+///
 /// This is what's stored in the crate index.  
 /// Note that this structs represents only a specific version of a crate.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

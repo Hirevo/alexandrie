@@ -3,13 +3,17 @@ use std::error;
 use std::fmt;
 use std::io;
 
-use semver::{Version, SemVerError as SemverError};
-use json::Error as JSONError;
-use io::Error as IOError;
-use git2::Error as GitError;
-use rocket::config::ConfigError as ConfigError;
 use diesel::result::Error as SQLError;
+use git2::Error as GitError;
+use io::Error as IOError;
+use json::Error as JSONError;
+use rocket::config::ConfigError;
+use semver::{SemVerError as SemverError, Version};
 use toml::de::Error as TOMLError;
+
+use rocket::request::Request;
+use rocket::response::{self, Responder};
+use rocket_contrib::json::Json;
 
 /// The Error type for the registry.  
 /// It can represent any kind of error the registry might encounter.
@@ -39,16 +43,41 @@ pub enum AlexError {
     /// The requested crate cannot be found.
     CrateNotFound(String),
     /// The published crate version is lower than the current hosted version.
-    VersionTooLow { krate: String, hosted: Version, published: Version },
+    VersionTooLow {
+        krate: String,
+        hosted: Version,
+        published: Version,
+    },
     /// The token used to access the registry is invalid.
     InvalidToken,
+}
+
+impl<'r> Responder<'r> for Error {
+    fn respond_to(self, req: &Request) -> response::Result<'r> {
+        let message = match self {
+            Error::IOError(_) => format!("internal server error"),
+            Error::GitError(_) => format!("internal server error"),
+            Error::JSONError(_) => format!("internal server error"),
+            Error::TOMLError(_) => format!("internal server error"),
+            Error::SQLError(_) => format!("internal server error"),
+            Error::SemverError(_) => format!("internal server error"),
+            Error::ConfigError(_) => format!("internal server error"),
+            Error::AlexError(err) => err.to_string(),
+        };
+        Json(json!({
+            "errors": [{
+                "detail": message,
+            }]
+        }))
+        .respond_to(req)
+    }
 }
 
 impl fmt::Display for AlexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AlexError::CrateNotFound(name) => write!(f, "no crate named '{}' found", name),
-            AlexError::VersionTooLow{ .. } => write!(
+            AlexError::VersionTooLow { .. } => write!(
                 f,
                 "the published version is not greater than the existing one"
             ),

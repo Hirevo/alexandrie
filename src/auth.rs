@@ -23,22 +23,22 @@ impl<'a, 'r> FromRequest<'a, 'r> for Auth {
                 .guard()
                 .map_failure(|(status, _)| (status, Error::from(AlexError::InvalidToken)))?;
 
-            let queried = author_tokens::table
+            author_tokens::table
                 .inner_join(authors::table)
                 .select(authors::all_columns)
                 .filter(author_tokens::token.eq(token))
-                .first::<Author>(&conn.0);
-
-            match queried {
-                Ok(author) => Outcome::Success(Auth(author, String::from(token))),
-                Err(SQLError::NotFound) => Outcome::Failure((
-                    Status::new(401, "invalid token"),
-                    Error::from(AlexError::InvalidToken),
-                )),
-                Err(err) => {
-                    Outcome::Failure((Status::new(500, "internal server error"), Error::from(err)))
-                }
-            }
+                .first::<Author>(&conn.0)
+                .optional()
+                .map_err(|err| Err((Status::new(500, "internal server error"), Error::from(err))))?
+                .map_or_else(
+                    || {
+                        Outcome::Failure((
+                            Status::new(401, "invalid token"),
+                            Error::from(AlexError::InvalidToken),
+                        ))
+                    },
+                    |author| Outcome::Success(Auth(author, String::from(token))),
+                )
         } else {
             Outcome::Failure((
                 Status::new(401, "missing token"),

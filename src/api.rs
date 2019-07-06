@@ -36,7 +36,7 @@ pub struct APISearchResult {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct APISearchMeta {
-    pub total: u32,
+    pub total: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -85,79 +85,27 @@ pub fn api_publish(
     let hash = hex::encode(&Sha256::digest(&crate_bytes));
 
     let state = state.lock().unwrap();
-    let krate: Result<CrateRegistration, SQLError> = crates::table
+    state.index().refresh()?;
+    let krate = crates::table
         .filter(crates::name.eq(metadata.name.as_str()))
-        .first(&conn.0);
-    match krate {
-        Ok(krate) => {
-            let max_version = state.index().max_version(krate.name.as_str())?;
-            if metadata.vers <= max_version {
-                Err(Error::from(AlexError::VersionTooLow {
-                    krate: krate.name,
-                    hosted: max_version,
-                    published: metadata.vers,
-                }))
-            } else {
-                state.storage().store_crate(
-                    &metadata.name,
-                    metadata.vers.clone(),
-                    crate_bytes.as_slice(),
-                )?;
-
-                let path = state.index().index_crate(&metadata.name);
-                let crate_desc = Crate {
-                    name: metadata.name,
-                    vers: metadata.vers,
-                    deps: metadata
-                        .deps
-                        .into_iter()
-                        .map(|dep| Dependency {
-                            name: dep.name,
-                            req: dep.version_req,
-                            features: dep.features,
-                            optional: dep.optional,
-                            default_features: dep.default_features,
-                            target: dep.target,
-                            kind: dep.kind,
-                        })
-                        .collect(),
-                    cksum: hash,
-                    features: metadata.features,
-                    yanked: Some(false),
-                };
-                let parent = path.parent().unwrap();
-                fs::create_dir_all(parent)?;
-                let mut file = fs::OpenOptions::new().write(true).append(true).open(path)?;
-                json::to_writer(&mut file, &crate_desc)?;
-                write!(file, "\n")?;
-                file.flush()?;
-                state.index().commit_and_push(&format!(
-                    "Updating crate `{}#{}`",
-                    &crate_desc.name, &crate_desc.vers
-                ))?;
-
-                let new_crate = ModifyCrateRegistration {
-                    id: krate.id,
-                    name: crate_desc.name.as_str(),
-                    description: metadata.description.as_ref().map(|s| s.as_str()),
-                    documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
-                    repository: metadata.repository.as_ref().map(|s| s.as_str()),
-                };
-                diesel::update(crates::table)
-                    .set(new_crate)
-                    .execute(&conn.0)?;
-
-                Ok(Json(APIPublishResponse {}))
-            }
-        }
-        Err(SQLError::NotFound) => {
+        .first::<CrateRegistration>(&conn.0)
+        .optional()?;
+    if let Some(krate) = krate {
+        let max_version = state.index().max_version(krate.name.as_str())?;
+        if metadata.vers <= max_version {
+            Err(Error::from(AlexError::VersionTooLow {
+                krate: krate.name,
+                hosted: max_version,
+                published: metadata.vers,
+            }))
+        } else {
             state.storage().store_crate(
                 &metadata.name,
                 metadata.vers.clone(),
                 crate_bytes.as_slice(),
             )?;
 
-            let path = state.index().index_crate(metadata.name.as_str());
+            let path = state.index().index_crate(&metadata.name);
             let crate_desc = Crate {
                 name: metadata.name,
                 vers: metadata.vers,
@@ -180,52 +128,108 @@ pub fn api_publish(
             };
             let parent = path.parent().unwrap();
             fs::create_dir_all(parent)?;
-            let mut file = fs::OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(path)?;
+            let mut file = fs::OpenOptions::new().write(true).append(true).open(path)?;
             json::to_writer(&mut file, &crate_desc)?;
             write!(file, "\n")?;
             file.flush()?;
             state.index().commit_and_push(&format!(
-                "Adding crate `{}#{}`",
+                "Updating crate `{}#{}`",
                 &crate_desc.name, &crate_desc.vers
             ))?;
 
-            let new_crate = NewCrateRegistration {
+            let new_crate = ModifyCrateRegistration {
+                id: krate.id,
                 name: crate_desc.name.as_str(),
                 description: metadata.description.as_ref().map(|s| s.as_str()),
                 documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
                 repository: metadata.repository.as_ref().map(|s| s.as_str()),
             };
-            diesel::insert_into(crates::table)
-                .values(new_crate)
+            diesel::update(crates::table)
+                .set(new_crate)
                 .execute(&conn.0)?;
+
             Ok(Json(APIPublishResponse {}))
         }
-        Err(err) => Err(Error::from(err)),
+    } else {
+        state.storage().store_crate(
+            &metadata.name,
+            metadata.vers.clone(),
+            crate_bytes.as_slice(),
+        )?;
+
+        let path = state.index().index_crate(metadata.name.as_str());
+        let crate_desc = Crate {
+            name: metadata.name,
+            vers: metadata.vers,
+            deps: metadata
+                .deps
+                .into_iter()
+                .map(|dep| Dependency {
+                    name: dep.name,
+                    req: dep.version_req,
+                    features: dep.features,
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    target: dep.target,
+                    kind: dep.kind,
+                })
+                .collect(),
+            cksum: hash,
+            features: metadata.features,
+            yanked: Some(false),
+        };
+        let parent = path.parent().unwrap();
+        fs::create_dir_all(parent)?;
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)?;
+        json::to_writer(&mut file, &crate_desc)?;
+        write!(file, "\n")?;
+        file.flush()?;
+        state.index().commit_and_push(&format!(
+            "Adding crate `{}#{}`",
+            &crate_desc.name, &crate_desc.vers
+        ))?;
+
+        let new_crate = NewCrateRegistration {
+            name: crate_desc.name.as_str(),
+            description: metadata.description.as_ref().map(|s| s.as_str()),
+            documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
+            repository: metadata.repository.as_ref().map(|s| s.as_str()),
+        };
+        diesel::insert_into(crates::table)
+            .values(new_crate)
+            .execute(&conn.0)?;
+        Ok(Json(APIPublishResponse {}))
     }
 }
 
-#[get("/crates?<q>&<per_page>")]
+#[get("/crates?<q>&<per_page>&<page>")]
 pub fn api_search(
     state: State<Arc<Mutex<AppState>>>,
     conn: DbConn,
     q: String,
     per_page: Option<u32>,
+    page: Option<u32>,
 ) -> Result<Json<APISearchResponse>, Error> {
     let state = state.lock().unwrap();
+    state.index().refresh()?;
     let name_pattern = format!("%{}%", q.replace('\\', "\\\\").replace('%', "\\%"));
     let req = crates::table
         .select((crates::name, crates::description))
         .filter(crates::name.like(name_pattern.as_str()))
         .into_boxed();
-    let req = if let Some(limit) = per_page {
-        req.limit(limit as i64)
-    } else {
-        req
+    let req = match (per_page, page) {
+        (Some(per_page), Some(page)) => req.limit(per_page as i64).offset((page * per_page) as i64),
+        (Some(per_page), None) => req.limit(per_page as i64),
+        _ => req,
     };
     let results = req.load::<(String, Option<String>)>(&conn.0)?;
+    let total = crates::table
+        .select(diesel::dsl::count(crates::name))
+        .filter(crates::name.like(name_pattern.as_str()))
+        .first::<i64>(&conn.0)?;
 
     let crates = results
         .into_iter()
@@ -238,11 +242,10 @@ pub fn api_search(
             })
         })
         .collect::<Result<Vec<APISearchResult>, Error>>()?;
-    let total = crates.len() as u32;
 
     Ok(Json(APISearchResponse {
         crates,
-        meta: APISearchMeta { total },
+        meta: APISearchMeta { total: total as u64 },
     }))
 }
 
@@ -250,10 +253,20 @@ pub fn api_search(
 pub fn api_download(
     state: State<Arc<Mutex<AppState>>>,
     _auth: Auth,
+    conn: DbConn,
     name: String,
     version: String,
 ) -> Result<Vec<u8>, Error> {
     let version = Version::parse(&version)?;
     let state = state.lock().unwrap();
-    state.storage().get_crate(&name, version)
+    state.index().refresh()?;
+    let krate = state.storage().get_crate(&name, version)?;
+    let downloads = crates::table
+        .select(crates::downloads)
+        .filter(crates::name.eq(name.as_str()))
+        .first::<u64>(&conn.0)?;
+    diesel::update(crates::table)
+        .set(crates::downloads.eq(downloads + 1))
+        .execute(&conn.0)?;
+    Ok(krate)
 }
