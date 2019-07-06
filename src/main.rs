@@ -16,6 +16,8 @@ extern crate diesel;
 
 use std::sync::{Arc, Mutex};
 
+use rocket_contrib::templates::Template;
+
 pub mod api;
 pub mod auth;
 pub mod catchers;
@@ -29,6 +31,7 @@ pub mod storage;
 
 use crate::db::DbConn;
 use crate::error::Error;
+use crate::frontend::config::Config;
 use crate::index::cli::CLIIndex;
 use crate::index::Index;
 use crate::state::AppState;
@@ -53,16 +56,32 @@ fn main() -> Result<(), Error> {
             || Ok(Storage::DiskStorage(DiskStorage::new("crate-storage")?)),
             |value| Ok(value.clone().try_into()?),
         )?;
+    let frontend = config
+        .extras
+        .get("frontend")
+        .map_or_else::<Result<Config, Error>, _, _>(
+            || Ok(Config::default()),
+            |value| Ok(value.clone().try_into()?),
+        )?;
+
+    let instance = instance.mount(
+        "/api/v1",
+        routes![
+            api::publish::route,
+            api::search::route,
+            api::download::route
+        ],
+    );
+
+    let instance = if frontend.enabled {
+        instance
+            .mount("/", routes![frontend::index::route])
+            .attach(Template::fairing())
+    } else {
+        instance
+    };
 
     instance
-        .mount(
-            "/api/v1",
-            routes![
-                api::publish::route,
-                api::search::route,
-                api::download::route
-            ],
-        )
         .register(catchers![
             catchers::catch_401,
             catchers::catch_404,
@@ -70,6 +89,7 @@ fn main() -> Result<(), Error> {
         ])
         .attach(DbConn::fairing())
         .manage(Arc::new(Mutex::new(AppState::new(index, storage))))
+        .manage(frontend)
         .launch();
 
     Ok(())

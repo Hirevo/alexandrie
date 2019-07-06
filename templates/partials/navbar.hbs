@@ -1,0 +1,115 @@
+<style>
+    .navbar {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        height: 50px;
+        display: grid;
+        grid-gap: 8.5px;
+        grid-template-rows: 1fr;
+        grid-template-columns: 0px min-content 1fr min-content 0px;
+        grid-template-areas: ". brand search login .";
+        color: var(--fg-color);
+        background-color: var(--bg-color);
+        border-radius: 5px;
+        box-shadow: 0 0 10px black;
+    }
+
+    .navbar-tag {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border-radius: 5px;
+        text-decoration: none;
+        color: var(--fg-color);
+        font-weight: bold;
+        padding: 0 10px;
+    }
+
+    .navbar-tag:hover {
+        background-color: var(--lighter-bg-color);
+    }
+
+    .brand-container {
+        grid-area: brand;
+        width: 100%;
+        height: 100%;
+        padding: 8.5px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .brand {
+        width: 100%;
+        height: 100%;
+    }
+
+    .search-container {
+        grid-area: search;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8.5px 0;
+    }
+
+    .search {
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        border: none;
+        border-radius: 5px;
+        color: var(--fg-color);
+        background-color: var(--dark-bg-color);
+        padding: 5px 10px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        width: 200px;
+        height: 100%;
+        transition: width 0.15s, background-color 0.15s;
+    }
+
+    .search:focus {
+        width: 320px;
+        border: 2px solid var(--darkest-bg-color);
+        background-color: var(--darker-bg-color);
+    }
+
+    .login-container {
+        grid-area: login;
+        width: 100%;
+        height: 100%;
+        padding: 8.5px 0;
+        display: grid;
+        grid-gap: 5px;
+        grid-template-rows: 1fr;
+        grid-template-columns: min-content min-content;
+    }
+
+    .login-container.logged-in {}
+</style>
+<div class="navbar">
+    <div class="brand-container">
+        <a class="brand navbar-tag" href="/">
+            {{ instance.title }}
+        </a>
+    </div>
+    <div class="search-container">
+        <form method="GET" action="/search">
+            <input type="text" class="search" name="q" placeholder="Search crate...">
+        </form>
+    </div>
+    <div class="login-container">
+        {{#if user}}
+        {{else}}
+        <a href="/account/login" class="navbar-tag">Login</a>
+        <a href="/account/register" class="navbar-tag">Register</a>
+        {{/if}}
+    </div>
+</div>

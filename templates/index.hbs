@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {{> partials/head}}
+</head>
+
+<body>
+    {{> partials/navbar}}
+    <style>
+        .hero {
+            width: 100%;
+        }
+
+        .hero-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            padding: 40px 10px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: bolder;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .content-grid {
+            width: 100%;
+            padding: 10px;
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(325px, 1fr));
+        }
+    </style>
+    <div class="hero">
+        <div style="height: 50px"></div>
+        <div class="hero-content-container">
+            <div class="hero-title">Welcome to {{ instance.title }} !</div>
+            <div class="hero-subtitle">{{ instance.description }}</div>
+        </div>
+    </div>
+    <div class="most-downloaded">
+        <div class="most-downloaded-title">Most downloaded crates:</div>
+        {{#each crates}}
+        {{else}}
+        <div class="most-downloaded-empty"></div>
+        {{/each}}
+    </div>
+</body>
+
+</html>

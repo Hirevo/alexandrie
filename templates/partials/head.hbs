@@ -1,0 +1,53 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="shortcut icon" type="image/x-icon" href="{{ instance.favicon }}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans:400,500">
+<title>{{ instance.title }}</title>
+<style>
+    html,
+    body {
+        min-width: 100%;
+        min-height: 100%;
+        background-color: var(--bg-color);
+        overflow-x: hidden;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        --fg-color: #272727;
+        --dark-fg-color: #202020;
+        --darker-fg-color: #171717;
+        --lighter-bg-color: #FFF;
+        --light-bg-color: #EEE;
+        --bg-color: #E0E0E0;
+        --dark-bg-color: #C0C0C0;
+        --darker-bg-color: #909090;
+        --darker-bg-color: #707070;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        html {
+            --lighter-bg-color: #373737;
+            --light-bg-color: #303030;
+            --bg-color: #272727;
+            --dark-bg-color: #202020;
+            --darker-bg-color: #171717;
+            --darkest-bg-color: #101010;
+            --fg-color: #FFF;
+            --dark-fg-color: #E0E0E0;
+            --darker-fg-color: #C0C0C0;
+        }
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        font-family: "Fira Sans", sans-serif;
+        letter-spacing: -0.5px;
+        color: var(--fg-color);
+    }
+</style>
