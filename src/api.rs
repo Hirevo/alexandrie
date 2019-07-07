@@ -49,21 +49,27 @@ pub struct APICrateMeta {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
+    pub readme_file: Option<String>,
     pub keywords: Option<Vec<String>>,
+    pub categories: Option<Vec<String>>,
     pub license: Option<String>,
     pub license_file: Option<String>,
     pub repository: Option<String>,
+    pub links: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct APICrateDependency {
+    pub name: String,
+    pub version_req: VersionReq,
+    pub features: Vec<String>,
     pub optional: bool,
     pub default_features: bool,
-    pub name: String,
-    pub features: Vec<String>,
-    pub version_req: VersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
+    pub registry: Option<String>,
+    #[serde(rename = "explicit_name_in_toml")]
+    pub explicit_name: Option<String>,
 }
 
 #[put("/crates/new", data = "<data>")]
