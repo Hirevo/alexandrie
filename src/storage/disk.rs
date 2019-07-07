@@ -1,14 +1,14 @@
-use std::path::PathBuf;
-use std::io::{self, Read};
 use std::fs;
+use std::io::{self, Read};
+use std::path::PathBuf;
 
-use serde::{Serialize, Deserialize};
 use semver::Version;
+use serde::{Deserialize, Serialize};
 
-use crate::{Store, Error};
+use crate::{Error, Store};
 
 /// The local on-disk storage strategy.  
-/// 
+///
 /// It stores the crates as files in the given directory.  
 /// It names the crates as `"{name}-{version}.crate"`.  
 /// As there will not be any duplicated names, it doesn't create any subdirectories.
@@ -20,7 +20,9 @@ pub struct DiskStorage {
 impl DiskStorage {
     /// Create an DiskStorage instance with the specified path.
     pub fn new<P: Into<PathBuf>>(path: P) -> Result<DiskStorage, Error> {
-        Ok(DiskStorage { path: path.into() })
+        let path = path.into();
+        fs::create_dir_all(&path)?;
+        Ok(DiskStorage { path })
     }
 
     /// Generate a unique filename for the given crate name and version.
@@ -41,7 +43,10 @@ impl Store for DiskStorage {
 
     fn store_crate(&self, name: &str, version: Version, mut data: impl Read) -> Result<(), Error> {
         let path = self.path.join(DiskStorage::format_name(name, version));
-        let mut file = fs::OpenOptions::new().create_new(true).write(true).open(&path)?;
+        let mut file = fs::OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(&path)?;
         io::copy(&mut data, &mut file)?;
         Ok(())
     }

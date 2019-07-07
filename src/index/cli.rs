@@ -19,9 +19,8 @@ pub struct CLIIndex {
 
 impl CLIIndex {
     /// Create a CLIIndex instance with the given path.
-    pub fn new<P: Into<PathBuf>>(dir: P) -> Result<CLIIndex, Error> {
-        let path = dir.into();
-
+    pub fn new<P: Into<PathBuf>>(path: P) -> Result<CLIIndex, Error> {
+        let path = path.into();
         Ok(CLIIndex { path })
     }
 }
