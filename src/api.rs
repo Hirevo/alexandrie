@@ -5,12 +5,13 @@ use std::sync::{Arc, Mutex};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use diesel::prelude::*;
+use rocket::http::ContentType;
+use rocket::response::{Content, Stream};
 use rocket::{Data, State};
 use rocket_contrib::json::Json;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use rocket::response::Stream;
 
 use crate::db::models::{CrateRegistration, ModifyCrateRegistration, NewCrateRegistration};
 use crate::db::schema::*;
@@ -283,7 +284,7 @@ pub fn api_download(
     conn: DbConn,
     name: String,
     version: String,
-) -> Result<Stream<Box<dyn Read>>, Error> {
+) -> Result<Content<Stream<Box<dyn Read>>>, Error> {
     let version = Version::parse(&version)?;
     let state = state.lock().unwrap();
     state.index().refresh()?;
@@ -295,5 +296,5 @@ pub fn api_download(
     diesel::update(crates::table)
         .set(crates::downloads.eq(downloads + 1))
         .execute(&conn.0)?;
-    Ok(Stream::from(krate))
+    Ok(Content(ContentType::Binary, Stream::from(krate)))
 }
