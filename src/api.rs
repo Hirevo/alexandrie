@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use byteorder::{LittleEndian, ReadBytesExt};
 use diesel::prelude::*;
 use rocket::http::ContentType;
-use rocket::response::{Content, Stream};
+use rocket::response::{Content, Stream, Responder};
 use rocket::{Data, State};
 use rocket_contrib::json::Json;
 use semver::{Version, VersionReq};
@@ -33,6 +33,11 @@ pub struct APISearchResult {
     pub name: String,
     pub max_version: Version,
     pub description: Option<String>,
+    pub downloads: u64,
+    pub created_at: chrono::NaiveDateTime,
+    pub updated_at: chrono::NaiveDateTime,
+    pub documentation: Option<String>,
+    pub repository: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -74,6 +79,7 @@ pub struct APICrateDependency {
     pub explicit_name: Option<String>,
 }
 
+/// Route to publish a new crate (used by `cargo publish`).
 #[put("/crates/new", data = "<data>")]
 pub fn api_publish(
     state: State<Arc<Mutex<AppState>>>,
@@ -98,11 +104,11 @@ pub fn api_publish(
         .first::<CrateRegistration>(&conn.0)
         .optional()?;
     if let Some(krate) = krate {
-        let max_version = state.index().max_version(krate.name.as_str())?;
-        if metadata.vers <= max_version {
+        let Crate { vers: latest, .. } = state.index().latest_crate(krate.name.as_str())?;
+        if metadata.vers <= latest {
             return Err(Error::from(AlexError::VersionTooLow {
                 krate: krate.name,
-                hosted: max_version,
+                hosted: latest,
                 published: metadata.vers,
             }));
         }
@@ -232,6 +238,7 @@ pub fn api_publish(
     }
 }
 
+/// Route to search through crates (used by `cargo search`).
 #[get("/crates?<q>&<per_page>&<page>")]
 pub fn api_search(
     state: State<Arc<Mutex<AppState>>>,
@@ -244,7 +251,6 @@ pub fn api_search(
     state.index().refresh()?;
     let name_pattern = format!("%{}%", q.replace('\\', "\\\\").replace('%', "\\%"));
     let req = crates::table
-        .select((crates::name, crates::description))
         .filter(crates::name.like(name_pattern.as_str()))
         .into_boxed();
     let req = match (per_page, page) {
@@ -252,7 +258,7 @@ pub fn api_search(
         (Some(per_page), None) => req.limit(per_page as i64),
         _ => req,
     };
-    let results = req.load::<(String, Option<String>)>(&conn.0)?;
+    let results = req.load::<CrateRegistration>(&conn.0)?;
     let total = crates::table
         .select(diesel::dsl::count(crates::name))
         .filter(crates::name.like(name_pattern.as_str()))
@@ -260,12 +266,17 @@ pub fn api_search(
 
     let crates = results
         .into_iter()
-        .map(|(name, description)| {
-            let max_version = state.index().max_version(name.as_str())?;
+        .map(|krate| {
+            let latest = state.index().latest_crate(krate.name.as_str())?;
             Ok(APISearchResult {
-                name,
-                max_version,
-                description,
+                name: krate.name,
+                max_version: latest.vers,
+                description: krate.description,
+                downloads: krate.downloads,
+                created_at: krate.created_at,
+                updated_at: krate.updated_at,
+                documentation: krate.documentation,
+                repository: krate.repository,
             })
         })
         .collect::<Result<Vec<APISearchResult>, Error>>()?;
@@ -278,13 +289,16 @@ pub fn api_search(
     }))
 }
 
+/// Route to download a crate tarball (used by `cargo build`).
+///
+/// The response is streamed, for performance and memory footprint reasons.
 #[get("/crates/<name>/<version>/download")]
 pub fn api_download(
     state: State<Arc<Mutex<AppState>>>,
     conn: DbConn,
     name: String,
     version: String,
-) -> Result<Content<Stream<Box<dyn Read>>>, Error> {
+) -> Result<impl Responder, Error> {
     let version = Version::parse(&version)?;
     let state = state.lock().unwrap();
     state.index().refresh()?;

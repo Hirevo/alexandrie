@@ -98,15 +98,15 @@ impl Indexer for CLIIndex {
         Ok(found.ok_or_else(|| AlexError::CrateNotFound(String::from(name)))?)
     }
 
-    fn max_version(&self, name: &str) -> Result<Version, Error> {
+    fn latest_crate(&self, name: &str) -> Result<Crate, Error> {
         let path = self.index_crate(name);
         let reader = io::BufReader::new(fs::File::open(path)?);
         Ok(reader
             .lines()
-            .map(|line| Ok(json::from_str::<Crate>(line?.as_str())?.vers))
-            .collect::<Result<Vec<Version>, Error>>()?
+            .map(|line| Ok(json::from_str::<Crate>(line?.as_str())?))
+            .collect::<Result<Vec<Crate>, Error>>()?
             .into_iter()
-            .max()
+            .max_by(|k1, k2| k1.vers.cmp(&k2.vers))
             .expect("at least one version to exist"))
     }
 }

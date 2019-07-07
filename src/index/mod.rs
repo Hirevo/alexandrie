@@ -26,7 +26,7 @@ pub trait Indexer {
     /// Refreshes the managed crate index (in case another instance made modification to it).
     fn refresh(&self) -> Result<(), Error>;
     /// Retrives the latest version of a crate.
-    fn max_version(&self, name: &str) -> Result<Version, Error>;
+    fn latest_crate(&self, name: &str) -> Result<Crate, Error>;
     /// Retrives the filepath to the saved crate metadata.
     fn index_crate(&self, name: &str) -> PathBuf;
     /// Retrives the crate metadata for the given name and version.
@@ -48,9 +48,9 @@ impl Indexer for Index {
         }
     }
 
-    fn max_version(&self, name: &str) -> Result<Version, Error> {
+    fn latest_crate(&self, name: &str) -> Result<Crate, Error> {
         match self {
-            Index::CLIIndex(idx) => idx.max_version(name),
+            Index::CLIIndex(idx) => idx.latest_crate(name),
         }
     }
 
