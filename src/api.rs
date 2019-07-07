@@ -10,6 +10,7 @@ use rocket_contrib::json::Json;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use rocket::response::Stream;
 
 use crate::db::models::{CrateRegistration, ModifyCrateRegistration, NewCrateRegistration};
 use crate::db::schema::*;
@@ -98,73 +99,73 @@ pub fn api_publish(
     if let Some(krate) = krate {
         let max_version = state.index().max_version(krate.name.as_str())?;
         if metadata.vers <= max_version {
-            Err(Error::from(AlexError::VersionTooLow {
+            return Err(Error::from(AlexError::VersionTooLow {
                 krate: krate.name,
                 hosted: max_version,
                 published: metadata.vers,
-            }))
-        } else {
-            state.storage().store_crate(
-                &metadata.name,
-                metadata.vers.clone(),
-                crate_bytes.as_slice(),
-            )?;
-
-            let path = state.index().index_crate(&metadata.name);
-            let crate_desc = Crate {
-                name: metadata.name,
-                vers: metadata.vers,
-                deps: metadata
-                    .deps
-                    .into_iter()
-                    .map(|dep| {
-                        let (name, package) = if let Some(renamed) = dep.explicit_name {
-                            (renamed, Some(dep.name))
-                        } else {
-                            (dep.name, None)
-                        };
-                        Dependency {
-                            name: name,
-                            req: dep.version_req,
-                            features: dep.features,
-                            optional: dep.optional,
-                            default_features: dep.default_features,
-                            target: dep.target,
-                            kind: dep.kind,
-                            registry: dep.registry,
-                            package: package,
-                        }
-                    })
-                    .collect(),
-                cksum: hash,
-                features: metadata.features,
-                yanked: Some(false),
-                links: metadata.links,
-            };
-            let parent = path.parent().unwrap();
-            fs::create_dir_all(parent)?;
-            let mut file = fs::OpenOptions::new().write(true).append(true).open(path)?;
-            json::to_writer(&mut file, &crate_desc)?;
-            write!(file, "\n")?;
-            file.flush()?;
-            state.index().commit_and_push(&format!(
-                "Updating crate `{}#{}`",
-                &crate_desc.name, &crate_desc.vers
-            ))?;
-
-            let new_crate = ModifyCrateRegistration {
-                id: krate.id,
-                name: crate_desc.name.as_str(),
-                description: metadata.description.as_ref().map(|s| s.as_str()),
-                documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
-                repository: metadata.repository.as_ref().map(|s| s.as_str()),
-            };
-            diesel::update(crates::table)
-                .set(new_crate)
-                .execute(&conn.0)?;
-
-            Ok(Json(APIPublishResponse {}))
+            }));
         }
+
+        state.storage().store_crate(
+            &metadata.name,
+            metadata.vers.clone(),
+            crate_bytes.as_slice(),
+        )?;
+
+        let path = state.index().index_crate(&metadata.name);
+        let crate_desc = Crate {
+            name: metadata.name,
+            vers: metadata.vers,
+            deps: metadata
+                .deps
+                .into_iter()
+                .map(|dep| {
+                    let (name, package) = if let Some(renamed) = dep.explicit_name {
+                        (renamed, Some(dep.name))
+                    } else {
+                        (dep.name, None)
+                    };
+                    Dependency {
+                        name: name,
+                        req: dep.version_req,
+                        features: dep.features,
+                        optional: dep.optional,
+                        default_features: dep.default_features,
+                        target: dep.target,
+                        kind: dep.kind,
+                        registry: dep.registry,
+                        package: package,
+                    }
+                })
+                .collect(),
+            cksum: hash,
+            features: metadata.features,
+            yanked: Some(false),
+            links: metadata.links,
+        };
+        let parent = path.parent().unwrap();
+        fs::create_dir_all(parent)?;
+        let mut file = fs::OpenOptions::new().write(true).append(true).open(path)?;
+        json::to_writer(&mut file, &crate_desc)?;
+        write!(file, "\n")?;
+        file.flush()?;
+        state.index().commit_and_push(&format!(
+            "Updating crate `{}#{}`",
+            &crate_desc.name, &crate_desc.vers
+        ))?;
+
+        let new_crate = ModifyCrateRegistration {
+            id: krate.id,
+            name: crate_desc.name.as_str(),
+            description: metadata.description.as_ref().map(|s| s.as_str()),
+            documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
+            repository: metadata.repository.as_ref().map(|s| s.as_str()),
+        };
+        diesel::update(crates::table)
+            .set(new_crate)
+            .execute(&conn.0)?;
+
+        Ok(Json(APIPublishResponse {}))
     } else {
         state.storage().store_crate(
             &metadata.name,
@@ -282,11 +283,11 @@ pub fn api_download(
     conn: DbConn,
     name: String,
     version: String,
-) -> Result<Vec<u8>, Error> {
+) -> Result<Stream<Box<dyn Read>>, Error> {
     let version = Version::parse(&version)?;
     let state = state.lock().unwrap();
     state.index().refresh()?;
-    let krate = state.storage().get_crate(&name, version)?;
+    let krate = state.storage().read_crate(&name, version)?;
     let downloads = crates::table
         .select(crates::downloads)
         .filter(crates::name.eq(name.as_str()))
@@ -294,5 +295,5 @@ pub fn api_download(
     diesel::update(crates::table)
         .set(crates::downloads.eq(downloads + 1))
         .execute(&conn.0)?;
-    Ok(krate)
+    Ok(Stream::from(krate))
 }

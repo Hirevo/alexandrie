@@ -41,6 +41,12 @@ impl Store for DiskStorage {
         Ok(cursor.into_inner())
     }
 
+    fn read_crate(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
+        let path = self.path.join(DiskStorage::format_name(name, version));
+        let file = fs::File::open(&path)?;
+        Ok(Box::new(file))
+    }
+
     fn store_crate(&self, name: &str, version: Version, mut data: impl Read) -> Result<(), Error> {
         let path = self.path.join(DiskStorage::format_name(name, version));
         let mut file = fs::OpenOptions::new()

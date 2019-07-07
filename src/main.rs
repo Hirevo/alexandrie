@@ -4,7 +4,7 @@
     decl_macro,
     custom_attribute,
     result_map_or_else,
-    bind_by_move_pattern_guards
+    bind_by_move_pattern_guards,
 )]
 
 #[macro_use]
