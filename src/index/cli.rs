@@ -3,13 +3,13 @@ use std::io::{self, BufRead};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use semver::{Version, VersionReq};
-use serde::{Serialize, Deserialize};
+use semver::VersionReq;
+use serde::{Deserialize, Serialize};
 
 use crate::{AlexError, Crate, Error, Indexer};
 
 /// The CLI crate index management strategy type.
-/// 
+///
 /// It manages the crate index through the invocation of "git" shell commands.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CLIIndex {

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use semver::{Version, VersionReq};
+use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 
 mod cli;
