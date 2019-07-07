@@ -279,7 +279,6 @@ pub fn api_search(
 #[get("/crates/<name>/<version>/download")]
 pub fn api_download(
     state: State<Arc<Mutex<AppState>>>,
-    _auth: Auth,
     conn: DbConn,
     name: String,
     version: String,
