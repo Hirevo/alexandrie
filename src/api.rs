@@ -117,19 +117,29 @@ pub fn api_publish(
                 deps: metadata
                     .deps
                     .into_iter()
-                    .map(|dep| Dependency {
-                        name: dep.name,
-                        req: dep.version_req,
-                        features: dep.features,
-                        optional: dep.optional,
-                        default_features: dep.default_features,
-                        target: dep.target,
-                        kind: dep.kind,
+                    .map(|dep| {
+                        let (name, package) = if let Some(renamed) = dep.explicit_name {
+                            (renamed, Some(dep.name))
+                        } else {
+                            (dep.name, None)
+                        };
+                        Dependency {
+                            name: name,
+                            req: dep.version_req,
+                            features: dep.features,
+                            optional: dep.optional,
+                            default_features: dep.default_features,
+                            target: dep.target,
+                            kind: dep.kind,
+                            registry: dep.registry,
+                            package: package,
+                        }
                     })
                     .collect(),
                 cksum: hash,
                 features: metadata.features,
                 yanked: Some(false),
+                links: metadata.links,
             };
             let parent = path.parent().unwrap();
             fs::create_dir_all(parent)?;
@@ -169,19 +179,29 @@ pub fn api_publish(
             deps: metadata
                 .deps
                 .into_iter()
-                .map(|dep| Dependency {
-                    name: dep.name,
-                    req: dep.version_req,
-                    features: dep.features,
-                    optional: dep.optional,
-                    default_features: dep.default_features,
-                    target: dep.target,
-                    kind: dep.kind,
+                .map(|dep| {
+                    let (name, package) = if let Some(renamed) = dep.explicit_name {
+                        (renamed, Some(dep.name))
+                    } else {
+                        (dep.name, None)
+                    };
+                    Dependency {
+                        name: name,
+                        req: dep.version_req,
+                        features: dep.features,
+                        optional: dep.optional,
+                        default_features: dep.default_features,
+                        target: dep.target,
+                        kind: dep.kind,
+                        registry: dep.registry,
+                        package: package,
+                    }
                 })
                 .collect(),
             cksum: hash,
             features: metadata.features,
             yanked: Some(false),
+            links: metadata.links,
         };
         let parent = path.parent().unwrap();
         fs::create_dir_all(parent)?;
@@ -250,7 +270,9 @@ pub fn api_search(
 
     Ok(Json(APISearchResponse {
         crates,
-        meta: APISearchMeta { total: total as u64 },
+        meta: APISearchMeta {
+            total: total as u64,
+        },
     }))
 }
 
