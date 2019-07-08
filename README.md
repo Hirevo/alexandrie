@@ -103,7 +103,8 @@ index = "<link-to-the-index-git-repository>"
   To generate a token, you need to register an author first by creating one in the database.
   You can do it like this:
   ```sql
-  insert into `authors` (`login`, `name`, `passwd`) values ("<username>", "<displayable-name>", sha2("<passwd>", 512));
+  -- Replace the '<...>' placeholders by the real ones.
+  insert into `authors` (`email`, `name`, `passwd`) values ("<email>", "<displayable-name>", sha2("<passwd>", 512));
   insert into `author_tokens` (`author_id`, `token`) values (1, sha2(concat(now(), rand(), uuid()), 512));
   select token from `author_tokens` limit 1; -- This will display the token back to you.
   ```

@@ -2,59 +2,176 @@
 <html lang="en">
 
 <head>
-    {{> partials/head}}
+	{{> partials/head}}
 </head>
 
 <body>
-    {{> partials/navbar}}
-    <style>
-        .hero {
-            width: 100%;
-        }
+	{{> partials/navbar}}
+	<style>
+		.hero {
+			width: 100%;
+		}
 
-        .hero-content-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            width: 100%;
-            padding: 40px 10px;
-        }
+		.hero-content-container {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-direction: column;
+			width: 100%;
+			padding: 40px 10px;
+		}
 
-        .hero-title {
-            font-size: 30px;
-            font-weight: bolder;
-            text-align: center;
-        }
+		.hero-title {
+			font-size: 30px;
+			font-weight: bolder;
+			text-align: center;
+		}
 
-        .hero-subtitle {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-        }
+		.hero-subtitle {
+			font-size: 24px;
+			font-weight: bold;
+			text-align: center;
+		}
 
-        .content-grid {
-            width: 100%;
-            padding: 10px;
-            display: grid;
-            grid-gap: 10px;
-            grid-template-columns: repeat(auto-fit, minmax(325px, 1fr));
-        }
-    </style>
-    <div class="hero">
-        <div style="height: 50px"></div>
-        <div class="hero-content-container">
-            <div class="hero-title">Welcome to {{ instance.title }} !</div>
-            <div class="hero-subtitle">{{ instance.description }}</div>
-        </div>
-    </div>
-    <div class="most-downloaded">
-        <div class="most-downloaded-title">Most downloaded crates:</div>
-        {{#each crates}}
-        {{else}}
-        <div class="most-downloaded-empty"></div>
-        {{/each}}
-    </div>
+		.stats {
+			width: 100%;
+			display: grid;
+			grid-template-rows: 1fr;
+			grid-template-columns: repeat(2, 1fr);
+			align-items: center;
+			justify-content: center;
+			white-space: nowrap;
+		}
+
+		.stats-total-downloads {
+			font-size: 20px;
+			border-right: solid 1px var(--fg-color);
+			padding: 5px 10px;
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+		}
+
+		.stats-crate-count {
+			font-size: 20px;
+			border-left: solid 1px var(--fg-color);
+			padding: 5px 10px;
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+		}
+
+		.content-grid {
+			width: 100%;
+			padding: 10px;
+			display: grid;
+			grid-gap: 10px;
+			grid-template-columns: repeat(auto-fit, 325px);
+			align-items: center;
+			justify-content: center;
+		}
+
+		.card {
+			width: 325px;
+			display: flex;
+			flex-direction: column;
+			border-radius: 10px;
+			box-shadow: 0 0 10px black;
+			background-color: var(--fg-color);
+			padding: 10px;
+		}
+
+		.card * {
+			color: #FFF;
+		}
+
+		.card-title {
+			text-align: center;
+			font-size: 21px;
+			font-weight: bold;
+			padding: 5px 0;
+		}
+
+		.most-downloaded,
+		.last-updated {
+			background-color: var(--fg-color);
+		}
+
+		.most-downloaded {
+			background: linear-gradient(210deg, rgb(255, 94, 0), rgb(255, 30, 0));
+		}
+
+		.last-updated {
+			background: linear-gradient(210deg, rgb(14, 172, 0), rgb(0, 102, 31));
+		}
+
+		.most-downloaded-empty,
+		.last-updated-empty {
+			height: 300px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 20px;
+		}
+
+		.card-footer {
+			width: 100%;
+			padding: 5px;
+		}
+
+		.card-footer-button {
+			width: 100%;
+			text-decoration: none;
+			text-align: center;
+			padding: 7px 10px;
+			font-weight: bold;
+			font-size: 20px;
+			display: block;
+			color: var(--fg-color);
+			box-shadow: 0 0 10px #000A;
+			border-radius: 30px;
+			background-color: var(--bg-color);
+		}
+	</style>
+	<div class="hero">
+		<div style="height: 50px"></div>
+		<div class="hero-content-container">
+			<div class="hero-title">Welcome to {{ instance.title }} !</div>
+			<div class="hero-subtitle">{{ instance.description }}</div>
+		</div>
+	</div>
+	<div class="stats">
+		<div class="stats-total-downloads"><b>{{ total_downloads }}</b>&nbsp;total downloads</div>
+		<div class="stats-crate-count"><b>{{ crate_count }}</b>&nbsp;crates stored</div>
+	</div>
+	<div class="content-grid">
+		<div class="card most-downloaded">
+			<div class="card-title most-downloaded-title">Most downloaded</div>
+			<div class="card-content">
+				{{#each most_downloaded}}
+				<div class="most-downloaded-entry">{{ this.name }}</div>
+				{{else}}
+				<div class="most-downloaded-empty">Empty list.</div>
+				{{/each}}
+			</div>
+			<div class="card-footer">
+				<a class="card-footer-button" href="/most-downloaded">See more...</a>
+			</div>
+		</div>
+		<div class="card last-updated">
+			<div class="card-title last-updated-title">Last updated</div>
+			<div class="card-content">
+				{{#each last_updated}}
+				<div class="last-updated-entry">{{ this.name }}</div>
+				{{else}}
+				<div class="last-updated-empty">Empty list.</div>
+				{{/each}}
+			</div>
+			<div class="card-footer">
+				<a class="card-footer-button" href="/last-updated">See more...</a>
+			</div>
+		</div>
+	</div>
 </body>
 
 </html>

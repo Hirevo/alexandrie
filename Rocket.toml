@@ -12,5 +12,5 @@ path = "crate-storage"
 [global.frontend]
 enabled = true
 title = "crates.polomack.eu"
-description = "My personal Rust crate registry for my personal projects"
+description = "My personal Rust crate registry for my personal projects."
 # favicon = ""

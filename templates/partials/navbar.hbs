@@ -29,7 +29,13 @@
     }
 
     .navbar-tag:hover {
-        background-color: var(--lighter-bg-color);
+        background-color: var(--darker-bg-color);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .navbar-tag:hover {
+            background-color: var(--lighter-bg-color);
+        }
     }
 
     .brand-container {
