@@ -75,7 +75,7 @@ fn main() -> Result<(), Error> {
 
     let instance = if frontend.enabled {
         instance
-            .mount("/", routes![frontend::index::route])
+            .mount("/", routes![frontend::index::route, frontend::search::route])
             .attach(Template::fairing())
     } else {
         instance

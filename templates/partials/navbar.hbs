@@ -113,6 +113,9 @@
     </div>
     <div class="login-container">
         {{#if user}}
+        <span>Welcome, {{ user.name }} !</span>
+        <a href="/account/settings" class="navbar-tag">Settings</a>
+        <a href="/account/logout" class="navbar-tag">Logout</a>
         {{else}}
         <a href="/account/login" class="navbar-tag">Login</a>
         <a href="/account/register" class="navbar-tag">Register</a>

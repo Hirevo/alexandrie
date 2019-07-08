@@ -36,7 +36,7 @@ pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Err
             "most_downloaded": most_downloaded,
             "last_updated": last_updated.into_iter().map(|(name, date)| json!({
                 "name": name,
-                "updated_at": date.format("%b %-d %Y, %H:%M UTC").to_string(),
+                "updated_at": date.format("%b %-d %Y, %H:%M").to_string(),
             })).collect::<Vec<_>>(),
         }),
     ))

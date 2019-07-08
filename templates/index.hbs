@@ -3,10 +3,6 @@
 
 <head>
     {{> partials/head}}
-</head>
-
-<body>
-    {{> partials/navbar}}
     <style>
         .hero {
             width: 100%;
@@ -41,9 +37,10 @@
             align-items: center;
             justify-content: center;
             white-space: nowrap;
+            padding: 5px 0;
         }
 
-        .stats-total-downloads {
+        .stats-left {
             font-size: 20px;
             border-right: solid 1px var(--fg-color);
             padding: 5px 10px;
@@ -52,7 +49,7 @@
             justify-content: flex-end;
         }
 
-        .stats-crate-count {
+        .stats-right {
             font-size: 20px;
             border-left: solid 1px var(--fg-color);
             padding: 5px 10px;
@@ -66,13 +63,14 @@
             padding: 10px;
             display: grid;
             grid-gap: 10px;
-            grid-template-columns: repeat(auto-fit, 325px);
+            grid-template-columns: repeat(auto-fit, 350px);
             align-items: center;
             justify-content: center;
         }
 
         .card {
-            width: 325px;
+            width: 350px;
+            height: 100%;
             display: flex;
             flex-direction: column;
             border-radius: 10px;
@@ -81,15 +79,19 @@
             padding: 10px;
         }
 
-        .card * {
-            color: #FFF;
-        }
-
         .card-title {
             text-align: center;
             font-size: 21px;
             font-weight: bold;
             padding: 5px 0;
+        }
+
+        .card-content {
+            flex-grow: 1;
+        }
+
+        .card * {
+            color: #FFF;
         }
 
         .most-downloaded,
@@ -142,6 +144,11 @@
             border-radius: 30px;
             color: var(--fg-color);
             background-color: var(--bg-color);
+            transition: transform 0.15s;
+        }
+
+        .card-footer-button:hover {
+            transform: scale(1.05);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -151,6 +158,10 @@
             }
         }
     </style>
+</head>
+
+<body>
+    {{> partials/navbar}}
     <div class="hero">
         <div style="height: 50px"></div>
         <div class="hero-content-container">
@@ -159,8 +170,8 @@
         </div>
     </div>
     <div class="stats">
-        <div class="stats-total-downloads"><b>{{ total_downloads }}</b>&nbsp;total downloads</div>
-        <div class="stats-crate-count"><b>{{ crate_count }}</b>&nbsp;crates stored</div>
+        <div class="stats-left"><b>{{ total_downloads }}</b>&nbsp;total downloads</div>
+        <div class="stats-right"><b>{{ crate_count }}</b>&nbsp;crates stored</div>
     </div>
     <div class="content-grid">
         <div class="card most-downloaded">

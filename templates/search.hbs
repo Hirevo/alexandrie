@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {{> partials/head}}
+    <style>
+        .hero {
+            width: 100%;
+        }
+
+        .hero-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            padding: 40px 10px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: bolder;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .stats {
+            width: 100%;
+            display: grid;
+            grid-template-rows: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            padding: 5px 0;
+        }
+
+        .stats-left {
+            font-size: 20px;
+            border-right: solid 1px var(--fg-color);
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .stats-right {
+            font-size: 20px;
+            border-left: solid 1px var(--fg-color);
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .search-results-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-results {
+            width: 1400px;
+            height: 100vh;
+            background-color: #000;
+        }
+
+        @media (max-width: 1400px) {
+            .search-results {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {{> partials/navbar}}
+    <div class="hero">
+        <div style="height: 50px"></div>
+        <div class="hero-content-container">
+            <div class="hero-title">Search results</div>
+            <div class="hero-subtitle">Searched for '{{ searched_text }}'</div>
+        </div>
+    </div>
+    <div class="stats">
+        <div class="stats-left">Page&nbsp;<b>{{ page_number }}</b></div>
+        <div class="stats-right"><b>{{ total_results }}</b>&nbsp;total results</div>
+    </div>
+    <div class="search-results-container">
+        <div class="search-results">
+        </div>
+    </div>
+</body>
+
+</html>
