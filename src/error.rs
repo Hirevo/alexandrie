@@ -15,6 +15,8 @@ use rocket::request::Request;
 use rocket::response::{self, Responder};
 use rocket_contrib::json::Json;
 
+use crate::db::models::Author;
+
 /// The Error type for the registry.  
 /// It can represent any kind of error the registry might encounter.
 #[derive(Debug)]
@@ -42,6 +44,8 @@ pub enum Error {
 pub enum AlexError {
     /// The requested crate cannot be found.
     CrateNotFound(String),
+    /// The crate is not owned by the user.
+    CrateNotOwned(String, Author),
     /// The published crate version is lower than the current hosted version.
     VersionTooLow {
         krate: String,
@@ -77,9 +81,12 @@ impl fmt::Display for AlexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AlexError::CrateNotFound(name) => write!(f, "no crate named '{}' found", name),
-            AlexError::VersionTooLow { .. } => write!(
+            AlexError::CrateNotOwned(name, _) => write!(f, "you are not an owner of '{}'", name),
+            AlexError::VersionTooLow { hosted, published, .. } => write!(
                 f,
-                "the published version is not greater than the existing one"
+                "the published version is too low (hosted version is {1}, {0} <= {1})",
+                published,
+                hosted,
             ),
             AlexError::InvalidToken => write!(f, "invalid token"),
         }

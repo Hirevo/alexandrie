@@ -11,7 +11,7 @@ use crate::{AlexError, DbConn, Error};
 /// The Auth request guard.  
 /// It checks that the incoming request is from an authenticated user.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Auth(Author, String);
+pub struct Auth(pub Author, pub String);
 
 impl<'a, 'r> FromRequest<'a, 'r> for Auth {
     type Error = crate::Error;

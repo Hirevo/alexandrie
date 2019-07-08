@@ -1,13 +1,13 @@
 table! {
     /// The author table.
     authors (id) {
-        /// The ID of the author.
+        /// The author's ID.
         id -> Unsigned<Bigint>,
-        /// The login/username of the author.
-        login -> Varchar,
-        /// The displayable name of the author.
+        /// The author's email address.
+        email -> Varchar,
+        /// The author's displayable name.
         name -> Varchar,
-        /// The SHA512 hash of the author's password.
+        /// The author's SHA512-hashed password.
         passwd -> Varchar,
     }
 }
@@ -15,43 +15,43 @@ table! {
 table! {
     /// The crate metadata table.
     crates (id) {
-        /// The ID of the crate.
+        /// The crate's ID.
         id -> Unsigned<Bigint>,
-        /// The name of the crate.
+        /// The crate's name.
         name -> Varchar,
-        /// The descripton of the crate.
+        /// The crate's descripton.
         description -> Nullable<Varchar>,
-        /// The creation date of the crate.
+        /// The crate's creation date.
         created_at -> Datetime,
-        /// The date of the last update to the crate.
+        /// The crate's last updated date.
         updated_at -> Datetime,
-        /// The download count of the crate.
+        /// The crate's download count.
         downloads -> Unsigned<Bigint>,
-        /// The documentation link of the crate.
+        /// The URL to the crate's documentation.
         documentation -> Nullable<Varchar>,
-        /// The repository link of the crate.
+        /// The URL to the crate's repository.
         repository -> Nullable<Varchar>,
     }
 }
 
 table! {
-    /// The crate-to-authors one-to-many relationship table.
+    /// The crate-to-authors (one-to-many) relationship table.
     crate_authors (id) {
-        /// The ID of the relationship.
+        /// The relationship's ID.
         id -> Unsigned<Bigint>,
-        /// The crate ID.
+        /// The crate's ID.
         crate_id -> Unsigned<Bigint>,
-        /// The author ID.
+        /// The author's ID.
         author_id -> Unsigned<Bigint>,
     }
 }
 
 table! {
-    /// The author-to-tokens one-to-many relationship table.
+    /// The author-to-tokens (one-to-many) relationship table.
     author_tokens (id) {
-        /// The ID of the token.
+        /// The token's ID.
         id -> Unsigned<Bigint>,
-        /// The author ID.
+        /// The author's ID.
         author_id -> Unsigned<Bigint>,
         /// The token itself.
         token -> Varchar,

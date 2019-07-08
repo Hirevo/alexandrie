@@ -30,9 +30,9 @@ pub struct CrateRegistration {
     pub updated_at: NaiveDateTime,
     /// The crate's download count.
     pub downloads: u64,
-    /// The link to the crate's documentation.
+    /// The URL to the crate's documentation.
     pub documentation: Option<String>,
-    /// The link to the crate's repository.
+    /// The URL to the crate's repository.
     pub repository: Option<String>,
 }
 
@@ -50,7 +50,7 @@ pub struct CrateRegistration {
 #[table_name = "crates"]
 #[primary_key(id)]
 /// Represents a partial crate entry from the database, 
-/// suitable to edit a field while letting the database maintain the updated date of the row.
+/// suitable to edit an entry while letting the database maintain the updated date of the row.
 pub struct ModifyCrateRegistration<'a> {
     /// The crate's ID.
     pub id: u64,
@@ -58,24 +58,24 @@ pub struct ModifyCrateRegistration<'a> {
     pub name: &'a str,
     /// The crate's description.
     pub description: Option<&'a str>,
-    /// The link to the crate's documentation.
+    /// The URL to the crate's documentation.
     pub documentation: Option<&'a str>,
-    /// The link to the crate's repository.
+    /// The URL to the crate's repository.
     pub repository: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "crates"]
 /// Represents a partial crate entry from the database, 
-/// suitable to create a field while letting the database assign an ID and set the creation date of the row.
+/// suitable to create an entry while letting the database assign an ID and set the creation date of the row.
 pub struct NewCrateRegistration<'a> {
     /// The crate's name.
     pub name: &'a str,
     /// The crate's description.
     pub description: Option<&'a str>,
-    /// The link to the crate's documentation.
+    /// The URL to the crate's documentation.
     pub documentation: Option<&'a str>,
-    /// The link to the crate's repository.
+    /// The URL to the crate's repository.
     pub repository: Option<&'a str>,
 }
 
@@ -96,8 +96,8 @@ pub struct NewCrateRegistration<'a> {
 pub struct Author {
     /// The author's ID.
     pub id: u64,
-    /// The author's login/username.
-    pub login: String,
+    /// The author's email address.
+    pub email: String,
     /// The author's displayable name.
     pub name: String,
     /// The author's SHA512-hashed password.
@@ -113,11 +113,12 @@ pub struct Author {
     Queryable,
     Insertable,
     Identifiable,
+    Associations,
     AsChangeset,
 )]
 #[table_name = "crate_authors"]
-#[belongs_to(CrateRegistration)]
 #[belongs_to(Author)]
+#[belongs_to(CrateRegistration, foreign_key = "crate_id")]
 #[primary_key(id)]
 /// Represents a crate-to-author relationship in the database.
 pub struct CrateAuthor {
@@ -137,7 +138,27 @@ pub struct CrateAuthor {
     Deserialize,
     Queryable,
     Insertable,
+)]
+#[table_name = "crate_authors"]
+/// Represents a crate-to-author relationship in the database, 
+/// suitable to create an entry while letting the database assign a relationship ID.
+pub struct NewCrateAuthor {
+    /// The crate's ID.
+    pub crate_id: u64,
+    /// The author's ID.
+    pub author_id: u64,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
     Identifiable,
+    Associations,
     AsChangeset,
 )]
 #[table_name = "author_tokens"]

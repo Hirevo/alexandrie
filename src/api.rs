@@ -6,14 +6,16 @@ use std::sync::{Arc, Mutex};
 use byteorder::{LittleEndian, ReadBytesExt};
 use diesel::prelude::*;
 use rocket::http::ContentType;
-use rocket::response::{Content, Stream, Responder};
+use rocket::response::{Content, Responder, Stream};
 use rocket::{Data, State};
 use rocket_contrib::json::Json;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::db::models::{CrateRegistration, ModifyCrateRegistration, NewCrateRegistration};
+use crate::db::models::{
+    CrateAuthor, CrateRegistration, ModifyCrateRegistration, NewCrateAuthor, NewCrateRegistration,
+};
 use crate::db::schema::*;
 use crate::{
     AlexError, AppState, Auth, Crate, DbConn, Dependency, DependencyKind, Error, Indexer, Store,
@@ -79,11 +81,12 @@ pub struct APICrateDependency {
     pub explicit_name: Option<String>,
 }
 
+// TODO: Manage authors.
 /// Route to publish a new crate (used by `cargo publish`).
 #[put("/crates/new", data = "<data>")]
 pub fn api_publish(
     state: State<Arc<Mutex<AppState>>>,
-    _auth: Auth,
+    auth: Auth,
     conn: DbConn,
     data: Data,
 ) -> Result<Json<APIPublishResponse>, Error> {
@@ -99,27 +102,7 @@ pub fn api_publish(
 
     let state = state.lock().unwrap();
     state.index().refresh()?;
-    let krate = crates::table
-        .filter(crates::name.eq(metadata.name.as_str()))
-        .first::<CrateRegistration>(&conn.0)
-        .optional()?;
-    if let Some(krate) = krate {
-        let Crate { vers: latest, .. } = state.index().latest_crate(krate.name.as_str())?;
-        if metadata.vers <= latest {
-            return Err(Error::from(AlexError::VersionTooLow {
-                krate: krate.name,
-                hosted: latest,
-                published: metadata.vers,
-            }));
-        }
-
-        state.storage().store_crate(
-            &metadata.name,
-            metadata.vers.clone(),
-            crate_bytes.as_slice(),
-        )?;
-
-        let path = state.index().index_crate(&metadata.name);
+    conn.transaction(|| {
         let crate_desc = Crate {
             name: metadata.name,
             vers: metadata.vers,
@@ -150,6 +133,64 @@ pub fn api_publish(
             yanked: Some(false),
             links: metadata.links,
         };
+        let new_crate = NewCrateRegistration {
+            name: crate_desc.name.as_str(),
+            description: metadata.description.as_ref().map(|s| s.as_str()),
+            documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
+            repository: metadata.repository.as_ref().map(|s| s.as_str()),
+        };
+        let result = diesel::insert_into(crates::table)
+            .values(new_crate)
+            .execute(&conn.0)?;
+        let krate = crates::table
+            .filter(crates::name.eq(crate_desc.name.as_str()))
+            .first::<CrateRegistration>(&conn.0)?;
+        let operation = if result == 1 {
+            diesel::insert_into(crate_authors::table)
+                .values(NewCrateAuthor {
+                    crate_id: krate.id,
+                    author_id: auth.0.id,
+                })
+                .execute(&conn.0)?;
+            "Adding"
+        } else {
+            diesel::update(crates::table)
+                .set(ModifyCrateRegistration {
+                    id: krate.id,
+                    name: crate_desc.name.as_str(),
+                    description: metadata.description.as_ref().map(|s| s.as_str()),
+                    documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
+                    repository: metadata.repository.as_ref().map(|s| s.as_str()),
+                })
+                .execute(&conn.0)?;
+            "Updating"
+        };
+
+        let not_owned = CrateAuthor::belonging_to(&krate)
+            .filter(crate_authors::author_id.eq(&auth.0.id))
+            .first::<CrateAuthor>(&conn.0)
+            .optional()?
+            .is_none();
+        if not_owned {
+            return Err(Error::from(AlexError::CrateNotOwned(krate.name, auth.0)));
+        }
+
+        let Crate { vers: latest, .. } = state.index().latest_crate(krate.name.as_str())?;
+        if crate_desc.vers <= latest {
+            return Err(Error::from(AlexError::VersionTooLow {
+                krate: krate.name,
+                hosted: latest,
+                published: crate_desc.vers,
+            }));
+        }
+
+        state.storage().store_crate(
+            &crate_desc.name,
+            crate_desc.vers.clone(),
+            crate_bytes.as_slice(),
+        )?;
+
+        let path = state.index().index_crate(&crate_desc.name);
         let parent = path.parent().unwrap();
         fs::create_dir_all(parent)?;
         let mut file = fs::OpenOptions::new().write(true).append(true).open(path)?;
@@ -157,85 +198,12 @@ pub fn api_publish(
         write!(file, "\n")?;
         file.flush()?;
         state.index().commit_and_push(&format!(
-            "Updating crate `{}#{}`",
-            &crate_desc.name, &crate_desc.vers
+            "{} crate `{}#{}`",
+            operation, &crate_desc.name, &crate_desc.vers
         ))?;
 
-        let new_crate = ModifyCrateRegistration {
-            id: krate.id,
-            name: crate_desc.name.as_str(),
-            description: metadata.description.as_ref().map(|s| s.as_str()),
-            documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
-            repository: metadata.repository.as_ref().map(|s| s.as_str()),
-        };
-        diesel::update(crates::table)
-            .set(new_crate)
-            .execute(&conn.0)?;
-
         Ok(Json(APIPublishResponse {}))
-    } else {
-        state.storage().store_crate(
-            &metadata.name,
-            metadata.vers.clone(),
-            crate_bytes.as_slice(),
-        )?;
-
-        let path = state.index().index_crate(metadata.name.as_str());
-        let crate_desc = Crate {
-            name: metadata.name,
-            vers: metadata.vers,
-            deps: metadata
-                .deps
-                .into_iter()
-                .map(|dep| {
-                    let (name, package) = if let Some(renamed) = dep.explicit_name {
-                        (renamed, Some(dep.name))
-                    } else {
-                        (dep.name, None)
-                    };
-                    Dependency {
-                        name: name,
-                        req: dep.version_req,
-                        features: dep.features,
-                        optional: dep.optional,
-                        default_features: dep.default_features,
-                        target: dep.target,
-                        kind: dep.kind,
-                        registry: dep.registry,
-                        package: package,
-                    }
-                })
-                .collect(),
-            cksum: hash,
-            features: metadata.features,
-            yanked: Some(false),
-            links: metadata.links,
-        };
-        let parent = path.parent().unwrap();
-        fs::create_dir_all(parent)?;
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(path)?;
-        json::to_writer(&mut file, &crate_desc)?;
-        write!(file, "\n")?;
-        file.flush()?;
-        state.index().commit_and_push(&format!(
-            "Adding crate `{}#{}`",
-            &crate_desc.name, &crate_desc.vers
-        ))?;
-
-        let new_crate = NewCrateRegistration {
-            name: crate_desc.name.as_str(),
-            description: metadata.description.as_ref().map(|s| s.as_str()),
-            documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
-            repository: metadata.repository.as_ref().map(|s| s.as_str()),
-        };
-        diesel::insert_into(crates::table)
-            .values(new_crate)
-            .execute(&conn.0)?;
-        Ok(Json(APIPublishResponse {}))
-    }
+    })
 }
 
 /// Route to search through crates (used by `cargo search`).
@@ -302,13 +270,18 @@ pub fn api_download(
     let version = Version::parse(&version)?;
     let state = state.lock().unwrap();
     state.index().refresh()?;
-    let krate = state.storage().read_crate(&name, version)?;
     let downloads = crates::table
         .select(crates::downloads)
         .filter(crates::name.eq(name.as_str()))
-        .first::<u64>(&conn.0)?;
-    diesel::update(crates::table)
-        .set(crates::downloads.eq(downloads + 1))
-        .execute(&conn.0)?;
-    Ok(Content(ContentType::Binary, Stream::from(krate)))
+        .first::<u64>(&conn.0)
+        .optional()?;
+    if let Some(downloads) = downloads {
+        diesel::update(crates::table)
+            .set(crates::downloads.eq(downloads + 1))
+            .execute(&conn.0)?;
+        let krate = state.storage().read_crate(&name, version)?;
+        Ok(Content(ContentType::Binary, Stream::from(krate)))
+    } else {
+        Err(Error::from(AlexError::CrateNotFound(name)))
+    }
 }
