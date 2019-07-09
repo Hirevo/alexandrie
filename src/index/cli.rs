@@ -6,7 +6,9 @@ use std::process::{Command, Stdio};
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 
-use crate::{AlexError, Crate, Error, Indexer};
+use crate::error::{AlexError, Error};
+use crate::index::Indexer;
+use crate::krate;
 
 /// The CLI crate index management strategy type.
 ///
@@ -83,7 +85,7 @@ impl Indexer for CLIIndex {
         }
     }
 
-    fn match_crate(&self, name: &str, req: VersionReq) -> Result<Crate, Error> {
+    fn match_crate(&self, name: &str, req: VersionReq) -> Result<krate::Crate, Error> {
         let path = self.index_crate(name);
         let file = fs::File::open(path).map_err(|err| match err.kind() {
             io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound(String::from(name))),
@@ -92,19 +94,19 @@ impl Indexer for CLIIndex {
         let found = io::BufReader::new(file)
             .lines()
             .map(|line| Some(json::from_str(line.ok()?.as_str()).ok()?))
-            .flat_map(|ret: Option<Crate>| ret.into_iter())
+            .flat_map(|ret: Option<krate::Crate>| ret.into_iter())
             .filter(|krate| req.matches(&krate.vers))
             .max_by(|k1, k2| k1.vers.cmp(&k2.vers));
         Ok(found.ok_or_else(|| AlexError::CrateNotFound(String::from(name)))?)
     }
 
-    fn latest_crate(&self, name: &str) -> Result<Crate, Error> {
+    fn latest_crate(&self, name: &str) -> Result<krate::Crate, Error> {
         let path = self.index_crate(name);
         let reader = io::BufReader::new(fs::File::open(path)?);
         Ok(reader
             .lines()
-            .map(|line| Ok(json::from_str::<Crate>(line?.as_str())?))
-            .collect::<Result<Vec<Crate>, Error>>()?
+            .map(|line| Ok(json::from_str::<krate::Crate>(line?.as_str())?))
+            .collect::<Result<Vec<krate::Crate>, Error>>()?
             .into_iter()
             .max_by(|k1, k2| k1.vers.cmp(&k2.vers))
             .expect("at least one version to exist"))

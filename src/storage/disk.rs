@@ -5,7 +5,8 @@ use std::path::PathBuf;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use crate::{Error, Store};
+use crate::error::Error;
+use crate::storage::Store;
 
 /// The local on-disk storage strategy.  
 ///

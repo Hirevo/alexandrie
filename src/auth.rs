@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::db::models::Author;
 use crate::db::schema::*;
-use crate::{AlexError, DbConn, Error};
+use crate::db::DbConn;
+use crate::error::{AlexError, Error};
 
 /// The Auth request guard.  
 /// It checks that the incoming request is from an authenticated user.

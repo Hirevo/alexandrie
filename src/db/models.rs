@@ -49,7 +49,7 @@ pub struct CrateRegistration {
 )]
 #[table_name = "crates"]
 #[primary_key(id)]
-/// Represents a partial crate entry from the database, 
+/// Represents a partial crate entry from the database,
 /// suitable to edit an entry while letting the database maintain the updated date of the row.
 pub struct ModifyCrateRegistration<'a> {
     /// The crate's ID.
@@ -66,7 +66,7 @@ pub struct ModifyCrateRegistration<'a> {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "crates"]
-/// Represents a partial crate entry from the database, 
+/// Represents a partial crate entry from the database,
 /// suitable to create an entry while letting the database assign an ID and set the creation date of the row.
 pub struct NewCrateRegistration<'a> {
     /// The crate's name.
@@ -130,17 +130,9 @@ pub struct CrateAuthor {
     pub author_id: u64,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    Queryable,
-    Insertable,
-)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "crate_authors"]
-/// Represents a crate-to-author relationship in the database, 
+/// Represents a crate-to-author relationship in the database,
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateAuthor {
     /// The crate's ID.
@@ -172,4 +164,63 @@ pub struct AuthorToken {
     pub author_id: u64,
     /// The token itself.
     pub token: String,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    Identifiable,
+    Associations,
+    AsChangeset,
+)]
+#[table_name = "keywords"]
+#[primary_key(id)]
+/// Represents a keyword entry in the database.
+pub struct Keyword {
+    /// The keyword's ID.
+    pub id: u64,
+    /// The keyword itself.
+    pub name: String,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    Identifiable,
+    Associations,
+    AsChangeset,
+)]
+#[table_name = "crate_keywords"]
+#[belongs_to(Keyword)]
+#[belongs_to(CrateRegistration, foreign_key = "crate_id")]
+#[primary_key(id)]
+/// Represents a crate-to-author relationship in the database.
+pub struct CrateKeyword {
+    /// The relationship's ID.
+    pub id: u64,
+    /// The crate's ID.
+    pub crate_id: u64,
+    /// The author's ID.
+    pub keyword_id: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "crate_keywords"]
+/// Represents a crate-to-author relationship in the database,
+/// suitable to create an entry while letting the database assign a relationship ID.
+pub struct NewCrateKeyword {
+    /// The crate's ID.
+    pub crate_id: u64,
+    /// The author's ID.
+    pub keyword_id: u64,
 }

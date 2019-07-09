@@ -3,10 +3,10 @@ use std::io::{self, Read};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-mod disk;
-pub use disk::*;
+pub mod disk;
 
-use crate::Error;
+use crate::error::Error;
+use crate::storage::disk::DiskStorage;
 
 /// The crate storage strategy enum type.  
 ///

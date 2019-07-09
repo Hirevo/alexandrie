@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use semver::{Version, VersionReq};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Represents a crate.
 ///
@@ -29,7 +29,7 @@ pub struct Crate {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Dependency {
     /// The name of the dependency.
-    /// 
+    ///
     /// If the dependency is renamed, this is the new name.  
     /// The original name is specified in the `package` field.
     pub name: String,

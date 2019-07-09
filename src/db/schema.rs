@@ -58,13 +58,39 @@ table! {
     }
 }
 
-joinable!(crate_authors -> authors (author_id));
-joinable!(crate_authors -> crates (crate_id));
+table! {
+    /// The keywords table (stores all unique keywords).
+    keywords (id) {
+        /// The keyword's ID.
+        id -> Unsigned<Bigint>,
+        /// The keyword itself.
+        name -> Varchar,
+    }
+}
+
+table! {
+    /// The crate-to-keywords (one-to-many) relationship table.
+    crate_keywords (id) {
+        /// The relationship's ID.
+        id -> Unsigned<Bigint>,
+        /// The crate's ID.
+        crate_id -> Unsigned<Bigint>,
+        /// The keyword's ID.
+        keyword_id -> Unsigned<Bigint>,
+    }
+}
+
 joinable!(author_tokens -> authors (author_id));
+joinable!(crate_authors -> crates (crate_id));
+joinable!(crate_authors -> authors (author_id));
+joinable!(crate_keywords -> crates (crate_id));
+joinable!(crate_keywords -> keywords (keyword_id));
 
 allow_tables_to_appear_in_same_query!(
     authors,
     crates,
-    crate_authors,
+    keywords,
     author_tokens,
+    crate_authors,
+    crate_keywords,
 );

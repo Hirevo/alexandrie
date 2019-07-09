@@ -4,7 +4,7 @@
     decl_macro,
     custom_attribute,
     result_map_or_else,
-    bind_by_move_pattern_guards,
+    bind_by_move_pattern_guards
 )]
 
 #[macro_use]
@@ -16,28 +16,24 @@ extern crate diesel;
 
 use std::sync::{Arc, Mutex};
 
-mod api;
-pub use api::*;
-mod auth;
-pub use auth::*;
-mod catchers;
-pub use catchers::*;
-mod db;
-pub use db::*;
-mod error;
-pub use error::*;
-mod frontend;
-pub use frontend::*;
-mod index;
-pub use index::*;
-mod krate;
-pub use krate::*;
-mod state;
-pub use state::*;
-mod storage;
-pub use storage::*;
+pub mod api;
+pub mod auth;
+pub mod catchers;
+pub mod db;
+pub mod error;
+pub mod frontend;
+pub mod index;
+pub mod krate;
+pub mod state;
+pub mod storage;
 
-use crate::Error;
+use crate::db::DbConn;
+use crate::error::Error;
+use crate::index::cli::CLIIndex;
+use crate::index::Index;
+use crate::state::AppState;
+use crate::storage::disk::DiskStorage;
+use crate::storage::Storage;
 
 fn main() -> Result<(), Error> {
     let instance = rocket::ignite();
@@ -59,8 +55,19 @@ fn main() -> Result<(), Error> {
         )?;
 
     instance
-        .mount("/api/v1", routes![api_publish, api_search, api_download])
-        .register(catchers![catch_401, catch_404, catch_500])
+        .mount(
+            "/api/v1",
+            routes![
+                api::publish::route,
+                api::search::route,
+                api::download::route
+            ],
+        )
+        .register(catchers![
+            catchers::catch_401,
+            catchers::catch_404,
+            catchers::catch_500
+        ])
         .attach(DbConn::fairing())
         .manage(Arc::new(Mutex::new(AppState::new(index, storage))))
         .launch();

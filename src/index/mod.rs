@@ -3,10 +3,11 @@ use std::path::PathBuf;
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 
-mod cli;
-pub use cli::*;
+pub mod cli;
 
-use crate::{Crate, Error};
+use crate::error::Error;
+use crate::index::cli::CLIIndex;
+use crate::krate;
 
 /// The crate indexing management strategy type.
 ///
@@ -26,11 +27,11 @@ pub trait Indexer {
     /// Refreshes the managed crate index (in case another instance made modification to it).
     fn refresh(&self) -> Result<(), Error>;
     /// Retrives the latest version of a crate.
-    fn latest_crate(&self, name: &str) -> Result<Crate, Error>;
+    fn latest_crate(&self, name: &str) -> Result<krate::Crate, Error>;
     /// Retrives the filepath to the saved crate metadata.
     fn index_crate(&self, name: &str) -> PathBuf;
     /// Retrives the crate metadata for the given name and version.
-    fn match_crate(&self, name: &str, req: VersionReq) -> Result<Crate, Error>;
+    fn match_crate(&self, name: &str, req: VersionReq) -> Result<krate::Crate, Error>;
     /// Commit and push changes upstream.
     fn commit_and_push(&self, msg: &str) -> Result<(), Error>;
 }
@@ -48,7 +49,7 @@ impl Indexer for Index {
         }
     }
 
-    fn latest_crate(&self, name: &str) -> Result<Crate, Error> {
+    fn latest_crate(&self, name: &str) -> Result<krate::Crate, Error> {
         match self {
             Index::CLIIndex(idx) => idx.latest_crate(name),
         }
@@ -60,7 +61,7 @@ impl Indexer for Index {
         }
     }
 
-    fn match_crate(&self, name: &str, req: VersionReq) -> Result<Crate, Error> {
+    fn match_crate(&self, name: &str, req: VersionReq) -> Result<krate::Crate, Error> {
         match self {
             Index::CLIIndex(idx) => idx.match_crate(name, req),
         }

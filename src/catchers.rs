@@ -1,6 +1,5 @@
-
-use rocket_contrib::json::Json;
 use json::{json, Value};
+use rocket_contrib::json::Json;
 
 #[catch(404)]
 pub fn catch_404() -> Json<Value> {

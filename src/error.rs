@@ -82,11 +82,12 @@ impl fmt::Display for AlexError {
         match self {
             AlexError::CrateNotFound(name) => write!(f, "no crate named '{}' found", name),
             AlexError::CrateNotOwned(name, _) => write!(f, "you are not an owner of '{}'", name),
-            AlexError::VersionTooLow { hosted, published, .. } => write!(
+            AlexError::VersionTooLow {
+                hosted, published, ..
+            } => write!(
                 f,
                 "the published version is too low (hosted version is {1}, {0} <= {1})",
-                published,
-                hosted,
+                published, hosted,
             ),
             AlexError::InvalidToken => write!(f, "invalid token"),
         }
