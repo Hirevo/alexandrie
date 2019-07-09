@@ -52,10 +52,15 @@
         grid-area: search;
         width: 100%;
         height: 100%;
+        padding: 8.5px 0;
+    }
+
+    .search-container form {
+        width: 100%;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        padding: 8.5px 0;
     }
 
     .search {
@@ -92,6 +97,42 @@
     }
 
     .login-container.logged-in {}
+
+    .burger-container {
+        grid-area: burger;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        background-color: var(--fg-color);
+    }
+
+    @media (max-width: 600px) {
+        .navbar {
+            grid-template-columns: 50px 1fr 0px;
+            grid-template-areas: "burger search .";
+        }
+
+        .brand-container {
+            display: none;
+        }
+
+        .login-container {
+            display: none;
+        }
+
+        .burger-container {
+            display: flex;
+        }
+
+        .search-container form {
+            justify-content: center;
+        }
+
+        .search:focus {
+            width: 100%;
+        }
+    }
 </style>
 <div class="navbar">
     <div class="brand-container">
@@ -113,5 +154,8 @@
         <a href="/account/login" class="navbar-tag">Login</a>
         <a href="/account/register" class="navbar-tag">Register</a>
         {{/if}}
+    </div>
+    <div class="burger-container">
+        
     </div>
 </div>
