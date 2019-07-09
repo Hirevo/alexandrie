@@ -10,8 +10,8 @@
         grid-template-rows: 1fr;
         grid-template-columns: 0px min-content 1fr min-content 0px;
         grid-template-areas: ". brand search login .";
-        color: var(--bg-color);
-        background-color: var(--fg-color);
+        color: var(--fg-color);
+        background-color: var(--lighter-bg-color);
         border-radius: 5px;
         box-shadow: 0 0 10px black;
     }
@@ -23,19 +23,13 @@
         text-align: center;
         border-radius: 5px;
         text-decoration: none;
-        color: var(--bg-color);
+        color: var(--fg-color);
         font-weight: bold;
         padding: 0 10px;
     }
 
     .navbar-tag:hover {
-        background-color: var(--darker-fg-color);
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .navbar-tag:hover {
-            background-color: var(--lighter-fg-color);
-        }
+        background-color: var(--bg-color);
     }
 
     .brand-container {
@@ -70,8 +64,8 @@
         -webkit-appearance: none;
         border: none;
         border-radius: 5px;
-        color: var(--bg-color);
-        background-color: var(--lighter-fg-color);
+        color: var(--fg-color);
+        background-color: var(--bg-color);
         padding: 5px 10px;
         font-size: 16px;
         font-weight: 600;
@@ -83,7 +77,7 @@
 
     .search:focus {
         width: 320px;
-        border: 2px solid var(--darker-fg-color);
+        border: 2px solid var(--darker-bg-color);
     }
 
     .login-container {
