@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use diesel::prelude::*;
 use json::json;
 use rocket::State;
@@ -8,9 +10,13 @@ use crate::db::schema::*;
 use crate::db::DbConn;
 use crate::error::Error;
 use crate::frontend::config::Config;
+use crate::frontend::helpers;
+use crate::index::Indexer;
+use crate::state::AppState;
 
 #[get("/search?<q>&<page>")]
 pub(crate) fn route(
+    state: State<Arc<Mutex<AppState>>>,
     config: State<Config>,
     conn: DbConn,
     q: String,
@@ -31,6 +37,7 @@ pub(crate) fn route(
         .offset(15 * ((page - 1) as i64))
         .load::<CrateRegistration>(&conn.0)?;
 
+    let state = state.lock().unwrap();
     Ok(Template::render(
         "search",
         json!({
@@ -38,7 +45,21 @@ pub(crate) fn route(
             "searched_text": searched_text,
             "page_number": page,
             "total_results": total_results,
-            "results": results,
+            "results": results.into_iter().map(|krate| {
+                dbg!(&krate);
+                let version = dbg!(state.index().latest_crate(&krate.name))?.vers;
+                Ok(json!({
+                    "id": krate.id,
+                    "name": krate.name,
+                    "version": version,
+                    "description": krate.description,
+                    "created_at": helpers::humanize_datetime(krate.created_at),
+                    "updated_at": helpers::humanize_datetime(krate.updated_at),
+                    "downloads": krate.downloads,
+                    "documentation": krate.documentation,
+                    "repository": krate.repository,
+                }))
+            }).collect::<Result<Vec<_>, Error>>()?,
         }),
     ))
 }

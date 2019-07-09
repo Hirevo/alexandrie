@@ -67,13 +67,70 @@
 
         .search-results {
             width: 1400px;
-            height: 100vh;
-            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            padding: 10px;
         }
 
         @media (max-width: 1400px) {
             .search-results {
                 width: 100%;
+            }
+        }
+
+        .search-result {
+            width: 100%;
+            display: grid;
+            grid-template-rows: 1fr;
+            grid-template-columns: 1fr min-content;
+            background-color: var(--fg-color);
+            color: var(--bg-color);
+            padding: 20px;
+            box-shadow: 0 0 10px #000A;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .search-result:hover {
+            transform: scale(1.03);
+        }
+
+        .search-result-infos {
+            padding: 10px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .search-result-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .search-result-desc {
+            font-size: 18px;
+        }
+
+        .search-result-stats {
+            border-left: solid 2px var(--bg-color);
+            padding: 10px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .search-result-stats-entry {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 550px) {
+            .search-result-stats {
+                display: none;
             }
         }
     </style>
@@ -94,6 +151,23 @@
     </div>
     <div class="search-results-container">
         <div class="search-results">
+            {{#if results}}
+            {{#each results}}
+            <a class="search-result" href="/crates/{{ this.name }}">
+                <div class="search-result-infos">
+                    <div class="search-result-title">{{ this.name }} #{{ this.version }}</div>
+                    <div class="search-result-desc">{{ this.description }}</div>
+                </div>
+                <div class="search-result-stats">
+                    <div class="search-result-stats-entry">{{ this.downloads }} downloads</div>
+                    <div class="search-result-stats-entry">Created on {{ this.updated_at }}</div>
+                    <div class="search-result-stats-entry">Last updated on {{ this.updated_at }}</div>
+                </div>
+            </a>
+            {{/each}}
+            {{else}}
+            Empty list.
+            {{/if}}
         </div>
     </div>
 </body>

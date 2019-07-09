@@ -90,21 +90,18 @@
             flex-grow: 1;
         }
 
-        .card * {
-            color: #FFF;
-        }
-
         .most-downloaded,
         .last-updated {
+            color: var(--bg-color);
             background-color: var(--fg-color);
         }
 
         .most-downloaded {
-            background: linear-gradient(210deg, rgb(255, 94, 0), rgb(255, 30, 0));
+            /* background: linear-gradient(210deg, rgb(255, 94, 0), rgb(255, 30, 0)); */
         }
 
         .last-updated {
-            background: linear-gradient(210deg, rgb(14, 172, 0), rgb(0, 102, 31));
+            /* background: linear-gradient(210deg, rgb(14, 172, 0), rgb(0, 102, 31)); */
         }
 
         .most-downloaded-list,
@@ -116,6 +113,7 @@
         .most-downloaded-entry,
         .last-updated-entry {
             text-decoration: none;
+            color: var(--bg-color);
         }
 
         .most-downloaded-empty,
@@ -153,8 +151,8 @@
 
         @media (prefers-color-scheme: dark) {
             .card-footer-button {
-                color: var(--bg-color);
-                background-color: var(--fg-color);
+                color: var(--fg-color);
+                background-color: var(--bg-color);
             }
         }
     </style>
@@ -178,13 +176,13 @@
             <div class="card-title most-downloaded-title">Most downloaded</div>
             <div class="card-content">
                 {{#if most_downloaded}}
-                <ol class="most-downloaded-list">
+                <ul class="most-downloaded-list">
                     {{#each most_downloaded}}
                     <li><a class="most-downloaded-entry" href="/crates/{{ this.name }}">
-                        {{ this.name }}: {{ this.downloads }} downloads
-                    </a></li>
+                            {{ this.name }}: {{ this.downloads }} downloads
+                        </a></li>
                     {{/each}}
-                </ol>
+                </ul>
                 {{else}}
                 <div class="most-downloaded-empty">Empty list.</div>
                 {{/if}}
@@ -197,13 +195,13 @@
             <div class="card-title last-updated-title">Last updated</div>
             <div class="card-content">
                 {{#if last_updated}}
-                <ol class="last-updated-list">
+                <ul class="last-updated-list">
                     {{#each last_updated}}
                     <li><a class="last-updated-entry" href="/crates/{{ this.name }}">
-                        {{ this.name }}: {{ this.updated_at }}
-                    </a></li>
+                            {{ this.name }}: {{ this.updated_at }}
+                        </a></li>
                     {{/each}}
-                </ol>
+                </ul>
                 {{else}}
                 <div class="last-updated-empty">Empty list.</div>
                 {{/if}}

@@ -9,6 +9,7 @@ use crate::db::schema::*;
 use crate::db::DbConn;
 use crate::error::Error;
 use crate::frontend::config::Config;
+use crate::frontend::helpers;
 
 #[get("/")]
 pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Error> {
@@ -17,7 +18,8 @@ pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Err
         .first::<i64>(&conn.0)?;
     let total_downloads = crates::table
         .select(diesel::dsl::sum(crates::downloads))
-        .first::<Option<BigDecimal>>(&conn.0)?;
+        .first::<Option<BigDecimal>>(&conn.0)?
+        .unwrap_or(BigDecimal::from(0));
     let most_downloaded = crates::table
         .order_by(crates::downloads.desc())
         .limit(10)
@@ -36,7 +38,7 @@ pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Err
             "most_downloaded": most_downloaded,
             "last_updated": last_updated.into_iter().map(|(name, date)| json!({
                 "name": name,
-                "updated_at": date.format("%b %-d %Y, %H:%M").to_string(),
+                "updated_at": helpers::humanize_datetime(date),
             })).collect::<Vec<_>>(),
         }),
     ))

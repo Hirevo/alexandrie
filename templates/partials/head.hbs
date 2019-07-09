@@ -17,7 +17,11 @@
         min-height: 100%;
         overflow-x: hidden;
         overflow-y: auto;
+        font-family: "Fira Sans", sans-serif;
+        color: var(--fg-color);
 
+        --lighter-fg-color: #505050;
+        --light-fg-color: #333;
         --fg-color: #272727;
         --dark-fg-color: #202020;
         --darker-fg-color: #171717;
@@ -37,17 +41,22 @@
             --dark-bg-color: #202020;
             --darker-bg-color: #171717;
             --darkest-bg-color: #101010;
-            --fg-color: #FFF;
-            --dark-fg-color: #E0E0E0;
-            --darker-fg-color: #C0C0C0;
+            --lighter-fg-color: #FFF;
+            --light-fg-color: #F0F0F0;
+            --fg-color: #E0E0E0;
+            --dark-fg-color: #A0A0A0;
+            --darker-fg-color: #888;
         }
+    }
+
+    a {
+        text-decoration: none;
+        color: var(--fg-color);
     }
 
     *,
     *::before,
     *::after {
         box-sizing: border-box;
-        font-family: "Fira Sans", sans-serif;
-        color: var(--fg-color);
     }
 </style>
