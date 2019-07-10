@@ -58,14 +58,14 @@ pub enum AlexError {
 
 impl<'r> Responder<'r> for Error {
     fn respond_to(self, req: &Request) -> response::Result<'r> {
-        let message = match self {
-            Error::IOError(_) => format!("internal server error"),
-            Error::GitError(_) => format!("internal server error"),
-            Error::JSONError(_) => format!("internal server error"),
-            Error::TOMLError(_) => format!("internal server error"),
-            Error::SQLError(_) => format!("internal server error"),
-            Error::SemverError(_) => format!("internal server error"),
-            Error::ConfigError(_) => format!("internal server error"),
+        let message = match dbg!(self) {
+            Error::IOError(_) => String::from("internal server error"),
+            Error::GitError(_) => String::from("internal server error"),
+            Error::JSONError(_) => String::from("internal server error"),
+            Error::TOMLError(_) => String::from("internal server error"),
+            Error::SQLError(_) => String::from("internal server error"),
+            Error::SemverError(_) => String::from("internal server error"),
+            Error::ConfigError(_) => String::from("internal server error"),
             Error::AlexError(err) => err.to_string(),
         };
         Json(json!({

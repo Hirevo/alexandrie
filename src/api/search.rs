@@ -58,8 +58,8 @@ pub(crate) fn route(
 
     //? Limit the result count depending on parameters.
     let req = match (per_page, page) {
-        (Some(per_page), Some(page)) => req.limit(per_page as i64).offset((page * per_page) as i64),
-        (Some(per_page), None) => req.limit(per_page as i64),
+        (Some(per_page), Some(page)) => req.limit(i64::from(per_page)).offset(i64::from(page * per_page)),
+        (Some(per_page), None) => req.limit(i64::from(per_page)),
         _ => req,
     };
     let results = req.load::<CrateRegistration>(&conn.0)?;

@@ -96,7 +96,7 @@ pub(crate) fn route(
                         (dep.name, None)
                     };
                     krate::Dependency {
-                        name: name,
+                        name,
                         req: dep.version_req,
                         features: dep.features,
                         optional: dep.optional,
@@ -104,7 +104,7 @@ pub(crate) fn route(
                         target: dep.target,
                         kind: dep.kind,
                         registry: dep.registry,
-                        package: package,
+                        package,
                     }
                 })
                 .collect(),
@@ -190,9 +190,13 @@ pub(crate) fn route(
         let path = state.index().index_crate(&crate_desc.name);
         let parent = path.parent().unwrap();
         fs::create_dir_all(parent)?;
-        let mut file = fs::OpenOptions::new().write(true).append(true).open(path)?;
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .append(true)
+            .create(true)
+            .open(path)?;
         json::to_writer(&mut file, &crate_desc)?;
-        write!(file, "\n")?;
+        writeln!(file)?;
         file.flush()?;
         state.index().commit_and_push(&format!(
             "{} crate `{}#{}`",
