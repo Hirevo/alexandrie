@@ -21,4 +21,4 @@ bigdecimal = { version = "0.0.14", features = ["serde"] }
 [dependencies.rocket_contrib]
 version = "0.4.2"
 default-features = false
-features = ["json", "diesel_mysql_pool", "handlebars_templates"]
+features = ["json", "serve", "diesel_mysql_pool", "handlebars_templates"]
