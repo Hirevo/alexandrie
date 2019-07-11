@@ -30,7 +30,7 @@
     }
 
     .navbar-tag:hover {
-        background-color: var(--bg-color) !important;
+        background-color: var(--dark-bg-color) !important;
     }
 
     .brand-container {
@@ -78,7 +78,7 @@
         text-align: center;
         width: 200px;
         height: 100%;
-        transition: width 0.15s, background-color 0.15s;
+        transition: width 0.15s;
     }
 
     .search:focus {
@@ -118,15 +118,34 @@
     }
 
     .burger-input~.navbar .burger-icon::before {
-        content: "\f0c9";
+        font-family: alexicons;
+        content: "\e900";
     }
 
     .burger-input:checked~.navbar .burger-icon::before {
-        content: "\f00d";
+        content: "\e901";
     }
 
     .navbar-mobile {
+        position: fixed;
+        top: 70px;
+        left: 10px;
+        right: 10px;
+        padding: 8.5px;
         display: none;
+        grid-gap: 8.5px;
+        grid-template-rows: min-content min-content;
+        grid-template-columns: 1fr;
+        grid-template-areas: "brand""login";
+        color: var(--fg-color);
+        background-color: var(--lighter-bg-color);
+        border-radius: 5px;
+        box-shadow: 0 0 10px black;
+        overflow: hidden;
+        opacity: 0;
+        transform: scale(0.7);
+        pointer-events: none;
+        transition: opacity 0.15s, transform 0.15s;
     }
 
     @media (max-width: 600px) {
@@ -156,24 +175,13 @@
         }
 
         .navbar-mobile {
-            position: fixed;
-            top: 70px;
-            left: 10px;
-            right: 10px;
-            padding: 8.5px;
-            grid-gap: 8.5px;
-            grid-template-rows: min-content min-content;
-            grid-template-columns: 1fr;
-            grid-template-areas: "brand""login";
-            color: var(--fg-color);
-            background-color: var(--lighter-bg-color);
-            border-radius: 5px;
-            box-shadow: 0 0 10px black;
-            overflow: hidden;
+            display: grid;
         }
 
         .burger-input:checked~.navbar-mobile {
-            display: grid;
+            opacity: 1;
+            transform: none;
+            pointer-events: initial;
         }
 
         .navbar-mobile .navbar-tag {

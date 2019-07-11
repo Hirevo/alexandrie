@@ -17,6 +17,7 @@ extern crate diesel;
 use std::sync::{Arc, Mutex};
 
 use rocket_contrib::templates::Template;
+use rocket_contrib::serve::StaticFiles;
 
 pub mod api;
 pub mod auth;
@@ -76,6 +77,7 @@ fn main() -> Result<(), Error> {
     let instance = if frontend.enabled {
         instance
             .mount("/", routes![frontend::index::route, frontend::search::route])
+            .mount("/assets", StaticFiles::from("assets"))
             .attach(Template::fairing())
     } else {
         instance

@@ -2,6 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <link rel="shortcut icon" type="image/x-icon" href="{{ instance.favicon }}">
+<link rel="stylesheet" href="/assets/icons.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans:400,500">
 <title>{{ instance.title }}</title>
 <style>
@@ -25,6 +26,7 @@
         --fg-color: #272727;
         --dark-fg-color: #202020;
         --darker-fg-color: #171717;
+
         --lighter-bg-color: #FFF;
         --light-bg-color: #F0F0F0;
         --bg-color: #EEE;
@@ -35,17 +37,18 @@
 
     @media (prefers-color-scheme: dark) {
         html {
+            --lighter-fg-color: #FFF;
+            --light-fg-color: #F0F0F0;
+            --fg-color: #E0E0E0;
+            --dark-fg-color: #A0A0A0;
+            --darker-fg-color: #888;
+
             --lighter-bg-color: #373737;
             --light-bg-color: #303030;
             --bg-color: #272727;
             --dark-bg-color: #202020;
             --darker-bg-color: #171717;
             --darkest-bg-color: #101010;
-            --lighter-fg-color: #FFF;
-            --light-fg-color: #F0F0F0;
-            --fg-color: #E0E0E0;
-            --dark-fg-color: #A0A0A0;
-            --darker-fg-color: #888;
         }
     }
 
@@ -60,4 +63,3 @@
         box-sizing: border-box;
     }
 </style>
-<script src="https://kit.fontawesome.com/0d4adeaee0.js"></script>
