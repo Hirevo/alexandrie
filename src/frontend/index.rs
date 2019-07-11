@@ -19,7 +19,7 @@ pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Err
     let total_downloads = crates::table
         .select(diesel::dsl::sum(crates::downloads))
         .first::<Option<BigDecimal>>(&conn.0)?
-        .unwrap_or(BigDecimal::from(0));
+        .unwrap_or_else(|| BigDecimal::from(0));
     let most_downloaded = crates::table
         .order_by(crates::downloads.desc())
         .limit(10)

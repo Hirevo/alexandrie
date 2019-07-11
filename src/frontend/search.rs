@@ -34,7 +34,7 @@ pub(crate) fn route(
     let results = crates::table
         .filter(crates::name.like(q.as_str()))
         .limit(15)
-        .offset(15 * ((page - 1) as i64))
+        .offset(15 * i64::from(page - 1))
         .load::<CrateRegistration>(&conn.0)?;
 
     let state = state.lock().unwrap();
