@@ -1,4 +1,4 @@
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal,ToPrimitive};
 use diesel::prelude::*;
 use json::json;
 use rocket::State;
@@ -19,7 +19,7 @@ pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Err
     let total_downloads = crates::table
         .select(diesel::dsl::sum(crates::downloads))
         .first::<Option<BigDecimal>>(&conn.0)?
-        .unwrap_or_else(|| BigDecimal::from(0));
+        .map_or(0, |dec| dec.to_u64().expect("download count exceeding u64::max_value()"));
     let most_downloaded = crates::table
         .order_by(crates::downloads.desc())
         .limit(10)

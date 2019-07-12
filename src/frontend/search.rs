@@ -46,8 +46,7 @@ pub(crate) fn route(
             "page_number": page,
             "total_results": total_results,
             "results": results.into_iter().map(|krate| {
-                dbg!(&krate);
-                let version = dbg!(state.index().latest_crate(&krate.name))?.vers;
+                let version = state.index().latest_crate(&krate.name)?.vers;
                 Ok(json!({
                     "id": krate.id,
                     "name": krate.name,

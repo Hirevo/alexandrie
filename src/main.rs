@@ -78,7 +78,11 @@ fn main() -> Result<(), Error> {
         instance
             .mount("/", routes![frontend::index::route, frontend::search::route])
             .mount("/assets", StaticFiles::from("assets"))
-            .attach(Template::fairing())
+            .attach(Template::custom(|hbs| {
+                hbs.handlebars.register_helper("fmt_date", Box::new(frontend::helpers::hbs_humanize_date));
+                hbs.handlebars.register_helper("fmt_datetime", Box::new(frontend::helpers::hbs_humanize_datetime));
+                hbs.handlebars.register_helper("fmt_number", Box::new(frontend::helpers::hbs_humanize_number));
+            }))
     } else {
         instance
     };

@@ -14,7 +14,7 @@
             justify-content: center;
             flex-direction: column;
             width: 100%;
-            padding: 40px 10px;
+            padding: 40px 10px 10px;
         }
 
         .hero-title {
@@ -33,11 +33,11 @@
             width: 100%;
             display: grid;
             grid-template-rows: 1fr;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr 1fr;
             align-items: center;
             justify-content: center;
             white-space: nowrap;
-            padding: 5px 0;
+            padding: 10px 0;
         }
 
         .stats-left {
@@ -139,7 +139,15 @@
             }
 
             .stats {
-                grid-template-columns: repeat(2, min-content);
+                grid-template-rows: 1fr 1fr;
+                grid-template-columns: min-content;
+            }
+
+            .stats-left,
+            .stats-right {
+                justify-content: flex-end;
+                border: none;
+                border-right: 2px solid var(--fg-color);
             }
         }
     </style>
@@ -156,7 +164,7 @@
     </div>
     <div class="stats">
         <div class="stats-left">Page&nbsp;<b>{{ page_number }}</b></div>
-        <div class="stats-right"><b>{{ total_results }}</b>&nbsp;results</div>
+        <div class="stats-right"><b>{{fmt_number total_results}}</b>&nbsp;results</div>
     </div>
     <div class="search-results-container">
         <div class="search-results">
@@ -168,7 +176,7 @@
                     <div class="search-result-desc">{{ this.description }}</div>
                 </div>
                 <div class="search-result-stats">
-                    <div class="search-result-stats-entry">{{ this.downloads }} downloads</div>
+                    <div class="search-result-stats-entry">{{fmt_number this.downloads}} downloads</div>
                     <div class="search-result-stats-entry">Created on {{ this.updated_at }}</div>
                     <div class="search-result-stats-entry">Last updated on {{ this.updated_at }}</div>
                 </div>
