@@ -133,9 +133,13 @@
             white-space: nowrap;
         }
 
-        @media (max-width: 550px) {
+        @media (max-width: 600px) {
             .search-result-stats {
                 display: none;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, min-content);
             }
         }
     </style>
@@ -152,7 +156,7 @@
     </div>
     <div class="stats">
         <div class="stats-left">Page&nbsp;<b>{{ page_number }}</b></div>
-        <div class="stats-right"><b>{{ total_results }}</b>&nbsp;total results</div>
+        <div class="stats-right"><b>{{ total_results }}</b>&nbsp;results</div>
     </div>
     <div class="search-results-container">
         <div class="search-results">
