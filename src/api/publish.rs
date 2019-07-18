@@ -12,9 +12,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::auth::Auth;
-use crate::db::models::{
-    CrateAuthor, CrateRegistration, ModifyCrateRegistration, NewCrateAuthor, NewCrateRegistration,
-};
+use crate::db::models::{CrateAuthor, CrateRegistration, NewCrateAuthor, NewCrateRegistration};
 use crate::db::schema::*;
 use crate::db::DbConn;
 use crate::error::{AlexError, Error};
