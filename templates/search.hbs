@@ -164,7 +164,7 @@
     </div>
     <div class="stats">
         <div class="stats-left">Page&nbsp;<b>{{ page_number }}</b></div>
-        <div class="stats-right"><b>{{fmt_number total_results}}</b>&nbsp;results</div>
+        <div class="stats-right"><b>{{ total_results }}</b>&nbsp;results</div>
     </div>
     <div class="search-results-container">
         <div class="search-results">
@@ -176,7 +176,7 @@
                     <div class="search-result-desc">{{ this.description }}</div>
                 </div>
                 <div class="search-result-stats">
-                    <div class="search-result-stats-entry">{{fmt_number this.downloads}} downloads</div>
+                    <div class="search-result-stats-entry">{{ this.downloads }} downloads</div>
                     <div class="search-result-stats-entry">Created on {{ this.updated_at }}</div>
                     <div class="search-result-stats-entry">Last updated on {{ this.updated_at }}</div>
                 </div>

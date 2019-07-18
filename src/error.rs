@@ -4,7 +4,6 @@ use std::fmt;
 use std::io;
 
 use diesel::result::Error as SQLError;
-use git2::Error as GitError;
 use io::Error as IOError;
 use json::Error as JSONError;
 use rocket::config::ConfigError;
@@ -17,14 +16,13 @@ use rocket_contrib::json::Json;
 
 use crate::db::models::Author;
 
-/// The Error type for the registry.  
+/// The Error type for the registry.
+///  
 /// It can represent any kind of error the registry might encounter.
 #[derive(Debug)]
 pub enum Error {
     /// An I/O error (file not found, access forbidden, etc...).
     IOError(IOError),
-    /// Git error (currently unused).
-    GitError(GitError),
     /// JSON (de)serialization error (invalid JSON parsed, etc...).
     JSONError(JSONError),
     /// TOML (de)serialization error (invalid TOML parsed, etc...).
@@ -60,7 +58,6 @@ impl<'r> Responder<'r> for Error {
     fn respond_to(self, req: &Request) -> response::Result<'r> {
         let message = match dbg!(self) {
             Error::IOError(_) => String::from("internal server error"),
-            Error::GitError(_) => String::from("internal server error"),
             Error::JSONError(_) => String::from("internal server error"),
             Error::TOMLError(_) => String::from("internal server error"),
             Error::SQLError(_) => String::from("internal server error"),
@@ -100,7 +97,6 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::IOError(err) => err.fmt(f),
-            Error::GitError(err) => err.fmt(f),
             Error::JSONError(err) => err.fmt(f),
             Error::TOMLError(err) => err.fmt(f),
             Error::SQLError(err) => err.fmt(f),
@@ -115,7 +111,6 @@ impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Error::IOError(err) => err.source(),
-            Error::GitError(err) => err.source(),
             Error::JSONError(err) => err.source(),
             Error::TOMLError(err) => err.source(),
             Error::SQLError(err) => err.source(),
@@ -129,12 +124,6 @@ impl error::Error for Error {
 impl From<IOError> for Error {
     fn from(err: IOError) -> Error {
         Error::IOError(err)
-    }
-}
-
-impl From<GitError> for Error {
-    fn from(err: GitError) -> Error {
-        Error::GitError(err)
     }
 }
 
@@ -180,17 +169,6 @@ impl TryInto<IOError> for Error {
     fn try_into(self) -> Result<IOError, Self::Error> {
         match self {
             Error::IOError(err) => Ok(err),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryInto<GitError> for Error {
-    type Error = ();
-
-    fn try_into(self) -> Result<GitError, Self::Error> {
-        match self {
-            Error::GitError(err) => Ok(err),
             _ => Err(()),
         }
     }

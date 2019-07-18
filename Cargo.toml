@@ -1,12 +1,12 @@
 [package]
 name = "alexandrie"
 version = "0.1.0"
-authors = ["Nicolas Polomack <nicolas.polomack@its-future.com>"]
+authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
 edition = "2018"
+default-run = "alexandrie"
 
 [dependencies]
 rocket = "0.4.1"
-git2 = "0.9.1"
 serde = { version = "1.0.94", features = ["derive"] }
 json = { package = "serde_json", version = "1.0.40" }
 semver = { version = "0.9.0", features = ["serde"] }

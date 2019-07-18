@@ -80,7 +80,7 @@ fn main() -> Result<(), Error> {
         instance
             .mount(
                 "/",
-                routes![frontend::index::route, frontend::search::route],
+                routes![frontend::index::route, frontend::search::route, frontend::krate::route],
             )
             .mount("/assets", StaticFiles::from("assets"))
             .attach(Template::custom(|hbs| {

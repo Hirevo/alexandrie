@@ -11,8 +11,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Config {
         Config {
-            syntaxes: dumps::from_dump_file("syntaxes.dump").expect("couldn't load syntaxes' dump"),
-            themes: dumps::from_dump_file("themes.dump").expect("couldn't load themes' dump"),
+            syntaxes: dumps::from_dump_file("syntect-dumps/syntaxes.dump").expect("couldn't load syntaxes' dump"),
+            themes: dumps::from_dump_file("syntect-dumps/themes.dump").expect("couldn't load themes' dump"),
         }
     }
 }

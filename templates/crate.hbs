@@ -107,12 +107,12 @@
         <div style="height: 50px"></div>
         <div class="hero-content-container">
             <div class="hero-title">{{ crate.name }} #{{ crate.version }}</div>
-            <div class="hero-subtitle">{{ author.name }} &lt;<a href="mailto:{{ author.email }}">{{ author.email }}</a>&gt;</div>
+            <div class="hero-subtitle">{{ crate.description }}</div>
         </div>
     </div>
     <div class="stats">
-        <div class="stats-left">{{ crate.downloads }} downloads</b></div>
-        <div class="stats-right"><b>Last updated on {{ crate.last_updated }}</div>
+        <div class="stats-left"><b>{{ crate.downloads }}</b>&nbsp;downloads</div>
+        <div class="stats-right">Last updated: &nbsp;<b>{{ crate.updated_at }}</b></div>
     </div>
     <div class="crate-container">
         <div class="crate">

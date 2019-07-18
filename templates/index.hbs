@@ -181,8 +181,8 @@
         </div>
     </div>
     <div class="stats">
-        <div class="stats-left"><b>{{fmt_number total_downloads}}</b>&nbsp;total downloads</div>
-        <div class="stats-right"><b>{{fmt_number crate_count}}</b>&nbsp;crates stored</div>
+        <div class="stats-left"><b>{{ total_downloads }}</b>&nbsp;total downloads</div>
+        <div class="stats-right"><b>{{ crate_count }}</b>&nbsp;crates stored</div>
     </div>
     <div class="content-grid">
         <div class="card most-downloaded">
@@ -191,10 +191,7 @@
                 {{#if most_downloaded}}
                 {{#each most_downloaded}}
                 <a class="most-downloaded-entry" href="/crates/{{ this.name }}">
-                    <b>{{ this.name }}</b>: {{fmt_number this.downloads}} downloads
-                </a>
-                <a class="most-downloaded-entry" href="/crates/{{ this.name }}">
-                    <b>{{ this.name }}</b>: {{fmt_number this.downloads}} downloads
+                    <b>{{ this.name }}</b>: {{ this.downloads }} downloads
                 </a>
                 {{/each}}
                 {{else}}
@@ -210,9 +207,6 @@
             <div class="card-content last-updated-entries">
                 {{#if last_updated}}
                 {{#each last_updated}}
-                <a class="last-updated-entry" href="/crates/{{ this.name }}">
-                    <b>{{ this.name }}</b>: {{ this.updated_at }}
-                </a>
                 <a class="last-updated-entry" href="/crates/{{ this.name }}">
                     <b>{{ this.name }}</b>: {{ this.updated_at }}
                 </a>

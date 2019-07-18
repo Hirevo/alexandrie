@@ -1,6 +1,5 @@
 use std::sync::{Arc, Mutex};
 
-use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::prelude::*;
 use json::json;
 use rocket::State;
@@ -32,7 +31,7 @@ pub(crate) fn route(
     let krate = state.index().latest_crate(&crate_desc.name)?;
     let rendered_readme = state.storage().get_readme(&crate_desc.name, krate.vers.clone()).ok();
     Ok(Template::render(
-        "index",
+        "crate",
         json!({
             "instance": config.as_ref(),
             "crate": {
