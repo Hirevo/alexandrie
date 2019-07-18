@@ -167,14 +167,12 @@ pub(crate) fn route(
             }
 
             //? Update the crate's metadata.
-            diesel::update(crates::table)
-                .set(ModifyCrateRegistration {
-                    id: krate.id,
-                    name: crate_desc.name.as_str(),
-                    description: metadata.description.as_ref().map(|s| s.as_str()),
-                    documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
-                    repository: metadata.repository.as_ref().map(|s| s.as_str()),
-                })
+            diesel::update(crates::table.filter(crates::id.eq(krate.id)))
+                .set((
+                    crates::description.eq(metadata.description.as_ref().map(|s| s.as_str())),
+                    crates::documentation.eq(metadata.documentation.as_ref().map(|s| s.as_str())),
+                    crates::repository.eq(metadata.repository.as_ref().map(|s| s.as_str())),
+                ))
                 .execute(&conn.0)?;
             "Updating"
         };

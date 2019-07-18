@@ -32,7 +32,7 @@ pub(crate) fn route(
         .first::<u64>(&conn.0)
         .optional()?;
     if let Some(downloads) = downloads {
-        diesel::update(crates::table)
+        diesel::update(crates::table.filter(crates::name.eq(name.as_str())))
             .set(crates::downloads.eq(downloads + 1))
             .execute(&conn.0)?;
         let krate = state.storage().read_crate(&name, version)?;
