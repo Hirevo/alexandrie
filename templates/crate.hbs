@@ -80,14 +80,18 @@
             }
         }
 
-        .crate-content pre {
+        .readme {
+            width: 100%;
+        }
+
+        .readme pre {
             font-weight: bold;
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px black;
         }
 
-        .crate-content code {
+        .readme code {
             color: var(--bg-color);
             background-color: var(--fg-color);
             font-weight: bold;
@@ -112,11 +116,13 @@
     </div>
     <div class="crate-container">
         <div class="crate-content">
-            {{#if rendered_readme}}
-            {{{ rendered_readme }}}
-            {{else}}
-            {{ crate.description }}
-            {{/if}}
+            <div class="readme">
+                {{#if rendered_readme}}
+                {{{ rendered_readme }}}
+                {{else}}
+                {{ crate.description }}
+                {{/if}}
+            </div>
         </div>
     </div>
 </body>
