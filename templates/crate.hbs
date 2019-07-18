@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {{> partials/head}}
+    <style>
+        .hero {
+            width: 100%;
+        }
+
+        .hero-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            padding: 40px 10px 10px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: bolder;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            /* font-weight: bold; */
+            text-align: center;
+        }
+
+        .stats {
+            width: 100%;
+            display: grid;
+            grid-template-rows: 1fr;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            padding: 10px 0;
+        }
+
+        .stats-left {
+            font-size: 20px;
+            border-right: solid 1px var(--fg-color);
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .stats-right {
+            font-size: 20px;
+            border-left: solid 1px var(--fg-color);
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .crate-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .crate {
+            width: 1400px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        @media (max-width: 1400px) {
+            .crate {
+                width: 100%;
+            }
+        }
+
+        .crate>content {
+            width: 100%;
+        }
+
+        .crate>content pre {
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px black;
+        }
+
+        .crate>content code {
+            color: var(--bg-color);
+            background-color: var(--fg-color);
+            font-weight: bold;
+            padding: 0.2em 0.5em;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    {{> partials/navbar}}
+    <div class="hero">
+        <div style="height: 50px"></div>
+        <div class="hero-content-container">
+            <div class="hero-title">{{ crate.name }} #{{ crate.version }}</div>
+            <div class="hero-subtitle">{{ author.name }} &lt;<a href="mailto:{{ author.email }}">{{ author.email }}</a>&gt;</div>
+        </div>
+    </div>
+    <div class="stats">
+        <div class="stats-left">{{ crate.downloads }} downloads</b></div>
+        <div class="stats-right"><b>Last updated on {{ crate.last_updated }}</div>
+    </div>
+    <div class="crate-container">
+        <div class="crate">
+            {{#if rendered_readme}}
+            {{{ rendered_readme }}}
+            {{else}}
+            {{ crate.description }}
+            {{/if}}
+        </div>
+    </div>
+</body>
+
+</html>
