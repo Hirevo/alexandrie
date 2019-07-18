@@ -196,17 +196,18 @@ pub(crate) fn route(
         let mut archive = Archive::new(GzDecoder::new(crate_bytes.as_slice()));
         let base_path = PathBuf::from(format!("{}-{}", crate_desc.name, crate_desc.vers));
         let readme_path = base_path.join("README.md");
-        let mut entries = archive.entries()?.collect::<io::Result<Vec<_>>>()?;
-        let found = entries.iter_mut().find(|entry| {
-            entry
+        let mut entries = archive.entries()?;
+        let found = entries.find(|entry| match entry {
+            Ok(entry) => entry
                 .path()
                 .map(|path| path == readme_path)
-                .unwrap_or(false)
+                .unwrap_or(false),
+            Err(_) => false,
         });
 
         if let Some(found) = found {
             let mut contents = String::new();
-            found.read_to_string(&mut contents)?;
+            found?.read_to_string(&mut contents)?;
 
             let mut highlighter: Option<HighlightLines> = None;
             let events =
@@ -226,17 +227,20 @@ pub(crate) fn route(
                     Event::Start(Tag::CodeBlock(info)) => {
                         let theme = &syntax_config.themes.themes["frontier-contrast"];
 
-                        highlighter = Some(if let Some(lang) = info.split(' ').next() {
-                            let syntax = syntax_config
-                                .syntaxes
-                                .find_syntax_by_token(lang)
-                                .unwrap_or_else(|| syntax_config.syntaxes.find_syntax_plain_text());
-                            HighlightLines::new(syntax, theme)
-                        } else {
-                            HighlightLines::new(
-                                syntax_config.syntaxes.find_syntax_plain_text(),
-                                theme,
-                            )
+                        highlighter = Some(match info.split(' ').next() {
+                            Some(lang) => {
+                                let syntax = syntax_config
+                                    .syntaxes
+                                    .find_syntax_by_token(lang)
+                                    .unwrap_or_else(|| syntax_config.syntaxes.find_syntax_plain_text());
+                                HighlightLines::new(syntax, theme)
+                            }
+                            None => {
+                                HighlightLines::new(
+                                    syntax_config.syntaxes.find_syntax_plain_text(),
+                                    theme,
+                                )
+                            }
                         });
                         let snippet = start_highlighted_html_snippet(theme);
                         Event::Html(snippet.0.into())

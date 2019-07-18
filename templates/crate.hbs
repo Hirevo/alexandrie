@@ -65,7 +65,7 @@
             justify-content: center;
         }
 
-        .crate {
+        .crate-content {
             width: 1400px;
             display: flex;
             align-items: center;
@@ -75,23 +75,19 @@
         }
 
         @media (max-width: 1400px) {
-            .crate {
+            .crate-content {
                 width: 100%;
             }
         }
 
-        .crate>content {
-            width: 100%;
-        }
-
-        .crate>content pre {
+        .crate-content pre {
             font-weight: bold;
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px black;
         }
 
-        .crate>content code {
+        .crate-content code {
             color: var(--bg-color);
             background-color: var(--fg-color);
             font-weight: bold;
@@ -115,7 +111,7 @@
         <div class="stats-right">Last updated: &nbsp;<b>{{ crate.updated_at }}</b></div>
     </div>
     <div class="crate-container">
-        <div class="crate">
+        <div class="crate-content">
             {{#if rendered_readme}}
             {{{ rendered_readme }}}
             {{else}}
