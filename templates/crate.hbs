@@ -99,6 +99,24 @@
             padding: 0.2em 0.5em;
             border-radius: 5px;
         }
+
+        @media (max-width: 600px) {
+            .search-result-stats {
+                display: none;
+            }
+
+            .stats {
+                grid-template-rows: 1fr 1fr;
+                grid-template-columns: min-content;
+            }
+
+            .stats-left,
+            .stats-right {
+                justify-content: flex-end;
+                border: none;
+                border-right: 2px solid var(--fg-color);
+            }
+        }
     </style>
 </head>
 
