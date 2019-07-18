@@ -1,15 +1,23 @@
 use std::collections::HashMap;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use byteorder::{LittleEndian, ReadBytesExt};
+use cmark::{Event, Options, Parser, Tag};
 use diesel::prelude::*;
+use flate2::read::GzDecoder;
 use rocket::{Data, State};
 use rocket_contrib::json::Json;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use syntect::easy::HighlightLines;
+use syntect::html::{
+    start_highlighted_html_snippet, styled_line_to_highlighted_html, IncludeBackground,
+};
+use tar::Archive;
 
 use crate::auth::Auth;
 use crate::db::models::{CrateAuthor, CrateRegistration, NewCrateAuthor, NewCrateRegistration};
@@ -20,6 +28,7 @@ use crate::index::Indexer;
 use crate::krate;
 use crate::state::AppState;
 use crate::storage::Store;
+use crate::utils::syntax;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PublishResponse {}
@@ -63,6 +72,7 @@ pub struct CrateDependency {
 #[put("/crates/new", data = "<data>")]
 pub(crate) fn route(
     state: State<Arc<Mutex<AppState>>>,
+    syntax_config: State<Arc<syntax::Config>>,
     auth: Auth,
     conn: DbConn,
     data: Data,
@@ -181,6 +191,72 @@ pub(crate) fn route(
             crate_desc.vers.clone(),
             crate_bytes.as_slice(),
         )?;
+
+        //? Render the crate's readme
+        let mut archive = Archive::new(GzDecoder::new(crate_bytes.as_slice()));
+        let base_path = PathBuf::from(format!("{}-{}", crate_desc.name, crate_desc.vers));
+        let readme_path = base_path.join("README.md");
+        let mut entries = archive.entries()?.collect::<io::Result<Vec<_>>>()?;
+        let found = entries.iter_mut().find(|entry| {
+            entry
+                .path()
+                .map(|path| path == readme_path)
+                .unwrap_or(false)
+        });
+
+        if let Some(found) = found {
+            let mut contents = String::new();
+            found.read_to_string(&mut contents)?;
+
+            let mut highlighter: Option<HighlightLines> = None;
+            let events =
+                Parser::new_ext(contents.as_str(), Options::all()).map(|event| match event {
+                    Event::Text(text) => {
+                        if let Some(ref mut highlighter) = highlighter {
+                            let highlighted = highlighter.highlight(&text, &syntax_config.syntaxes);
+                            let html = styled_line_to_highlighted_html(
+                                &highlighted,
+                                IncludeBackground::Yes,
+                            );
+                            Event::Html(html.into())
+                        } else {
+                            Event::Text(text)
+                        }
+                    }
+                    Event::Start(Tag::CodeBlock(info)) => {
+                        let theme = &syntax_config.themes.themes["frontier-contrast"];
+
+                        highlighter = Some(if let Some(lang) = info.split(' ').next() {
+                            let syntax = syntax_config
+                                .syntaxes
+                                .find_syntax_by_token(lang)
+                                .unwrap_or_else(|| syntax_config.syntaxes.find_syntax_plain_text());
+                            HighlightLines::new(syntax, theme)
+                        } else {
+                            HighlightLines::new(
+                                syntax_config.syntaxes.find_syntax_plain_text(),
+                                theme,
+                            )
+                        });
+                        let snippet = start_highlighted_html_snippet(theme);
+                        Event::Html(snippet.0.into())
+                    }
+                    Event::End(Tag::CodeBlock(_)) => {
+                        highlighter = None;
+                        Event::Html("</pre>".into())
+                    }
+                    _ => event,
+                });
+
+            let mut html = String::new();
+            cmark::html::push_html(&mut html, events);
+
+            state.storage().store_readme(
+                &crate_desc.name,
+                crate_desc.vers.clone(),
+                html.as_bytes(),
+            )?;
+        }
 
         //? Update the crate index.
         let path = state.index().index_crate(&crate_desc.name);

@@ -16,8 +16,8 @@ extern crate diesel;
 
 use std::sync::{Arc, Mutex};
 
-use rocket_contrib::templates::Template;
 use rocket_contrib::serve::StaticFiles;
+use rocket_contrib::templates::Template;
 
 pub mod api;
 pub mod auth;
@@ -29,6 +29,7 @@ pub mod index;
 pub mod krate;
 pub mod state;
 pub mod storage;
+pub mod utils;
 
 use crate::db::DbConn;
 use crate::error::Error;
@@ -38,6 +39,7 @@ use crate::index::Index;
 use crate::state::AppState;
 use crate::storage::disk::DiskStorage;
 use crate::storage::Storage;
+use crate::utils::syntax;
 
 fn main() -> Result<(), Error> {
     let instance = rocket::ignite();
@@ -76,13 +78,24 @@ fn main() -> Result<(), Error> {
 
     let instance = if frontend.enabled {
         instance
-            .mount("/", routes![frontend::index::route, frontend::search::route])
+            .mount(
+                "/",
+                routes![frontend::index::route, frontend::search::route],
+            )
             .mount("/assets", StaticFiles::from("assets"))
             .attach(Template::custom(|hbs| {
-                hbs.handlebars.register_helper("fmt_date", Box::new(frontend::helpers::hbs_humanize_date));
-                hbs.handlebars.register_helper("fmt_datetime", Box::new(frontend::helpers::hbs_humanize_datetime));
-                hbs.handlebars.register_helper("fmt_number", Box::new(frontend::helpers::hbs_humanize_number));
+                hbs.handlebars
+                    .register_helper("fmt_date", Box::new(frontend::helpers::hbs_humanize_date));
+                hbs.handlebars.register_helper(
+                    "fmt_datetime",
+                    Box::new(frontend::helpers::hbs_humanize_datetime),
+                );
+                hbs.handlebars.register_helper(
+                    "fmt_number",
+                    Box::new(frontend::helpers::hbs_humanize_number),
+                );
             }))
+            .manage(Arc::new(syntax::Config::default()))
     } else {
         instance
     };
@@ -91,11 +104,11 @@ fn main() -> Result<(), Error> {
         .register(catchers![
             catchers::catch_401,
             catchers::catch_404,
-            catchers::catch_500
+            catchers::catch_500,
         ])
         .attach(DbConn::fairing())
         .manage(Arc::new(Mutex::new(AppState::new(index, storage))))
-        .manage(frontend)
+        .manage(Arc::new(frontend))
         .launch();
 
     Ok(())

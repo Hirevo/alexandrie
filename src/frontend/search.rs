@@ -17,7 +17,7 @@ use crate::state::AppState;
 #[get("/search?<q>&<page>")]
 pub(crate) fn route(
     state: State<Arc<Mutex<AppState>>>,
-    config: State<Config>,
+    config: State<Arc<Config>>,
     conn: DbConn,
     q: String,
     page: Option<u32>,
@@ -41,7 +41,7 @@ pub(crate) fn route(
     Ok(Template::render(
         "search",
         json!({
-            "instance": config.inner(),
+            "instance": config.as_ref(),
             "searched_text": searched_text,
             "page_number": page,
             "total_results": total_results,
@@ -54,7 +54,7 @@ pub(crate) fn route(
                     "description": krate.description,
                     "created_at": helpers::humanize_datetime(krate.created_at),
                     "updated_at": helpers::humanize_datetime(krate.updated_at),
-                    "downloads": krate.downloads,
+                    "downloads": helpers::humanize_number(krate.downloads),
                     "documentation": krate.documentation,
                     "repository": krate.repository,
                 }))

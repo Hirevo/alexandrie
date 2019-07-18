@@ -1,4 +1,6 @@
-use bigdecimal::{BigDecimal,ToPrimitive};
+use std::sync::Arc;
+
+use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::prelude::*;
 use json::json;
 use rocket::State;
@@ -12,14 +14,17 @@ use crate::frontend::config::Config;
 use crate::frontend::helpers;
 
 #[get("/")]
-pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Error> {
+pub(crate) fn route(config: State<Arc<Config>>, conn: DbConn) -> Result<Template, Error> {
     let crate_count = crates::table
         .select(diesel::dsl::count(crates::id))
         .first::<i64>(&conn.0)?;
     let total_downloads = crates::table
         .select(diesel::dsl::sum(crates::downloads))
         .first::<Option<BigDecimal>>(&conn.0)?
-        .map_or(0, |dec| dec.to_u64().expect("download count exceeding u64::max_value()"));
+        .map_or(0, |dec| {
+            dec.to_u64()
+                .expect("download count exceeding u64::max_value()")
+        });
     let most_downloaded = crates::table
         .order_by(crates::downloads.desc())
         .limit(10)
@@ -32,7 +37,7 @@ pub(crate) fn route(config: State<Config>, conn: DbConn) -> Result<Template, Err
     Ok(Template::render(
         "index",
         json!({
-            "instance": config.inner(),
+            "instance": config.as_ref(),
             "total_downloads": total_downloads,
             "crate_count": crate_count,
             "most_downloaded": most_downloaded,

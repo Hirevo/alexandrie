@@ -2,3 +2,4 @@
 **/*.rs.bk
 /crate-index
 /crate-storage
+.DS_Store

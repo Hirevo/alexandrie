@@ -1,0 +1,39 @@
+[submodule "syntect-syntaxes/packages"]
+	path = syntect-syntaxes/packages
+	url = https://github.com/sublimehq/Packages.git
+[submodule "syntect-syntaxes/sublime-assembly"]
+	path = syntect-syntaxes/sublime-assembly
+	url = https://github.com/Nessphoro/sublimeassembly.git
+[submodule "syntect-syntaxes/less"]
+	path = syntect-syntaxes/less
+	url = https://github.com/danro/LESS-sublime.git
+[submodule "syntect-syntaxes/handlebars"]
+	path = syntect-syntaxes/handlebars
+	url = https://github.com/daaain/Handlebars.git
+[submodule "syntect-syntaxes/julia"]
+	path = syntect-syntaxes/julia
+	url = https://github.com/JuliaEditorSupport/Julia-sublime.git
+[submodule "syntect-syntaxes/toml"]
+	path = syntect-syntaxes/toml
+	url = https://github.com/Jayflux/sublime_toml_highlighting.git
+[submodule "syntect-syntaxes/sublime-linker"]
+	path = syntect-syntaxes/sublime-linker
+	url = https://github.com/jbw3/SublimeTextLinkerSyntax.git
+[submodule "syntect-syntaxes/sublime-genericconfig"]
+	path = syntect-syntaxes/sublime-genericconfig
+	url = https://github.com/skozlovf/Sublime-GenericConfig.git
+[submodule "syntect-syntaxes/viml"]
+	path = syntect-syntaxes/viml
+	url = https://github.com/SalGnt/Sublime-VimL.git
+[submodule "syntect-syntaxes/typescript"]
+	path = syntect-syntaxes/typescript
+	url = https://github.com/Microsoft/TypeScript-TmLanguage
+[submodule "syntect-syntaxes/elm"]
+	path = syntect-syntaxes/elm
+	url = https://github.com/elm-community/SublimeElmLanguageSupport
+[submodule "syntect-syntaxes/cmakelists"]
+	path = syntect-syntaxes/cmakelists
+	url = https://github.com/zyxar/Sublime-CMakeLists
+[submodule "syntect-syntaxes/swift"]
+	path = syntect-syntaxes/swift
+	url = https://github.com/colinta/Swift-for-f-ing-sublime.git

@@ -19,6 +19,10 @@ toml = "0.4.10"
 bigdecimal = { version = "0.0.14", features = ["serde"] }
 handlebars = "1.1.0"
 num-format = "0.4.0"
+syntect = "3.2.0"
+cmark = { package = "pulldown-cmark", version = "0.5.2" }
+flate2 = "1.0.9"
+tar = "0.4.26"
 
 [dependencies.rocket_contrib]
 version = "0.4.2"

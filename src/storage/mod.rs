@@ -42,6 +42,27 @@ pub trait Store {
     }
     /// Save a new crate tarball into the store.
     fn store_crate(&self, name: &str, version: Version, data: impl Read) -> Result<(), Error>;
+
+    /// Retrieves a rendered README from the store.
+    fn get_readme(&self, name: &str, version: Version) -> Result<String, Error>;
+    /// Reads a rendered README from the store.
+    fn read_readme(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
+        struct Reader {
+            source: Vec<u8>,
+        }
+
+        impl Read for Reader {
+            fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+                self.source.as_slice().read(buf)
+            }
+        }
+
+        Ok(Box::new(Reader {
+            source: self.get_readme(name, version)?.into_bytes(),
+        }))
+    }
+    /// Stores a new rendered README into the store.
+    fn store_readme(&self, name: &str, version: Version, rendered_readme: impl Read) -> Result<(), Error>;
 }
 
 impl Store for Storage {
@@ -60,6 +81,24 @@ impl Store for Storage {
     fn store_crate(&self, name: &str, version: Version, data: impl Read) -> Result<(), Error> {
         match self {
             Storage::DiskStorage(storage) => storage.store_crate(name, version, data),
+        }
+    }
+
+    fn get_readme(&self, name: &str, version: Version) -> Result<String, Error> {
+        match self {
+            Storage::DiskStorage(storage) => storage.get_readme(name, version),
+        }
+    }
+
+    fn read_readme(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
+        match self {
+            Storage::DiskStorage(storage) => storage.read_readme(name, version),
+        }
+    }
+
+    fn store_readme(&self, name: &str, version: Version, data: impl Read) -> Result<(), Error> {
+        match self {
+            Storage::DiskStorage(storage) => storage.store_readme(name, version, data),
         }
     }
 }
