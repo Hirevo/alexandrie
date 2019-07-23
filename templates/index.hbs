@@ -29,15 +29,23 @@
             text-align: center;
         }
 
-        .stats {
+        .stats-container {
             width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stats {
+            width: 1400px;
             display: grid;
             grid-template-rows: 1fr;
             grid-template-columns: 1fr 1fr;
             align-items: center;
             justify-content: center;
             white-space: nowrap;
-            padding: 10px 0;
+            padding: 10px 20px;
+            border-bottom: 2px solid var(--fg-color);
         }
 
         .stats-left {
@@ -59,13 +67,23 @@
         }
 
         .content-grid {
-            width: 100%;
+            width: 1400px;
             padding: 10px;
             display: grid;
             grid-gap: 10px;
             grid-template-columns: repeat(auto-fit, 350px);
             align-items: center;
             justify-content: center;
+        }
+
+        @media (max-width: 1400px) {
+            .content-grid {
+                width: 100%;
+            }
+
+            .stats {
+                width: 90%;
+            }
         }
 
         .card {

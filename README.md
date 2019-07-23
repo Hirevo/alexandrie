@@ -94,11 +94,11 @@ Once everything is configured, you can run with: `cargo run [--release]`.
 Then, if you want to use this index with Cargo, you can follow these steps:
 
 - Edit or create the `~/.cargo/config` file, and add the following code:
-```toml
-# Replace the '<...>' placeholders by the real ones.
-[registries.<name-of-your-registry>]
-index = "<link-to-the-index-git-repository>"
-```
+  ```toml
+  # Replace the '<...>' placeholders by the real ones.
+  [registries.<name-of-your-registry>]
+  index = "<link-to-the-index-git-repository>"
+  ```
 - Then, run `cargo login --registry <name-of-your-registry>` and enter your author token.  
   To generate a token, you need to register an author first by creating one in the database.
   You can do it like this:

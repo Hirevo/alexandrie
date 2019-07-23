@@ -29,15 +29,23 @@
             text-align: center;
         }
 
-        .stats {
+        .stats-container {
             width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stats {
+            width: 1400px;
             display: grid;
             grid-template-rows: 1fr;
             grid-template-columns: 1fr 1fr;
             align-items: center;
             justify-content: center;
             white-space: nowrap;
-            padding: 10px 0;
+            padding: 10px 20px;
+            border-bottom: 2px solid var(--fg-color);
         }
 
         .stats-left {
@@ -78,6 +86,10 @@
             .crate-content {
                 width: 100%;
             }
+
+            .stats {
+                width: 90%;
+            }
         }
 
         .readme {
@@ -100,6 +112,24 @@
             border-radius: 5px;
         }
 
+        .readme a {
+            color: #25F;
+            font-weight: bold;
+        }
+
+        .readme a:hover {
+            text-decoration: underline;
+        }
+
+        .readme h1,
+        .readme h2,
+        .readme h3,
+        .readme h4,
+        .readme h5,
+        .readme h6 {
+            margin: 0;
+        }
+
         @media (max-width: 600px) {
             .search-result-stats {
                 display: none;
@@ -107,7 +137,7 @@
 
             .stats {
                 grid-template-rows: 1fr 1fr;
-                grid-template-columns: min-content;
+                grid-template-columns: 1fr;
             }
 
             .stats-left,
@@ -129,9 +159,11 @@
             <div class="hero-subtitle">{{ crate.description }}</div>
         </div>
     </div>
-    <div class="stats">
-        <div class="stats-left"><b>{{ crate.downloads }}</b>&nbsp;downloads</div>
-        <div class="stats-right">Last updated: &nbsp;<b>{{ crate.updated_at }}</b></div>
+    <div class="stats-container">
+        <div class="stats">
+            <div class="stats-left"><b>{{ crate.downloads }}</b>&nbsp;downloads</div>
+            <div class="stats-right">Last updated: &nbsp;<b>{{ crate.updated_at }}</b></div>
+        </div>
     </div>
     <div class="crate-container">
         <div class="crate-content">
