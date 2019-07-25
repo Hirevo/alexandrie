@@ -5,7 +5,7 @@ use json::json;
 use rocket::State;
 use rocket_contrib::templates::Template;
 
-use crate::db::models::CrateRegistration;
+use crate::db::models::{CrateRegistration, CrateKeyword, Keyword};
 use crate::db::schema::*;
 use crate::db::DbConn;
 use crate::error::{AlexError, Error};
@@ -30,6 +30,10 @@ pub(crate) fn route(
         .ok_or_else(|| Error::from(AlexError::CrateNotFound(name)))?;
     let krate = state.index().latest_crate(&crate_desc.name)?;
     let rendered_readme = state.storage().get_readme(&crate_desc.name, krate.vers.clone()).ok();
+    let keywords = CrateKeyword::belonging_to(&crate_desc)
+        .inner_join(keywords::table)
+        .select(keywords::all_columns)
+        .load::<Keyword>(&conn.0)?;
     Ok(Template::render(
         "crate",
         json!({
@@ -46,6 +50,7 @@ pub(crate) fn route(
                 "repository": crate_desc.repository,
             },
             "rendered_readme": rendered_readme,
+            "keywords": keywords,
         }),
     ))
 }

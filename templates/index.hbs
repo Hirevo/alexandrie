@@ -66,12 +66,21 @@
             justify-content: flex-start;
         }
 
+        .content-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+        }
+
         .content-grid {
             width: 1400px;
             padding: 10px;
             display: grid;
-            grid-gap: 10px;
-            grid-template-columns: repeat(auto-fit, 350px);
+            grid-template-rows: 1fr;
+            grid-template-columns: 1fr 1fr;
             align-items: center;
             justify-content: center;
         }
@@ -97,21 +106,35 @@
             padding: 10px;
         }
 
-        .card-title {
-            text-align: center;
-            font-size: 21px;
-            font-weight: bold;
-            padding: 5px 0;
-        }
-
         .card-content {
             flex-grow: 1;
         }
 
         .most-downloaded,
         .last-updated {
-            background-color: var(--lighter-bg-color);
-            color: var(--fg-color);
+            width: 100%;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 10px;
+        }
+
+        .most-downloaded {
+            border-right: 1px solid var(--fg-color);
+        }
+
+        .last-updated {
+            border-left: 1px solid var(--fg-color);
+        }
+
+        .most-downloaded-title,
+        .last-updated-title {
+            width: 100%;
+            text-align: center;
+            font-size: 21px;
+            font-weight: bold;
+            padding: 5px 0;
         }
 
         .most-downloaded-list,
@@ -122,6 +145,7 @@
 
         .most-downloaded-entries,
         .last-updated-entries {
+            width: 100%;
             counter-reset: rank;
             display: flex;
             flex-direction: column;
@@ -136,8 +160,25 @@
 
         .most-downloaded-entry,
         .last-updated-entry {
-            padding: 3px;
-            font-size: 17px;
+            width: 100%;
+            color: var(--fg-color);
+            background-color: var(--lighter-bg-color);
+            padding: 10px 20px;
+            box-shadow: 0 0 10px #000A;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            margin-top: 10px;
+        }
+
+        .most-downloaded-entry:first-child,
+        .last-updated-entry:first-child {
+            margin-top: 0;
+        }
+
+        .most-downloaded-entry:hover,
+        .last-updated-entry:hover {
+            transform: scale(1.03);
         }
 
         .most-downloaded-empty,
@@ -170,7 +211,7 @@
         }
 
         .card-footer-button:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
 
         @media (max-width: 600px) {
@@ -198,43 +239,47 @@
             <div class="hero-subtitle">{{ instance.description }}</div>
         </div>
     </div>
-    <div class="stats">
-        <div class="stats-left"><b>{{ total_downloads }}</b>&nbsp;total downloads</div>
-        <div class="stats-right"><b>{{ crate_count }}</b>&nbsp;crates stored</div>
-    </div>
-    <div class="content-grid">
-        <div class="card most-downloaded">
-            <div class="card-title most-downloaded-title">Most downloaded</div>
-            <div class="card-content most-downloaded-entries">
-                {{#if most_downloaded}}
-                {{#each most_downloaded}}
-                <a class="most-downloaded-entry" href="/crates/{{ this.name }}">
-                    <b>{{ this.name }}</b>: {{ this.downloads }} downloads
-                </a>
-                {{/each}}
-                {{else}}
-                <div class="most-downloaded-empty">Empty list.</div>
-                {{/if}}
-            </div>
-            <div class="card-footer">
-                <a class="card-footer-button" href="/most-downloaded">See more...</a>
-            </div>
+    <div class="stats-container">
+        <div class="stats">
+            <div class="stats-left"><b>{{ total_downloads }}</b>&nbsp;total downloads</div>
+            <div class="stats-right"><b>{{ crate_count }}</b>&nbsp;crates stored</div>
         </div>
-        <div class="card last-updated">
-            <div class="card-title last-updated-title">Last updated</div>
-            <div class="card-content last-updated-entries">
-                {{#if last_updated}}
-                {{#each last_updated}}
-                <a class="last-updated-entry" href="/crates/{{ this.name }}">
-                    <b>{{ this.name }}</b>: {{ this.updated_at }}
-                </a>
-                {{/each}}
-                {{else}}
-                <div class="last-updated-empty">Empty list.</div>
-                {{/if}}
+    </div>
+    <div class="content-container">
+        <div class="content-grid">
+            <div class="most-downloaded">
+                <div class="most-downloaded-title">Most downloaded</div>
+                <div class="most-downloaded-entries">
+                    {{#if most_downloaded}}
+                    {{#each most_downloaded}}
+                    <a class="most-downloaded-entry" href="/crates/{{ this.name }}">
+                        <b>{{ this.name }}</b>: {{ this.downloads }} downloads
+                    </a>
+                    {{/each}}
+                    {{else}}
+                    <div class="most-downloaded-empty">Empty list.</div>
+                    {{/if}}
+                </div>
+                <div class="card-footer">
+                    <a class="card-footer-button" href="/most-downloaded">See more...</a>
+                </div>
             </div>
-            <div class="card-footer">
-                <a class="card-footer-button" href="/last-updated">See more...</a>
+            <div class="last-updated">
+                <div class="last-updated-title">Last updated</div>
+                <div class="last-updated-entries">
+                    {{#if last_updated}}
+                    {{#each last_updated}}
+                    <a class="last-updated-entry" href="/crates/{{ this.name }}">
+                        <b>{{ this.name }}</b>: {{ this.updated_at }}
+                    </a>
+                    {{/each}}
+                    {{else}}
+                    <div class="last-updated-empty">Empty list.</div>
+                    {{/if}}
+                </div>
+                <div class="card-footer">
+                    <a class="card-footer-button" href="/last-updated">See more...</a>
+                </div>
             </div>
         </div>
     </div>
