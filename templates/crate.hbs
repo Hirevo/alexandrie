@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <title>{{ crate.name }} - {{ instance.title }}</title>
     {{> partials/head}}
     <style>
         .hero {
@@ -158,16 +159,16 @@
         <div class="stats">
             <div class="stats-block">
                 <div class="stat">Downloaded&nbsp;<b>{{ crate.downloads }}</b>&nbsp;times</div>
-                <div class="stat">Last updated on&nbsp;<b>{{ crate.updated_at }}</b></div>
                 <div class="stat">Created on&nbsp;<b>{{ crate.updated_at }}</b></div>
+                <div class="stat">Last updated on&nbsp;<b>{{ crate.updated_at }}</b></div>
                 {{#if crate.repository}}
-                <div class="stat">Repository: &nbsp;<b><a href="{{ crate.repository }}">{{ crate.repository }}</a></b></div>
+                <div class="stat">Link to&nbsp;<b><a href="{{ crate.repository }}">Repository</a></b></div>
                 {{/if}}
                 {{#if crate.documentation}}
-                <div class="stat">Documentation: &nbsp;<b><a href="{{ crate.documentation }}">{{ crate.documentation }}</a></b></div>
+                <div class="stat">Link to&nbsp;<b><a href="{{ crate.documentation }}">Documentation</a></b></div>
                 {{/if}}
                 {{#if crate.homepage}}
-                <div class="stat">Homepage: &nbsp;<b><a href="{{ crate.homepage }}">{{ crate.homepage }}</a></b></div>
+                <div class="stat">Link to&nbsp;<b><a href="{{ crate.homepage }}">Homepage</a></b></div>
                 {{/if}}
             </div>
         </div>
