@@ -25,7 +25,6 @@
 
         .hero-subtitle {
             font-size: 24px;
-            /* font-weight: bold; */
             text-align: center;
         }
 
@@ -34,36 +33,24 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: column;
+            padding-top: 10px;
         }
 
         .stats {
-            width: 1400px;
-            display: grid;
-            grid-template-rows: 1fr;
-            grid-template-columns: 1fr 1fr;
             align-items: center;
             justify-content: center;
             white-space: nowrap;
-            padding: 10px 20px;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            width: 1400px;
+            border-top: 2px solid var(--fg-color);
             border-bottom: 2px solid var(--fg-color);
         }
 
-        .stats-left {
-            font-size: 20px;
-            border-right: solid 1px var(--fg-color);
-            padding: 5px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .stats-right {
-            font-size: 20px;
-            border-left: solid 1px var(--fg-color);
-            padding: 5px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
+        .stat {
+            font-size: 17px;
         }
 
         .search-results-container {
@@ -145,21 +132,18 @@
             white-space: nowrap;
         }
 
+        .search-results-empty {
+            font-weight: bold;
+            font-size: 20px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         @media (max-width: 600px) {
             .search-result-stats {
                 display: none;
-            }
-
-            .stats {
-                grid-template-rows: 1fr 1fr;
-                grid-template-columns: min-content;
-            }
-
-            .stats-left,
-            .stats-right {
-                justify-content: flex-end;
-                border: none;
-                border-right: 2px solid var(--fg-color);
             }
         }
     </style>
@@ -171,13 +155,15 @@
         <div style="height: 50px"></div>
         <div class="hero-content-container">
             <div class="hero-title">Search results</div>
-            <div class="hero-subtitle">Searched for '{{ searched_text }}'</div>
+            <div class="hero-subtitle">Searched for: {{ searched_text }}</div>
         </div>
     </div>
     <div class="stats-container">
         <div class="stats">
-            <div class="stats-left">Page&nbsp;<b>{{ page_number }}</b></div>
-            <div class="stats-right"><b>{{ total_results }}</b>&nbsp;results</div>
+            <div class="stats-block">
+                <div class="stat">Page&nbsp;<b>{{ page_number }} / {{ page_count }}</b></div>
+                <div class="stat"><b>{{ total_results }}</b>&nbsp;total results</div>
+            </div>
         </div>
     </div>
     <div class="search-results-container">
@@ -197,7 +183,7 @@
             </a>
             {{/each}}
             {{else}}
-            Empty list.
+            <div class="search-results-empty">No search results...</div>
             {{/if}}
         </div>
     </div>

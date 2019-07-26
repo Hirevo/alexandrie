@@ -14,7 +14,7 @@
             justify-content: center;
             flex-direction: column;
             width: 100%;
-            padding: 40px 10px 5px;
+            padding: 40px 10px 10px;
         }
 
         .hero-title {
@@ -160,6 +160,15 @@
                 <div class="stat">Downloaded&nbsp;<b>{{ crate.downloads }}</b>&nbsp;times</div>
                 <div class="stat">Last updated on&nbsp;<b>{{ crate.updated_at }}</b></div>
                 <div class="stat">Created on&nbsp;<b>{{ crate.updated_at }}</b></div>
+                {{#if crate.repository}}
+                <div class="stat">Repository: &nbsp;<b><a href="{{ crate.repository }}">{{ crate.repository }}</a></b></div>
+                {{/if}}
+                {{#if crate.documentation}}
+                <div class="stat">Documentation: &nbsp;<b><a href="{{ crate.documentation }}">{{ crate.documentation }}</a></b></div>
+                {{/if}}
+                {{#if crate.homepage}}
+                <div class="stat">Homepage: &nbsp;<b><a href="{{ crate.homepage }}">{{ crate.homepage }}</a></b></div>
+                {{/if}}
             </div>
         </div>
     </div>
