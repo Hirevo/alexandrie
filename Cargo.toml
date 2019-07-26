@@ -6,6 +6,7 @@ authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
 description = "An alternative crate registry, implemented in Rust."
 repository = "https://github.com/Hirevo/alexandrie"
 documentation = "https://crates.polomack.eu/docs/alexandrie"
+keywords = ["crates", "cargo", "web", "registry"]
 
 default-run = "alexandrie"
 
