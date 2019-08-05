@@ -1,5 +1,8 @@
-Alexandrie
-==========
+<div align=center><h1>Alexandrie</h1></div>
+<div align=center><strong>Modular alternative crate registry for Rust</strong></div>
+
+About
+-----
 
 This is an alternative crate registry for use with Cargo, written in Rust.
 

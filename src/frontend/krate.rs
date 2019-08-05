@@ -1,56 +1,62 @@
-use std::sync::{Arc, Mutex};
-
 use diesel::prelude::*;
 use json::json;
-use rocket::State;
-use rocket_contrib::templates::Template;
+use tide::{Context, Response};
 
-use crate::db::models::{CrateRegistration, CrateKeyword, Keyword};
+use crate::config::State;
+use crate::db::models::{CrateKeyword, CrateRegistration, Keyword};
 use crate::db::schema::*;
-use crate::db::DbConn;
 use crate::error::{AlexError, Error};
-use crate::frontend::config::Config;
 use crate::frontend::helpers;
-use crate::state::AppState;
 use crate::index::Indexer;
 use crate::storage::Store;
+use crate::utils;
 
-#[get("/crates/<name>")]
-pub(crate) fn route(
-    config: State<Arc<Config>>,
-    state: State<Arc<Mutex<AppState>>>,
-    conn: DbConn,
-    name: String,
-) -> Result<Template, Error> {
-    let state = state.lock().unwrap();
-    let crate_desc: CrateRegistration = crates::table
-        .filter(crates::name.eq(&name))
-        .first(&conn.0)
-        .optional()?
+pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
+    let name = ctx.param::<String>("crate").unwrap();
+    let state = ctx.state();
+    let repo = &state.repo;
+
+    let crate_desc = repo
+        .run(|conn| {
+            crates::table
+                .filter(crates::name.eq(&name))
+                .first::<CrateRegistration>(&conn)
+                .optional()
+        })
+        .await?
         .ok_or_else(|| Error::from(AlexError::CrateNotFound(name)))?;
-    let krate = state.index().latest_crate(&crate_desc.name)?;
-    let rendered_readme = state.storage().get_readme(&crate_desc.name, krate.vers.clone()).ok();
-    let keywords = CrateKeyword::belonging_to(&crate_desc)
-        .inner_join(keywords::table)
-        .select(keywords::all_columns)
-        .load::<Keyword>(&conn.0)?;
-    Ok(Template::render(
-        "crate",
-        json!({
-            "instance": config.as_ref(),
-            "crate": {
-                "id": crate_desc.id,
-                "name": crate_desc.name,
-                "version": krate.vers,
-                "description": crate_desc.description,
-                "downloads": helpers::humanize_number(crate_desc.downloads),
-                "created_at": helpers::humanize_datetime(crate_desc.created_at),
-                "updated_at": helpers::humanize_datetime(crate_desc.updated_at),
-                "documentation": crate_desc.documentation,
-                "repository": crate_desc.repository,
-            },
-            "rendered_readme": rendered_readme,
-            "keywords": keywords,
-        }),
+    let krate = state.index.latest_crate(&crate_desc.name)?;
+    let rendered_readme = state
+        .storage
+        .get_readme(&crate_desc.name, krate.vers.clone())
+        .ok();
+    let keywords = repo
+        .run(|conn| {
+            CrateKeyword::belonging_to(&crate_desc)
+                .inner_join(keywords::table)
+                .select(keywords::all_columns)
+                .load::<Keyword>(&conn)
+        })
+        .await?;
+
+    let engine = &state.frontend.handlebars;
+    let context = json!({
+        "instance": &state.frontend.config,
+        "crate": {
+            "id": crate_desc.id,
+            "name": crate_desc.name,
+            "version": krate.vers,
+            "description": crate_desc.description,
+            "downloads": helpers::humanize_number(crate_desc.downloads),
+            "created_at": helpers::humanize_datetime(crate_desc.created_at),
+            "updated_at": helpers::humanize_datetime(crate_desc.updated_at),
+            "documentation": crate_desc.documentation,
+            "repository": crate_desc.repository,
+        },
+        "rendered_readme": rendered_readme,
+        "keywords": keywords,
+    });
+    Ok(utils::response::html(
+        engine.render("crate", &context).unwrap(),
     ))
 }

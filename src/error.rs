@@ -6,13 +6,13 @@ use std::io;
 use diesel::result::Error as SQLError;
 use io::Error as IOError;
 use json::Error as JSONError;
-use rocket::config::ConfigError;
 use semver::{SemVerError as SemverError, Version};
 use toml::de::Error as TOMLError;
+// use tide::Error as TideError;
 
-use rocket::request::Request;
-use rocket::response::{self, Responder};
-use rocket_contrib::json::Json;
+use tide::{Response};
+use tide::response::IntoResponse;
+use json::json;
 
 use crate::db::models::Author;
 
@@ -29,10 +29,10 @@ pub enum Error {
     TOMLError(TOMLError),
     /// SQL error (invalid queries, database disconnections, etc...).
     SQLError(SQLError),
-    /// Version parsing errors (invalid version format parsed, etC...).
+    /// Version parsing errors (invalid version format parsed, etc...).
     SemverError(SemverError),
-    /// A configuration error (invalid Rocket.toml file, etc...).
-    ConfigError(ConfigError),
+    /// Tide error (invalid query params, could not keep up with the rising tide, etc...).
+    // TideError(TideError),
     /// Alexandrie's custom errors (crate not found, invalid token, etc...).
     AlexError(AlexError),
 }
@@ -54,23 +54,24 @@ pub enum AlexError {
     InvalidToken,
 }
 
-impl<'r> Responder<'r> for Error {
-    fn respond_to(self, req: &Request) -> response::Result<'r> {
-        let message = match dbg!(self) {
-            Error::IOError(_) => String::from("internal server error"),
-            Error::JSONError(_) => String::from("internal server error"),
-            Error::TOMLError(_) => String::from("internal server error"),
-            Error::SQLError(_) => String::from("internal server error"),
-            Error::SemverError(_) => String::from("internal server error"),
-            Error::ConfigError(_) => String::from("internal server error"),
+impl IntoResponse for Error {
+    fn into_response(self) -> Response {
+        let message = match self {
+            Error::IOError(_) => "internal server error".to_string(),
+            Error::JSONError(_) => "internal server error".to_string(),
+            Error::TOMLError(_) => "internal server error".to_string(),
+            Error::SQLError(_) => "internal server error".to_string(),
+            Error::SemverError(_) => "internal server error".to_string(),
             Error::AlexError(err) => err.to_string(),
         };
-        Json(json!({
+
+        let mut response = tide::response::json(json!({
             "errors": [{
                 "detail": message,
             }]
-        }))
-        .respond_to(req)
+        }));
+        *response.status_mut() = tide::http::StatusCode::INTERNAL_SERVER_ERROR;
+        response
     }
 }
 
@@ -101,7 +102,6 @@ impl fmt::Display for Error {
             Error::TOMLError(err) => err.fmt(f),
             Error::SQLError(err) => err.fmt(f),
             Error::SemverError(err) => err.fmt(f),
-            Error::ConfigError(err) => err.fmt(f),
             Error::AlexError(err) => err.fmt(f),
         }
     }
@@ -115,7 +115,6 @@ impl error::Error for Error {
             Error::TOMLError(err) => err.source(),
             Error::SQLError(err) => err.source(),
             Error::SemverError(err) => err.source(),
-            Error::ConfigError(err) => err.source(),
             Error::AlexError(err) => err.source(),
         }
     }
@@ -148,12 +147,6 @@ impl From<SQLError> for Error {
 impl From<SemverError> for Error {
     fn from(err: SemverError) -> Error {
         Error::SemverError(err)
-    }
-}
-
-impl From<ConfigError> for Error {
-    fn from(err: ConfigError) -> Error {
-        Error::ConfigError(err)
     }
 }
 
@@ -213,17 +206,6 @@ impl TryInto<SemverError> for Error {
     fn try_into(self) -> Result<SemverError, Self::Error> {
         match self {
             Error::SemverError(err) => Ok(err),
-            _ => Err(()),
-        }
-    }
-}
-
-impl TryInto<ConfigError> for Error {
-    type Error = ();
-
-    fn try_into(self) -> Result<ConfigError, Self::Error> {
-        match self {
-            Error::ConfigError(err) => Ok(err),
             _ => Err(()),
         }
     }

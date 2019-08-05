@@ -1,0 +1,24 @@
+[frontend]
+enabled = true
+title = "Alexandrie"
+description = "An alternative crate registry for Cargo, the Rust package manager."
+# favicon = ""
+
+[database]
+url = "mysql://root:root@127.0.0.1:3306/alexandrie"
+
+[index]
+type = "cli"
+path = "crate-index"
+
+[storage]
+type = "disk"
+path = "crate-storage"
+
+[syntect.syntaxes]
+type = "dump"
+path = "syntect-dumps/syntaxes.dump"
+
+[syntect.themes]
+type = "dump"
+path = "syntect-dumps/themes.dump"
