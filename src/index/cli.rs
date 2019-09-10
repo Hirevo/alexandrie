@@ -14,20 +14,20 @@ use crate::krate;
 ///
 /// It manages the crate index through the invocation of "git" shell commands.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CLIIndex {
+pub struct CommandLineIndex {
     /// The path of the crate index.
     path: PathBuf,
 }
 
-impl CLIIndex {
-    /// Create a CLIIndex instance with the given path.
-    pub fn new<P: Into<PathBuf>>(path: P) -> Result<CLIIndex, Error> {
+impl CommandLineIndex {
+    /// Create a CommandLineIndex instance with the given path.
+    pub fn new<P: Into<PathBuf>>(path: P) -> Result<CommandLineIndex, Error> {
         let path = path.into();
-        Ok(CLIIndex { path })
+        Ok(CommandLineIndex { path })
     }
 }
 
-impl Indexer for CLIIndex {
+impl Indexer for CommandLineIndex {
     fn refresh(&self) -> Result<(), Error> {
         Command::new("git")
             .arg("pull")

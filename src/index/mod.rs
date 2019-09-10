@@ -3,10 +3,11 @@ use std::path::PathBuf;
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 
+/// Index management through `git` shell command invocations.
 pub mod cli;
 
 use crate::error::Error;
-use crate::index::cli::CLIIndex;
+use crate::index::cli::CommandLineIndex;
 use crate::krate;
 
 /// The crate indexing management strategy type.
@@ -16,8 +17,11 @@ use crate::krate;
 #[serde(tag = "type")]
 pub enum Index {
     /// Manages the crate index through the invocation of the "git" shell command.
-    #[serde(rename = "cli")]
-    CLIIndex(CLIIndex),
+    #[serde(rename = "command-line")]
+    CommandLine(CommandLineIndex),
+
+    // TODO: Add an `Indexer` implementation using `git2`.
+    // Git2(Git2Index),
 }
 
 /// The required trait that any crate index management type must implement.
@@ -39,37 +43,37 @@ pub trait Indexer {
 impl Indexer for Index {
     fn url(&self) -> Result<String, Error> {
         match self {
-            Index::CLIIndex(idx) => idx.url(),
+            Index::CommandLine(idx) => idx.url(),
         }
     }
 
     fn refresh(&self) -> Result<(), Error> {
         match self {
-            Index::CLIIndex(idx) => idx.refresh(),
+            Index::CommandLine(idx) => idx.refresh(),
         }
     }
 
     fn latest_crate(&self, name: &str) -> Result<krate::Crate, Error> {
         match self {
-            Index::CLIIndex(idx) => idx.latest_crate(name),
+            Index::CommandLine(idx) => idx.latest_crate(name),
         }
     }
 
     fn index_crate(&self, name: &str) -> PathBuf {
         match self {
-            Index::CLIIndex(idx) => idx.index_crate(name),
+            Index::CommandLine(idx) => idx.index_crate(name),
         }
     }
 
     fn match_crate(&self, name: &str, req: VersionReq) -> Result<krate::Crate, Error> {
         match self {
-            Index::CLIIndex(idx) => idx.match_crate(name, req),
+            Index::CommandLine(idx) => idx.match_crate(name, req),
         }
     }
 
     fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
         match self {
-            Index::CLIIndex(idx) => idx.commit_and_push(msg),
+            Index::CommandLine(idx) => idx.commit_and_push(msg),
         }
     }
 }

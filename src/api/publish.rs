@@ -29,6 +29,7 @@ use crate::error::{AlexError, Error};
 use crate::index::Indexer;
 use crate::krate;
 use crate::storage::Store;
+use crate::utils;
 use crate::Repo;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -82,21 +83,6 @@ async fn read_at_most(body: &mut Body, size: usize) -> Result<Vec<u8>, io::Error
     Ok(output)
 }
 
-async fn get_author(state: &State, headers: &HeaderMap<HeaderValue>) -> Option<Author> {
-    let token = headers.get("Authorization").and_then(|x| x.to_str().ok())?;
-
-    let query = state.repo.run(|conn| {
-        author_tokens::table
-            .inner_join(authors::table)
-            .select(authors::all_columns)
-            .filter(author_tokens::token.eq(token))
-            .first::<Author>(&conn)
-            .ok()
-    });
-
-    query.await
-}
-
 fn link_keywords(
     crate_id: u64,
     keywords: Option<&Vec<String>>,
@@ -140,7 +126,8 @@ fn link_keywords(
 /// Route to publish a new crate (used by `cargo publish`).
 pub(crate) async fn route(mut ctx: Context<State>) -> Result<Response, Error> {
     let state = ctx.state();
-    let author = get_author(state, ctx.headers())
+    let author = state
+        .get_author(ctx.headers())
         .await
         .ok_or(AlexError::InvalidToken)?;
 
@@ -160,7 +147,9 @@ pub(crate) async fn route(mut ctx: Context<State>) -> Result<Response, Error> {
 
     let state = ctx.state();
     let repo = &state.repo;
-    state.index.refresh()?;
+
+    // state.index.refresh()?;
+
     let transaction = repo.run(|conn| {
         conn.transaction(|| {
             //? Construct a crate description.
@@ -290,58 +279,12 @@ pub(crate) async fn route(mut ctx: Context<State>) -> Result<Response, Error> {
                 let mut contents = String::new();
                 found?.read_to_string(&mut contents)?;
 
-                let mut highlighter: Option<HighlightLines> = None;
-                let events =
-                    Parser::new_ext(contents.as_str(), Options::all()).map(|event| match event {
-                        Event::Text(text) => {
-                            if let Some(ref mut highlighter) = highlighter {
-                                let highlighted =
-                                    highlighter.highlight(&text, &state.syntect.syntaxes);
-                                let html = styled_line_to_highlighted_html(
-                                    &highlighted,
-                                    IncludeBackground::Yes,
-                                );
-                                Event::Html(html.into())
-                            } else {
-                                Event::Text(text)
-                            }
-                        }
-                        Event::Start(Tag::CodeBlock(info)) => {
-                            let theme = &state.syntect.themes.themes["frontier-contrast"];
-
-                            highlighter = Some(match info.split(' ').next() {
-                                Some(lang) => {
-                                    let syntax = state
-                                        .syntect
-                                        .syntaxes
-                                        .find_syntax_by_token(lang)
-                                        .unwrap_or_else(|| {
-                                            state.syntect.syntaxes.find_syntax_plain_text()
-                                        });
-                                    HighlightLines::new(syntax, theme)
-                                }
-                                None => HighlightLines::new(
-                                    state.syntect.syntaxes.find_syntax_plain_text(),
-                                    theme,
-                                ),
-                            });
-                            let snippet = start_highlighted_html_snippet(theme);
-                            Event::Html(snippet.0.into())
-                        }
-                        Event::End(Tag::CodeBlock(_)) => {
-                            highlighter = None;
-                            Event::Html("</pre>".into())
-                        }
-                        _ => event,
-                    });
-
-                let mut html = String::new();
-                cmark::html::push_html(&mut html, events);
+                let rendered = utils::rendering::render_readme(&state.syntect, contents.as_str());
 
                 state.storage.store_readme(
                     &crate_desc.name,
                     crate_desc.vers.clone(),
-                    html.as_bytes(),
+                    rendered.as_bytes(),
                 )?;
             }
 

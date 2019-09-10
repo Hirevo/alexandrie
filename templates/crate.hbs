@@ -57,7 +57,7 @@
         .stats {
             align-items: center;
             justify-content: center;
-            white-space: nowrap;
+            white-space: normal;
             padding: 10px 0;
             display: flex;
             flex-direction: column;
@@ -129,17 +129,36 @@
         }
 
         .readme h1,
-        .readme h2,
-        .readme h3,
-        .readme h4,
-        .readme h5,
-        .readme h6 {
+        .readme h2 {
             margin: 0;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--dark-bg-color);
         }
 
-        @media (max-width: 600px) {
-            .search-result-stats {
-                display: none;
+        .readme h1.header::before,
+        .readme h2.header::before,
+        .readme h3.header::before,
+        .readme h4.header::before,
+        .readme h5.header::before,
+        .readme h6.header::before {
+            display: block;
+            margin-top: -70px;
+            height: 70px;
+            visibility: hidden;
+            content: " ";
+        }
+
+        .readme a.permalink {
+            color: inherit;
+            text-decoration: inherit;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .readme h1,
+            .readme h2 {
+                border-bottom: 1px solid var(--darker-fg-color);
             }
         }
     </style>
@@ -162,8 +181,9 @@
     <div class="stats-container">
         <div class="stats">
             <div class="stats-block">
+                <div class="stat">Owned by&nbsp;<b>{{ authors }}</b></div>
                 <div class="stat">Downloaded&nbsp;<b>{{ crate.downloads }}</b>&nbsp;times</div>
-                <div class="stat">Created on&nbsp;<b>{{ crate.updated_at }}</b></div>
+                <div class="stat">Created on&nbsp;<b>{{ crate.created_at }}</b></div>
                 <div class="stat">Last updated on&nbsp;<b>{{ crate.updated_at }}</b></div>
                 {{#if crate.repository}}
                 <div class="stat">Link to&nbsp;<b><a href="{{ crate.repository }}">Repository</a></b></div>

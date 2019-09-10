@@ -3,7 +3,7 @@ use json::json;
 use tide::{Context, Response};
 
 use crate::config::State;
-use crate::db::models::{CrateKeyword, CrateRegistration, Keyword};
+use crate::db::models::{Author, CrateAuthor, CrateKeyword, CrateRegistration, Keyword};
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
 use crate::frontend::helpers;
@@ -38,6 +38,14 @@ pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
                 .load::<Keyword>(&conn)
         })
         .await?;
+    let authors = repo
+        .run(|conn| {
+            CrateAuthor::belonging_to(&crate_desc)
+                .inner_join(authors::table)
+                .select(authors::name)
+                .load::<String>(&conn)
+        })
+        .await?;
 
     let engine = &state.frontend.handlebars;
     let context = json!({
@@ -53,6 +61,7 @@ pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
             "documentation": crate_desc.documentation,
             "repository": crate_desc.repository,
         },
+        "authors": authors.join(", "),
         "rendered_readme": rendered_readme,
         "keywords": keywords,
     });

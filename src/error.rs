@@ -46,12 +46,17 @@ pub enum AlexError {
     CrateNotOwned(String, Author),
     /// The published crate version is lower than the current hosted version.
     VersionTooLow {
+        /// The krate's name.
         krate: String,
+        /// The available hosted version.
         hosted: Version,
+        /// The proposed version to be published.
         published: Version,
     },
     /// The token used to access the registry is invalid.
     InvalidToken,
+    /// The request is invalid because of a required query parameter.
+    MissingQueryParams(&'static [&'static str]),
 }
 
 impl IntoResponse for Error {
@@ -88,6 +93,8 @@ impl fmt::Display for AlexError {
                 published, hosted,
             ),
             AlexError::InvalidToken => write!(f, "invalid token"),
+            AlexError::MissingQueryParams(params) =>
+                write!(f, "missing query parameters: {0:?}", params),
         }
     }
 }

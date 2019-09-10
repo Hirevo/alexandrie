@@ -9,7 +9,7 @@ use tide::{Context, Response};
 use crate::config::State;
 use crate::db::models::CrateRegistration;
 use crate::db::schema::*;
-use crate::error::Error;
+use crate::error::{AlexError, Error};
 use crate::index::Indexer;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -44,12 +44,14 @@ pub struct SearchParams {
 
 /// Route to search through crates (used by `cargo search`).
 pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
-    let params = ctx.url_query::<SearchParams>().unwrap();
+    let params = ctx
+        .url_query::<SearchParams>()
+        .map_err(|_| AlexError::MissingQueryParams(&["q"]))?;
     let state = ctx.state();
     let repo = &state.repo;
 
-    //? Fetch the latest index changes.
-    state.index.refresh()?;
+    // //? Fetch the latest index changes.
+    // state.index.refresh()?;
 
     //? Build the search pattern.
     let name_pattern = format!("%{}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));

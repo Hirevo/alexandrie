@@ -16,68 +16,54 @@ Goals
 -----
 
 - Offer customizable crate storage strategies (local on-disk, S3, Git Repo, etc...).
-- An optional integrated (most-likely server-side rendered) front-end.
-- Ideally, customizable backing database options for managing users and crates.
-- Do all this while staying performant.
+- An optional integrated (server-side rendered) front-end.
+- Be performant.
 
 Current state
 -------------
 
-- Currently, only MySQL is supported as the backing database.
-- Currently, there is no front-end implemented (in-progress).
-- Currently, managing users and generating tokens is done manually through the database.
+- The core Cargo APIs are functional but not yet complete.
+- The optional front-end is in active development.
+- Currently, generating tokens is done manually through the database.
 
 How to build
 ------------
 
-Alexandrie is built using Rocket and currently requires a MySQL database (MariaDB and PostgreSQL are such databases).  
+Alexandrie is built using Tide and currently requires a MySQL database (MariaDB and PostgreSQL are such databases).  
 To build, you can run `cargo build [--release]`.  
 
-To run it, you first have to configure the database credentials in the `Rocket.toml` file:
+Before running it, you need to configure the instance in the `alexandrie.toml` file.
+
+The database is configured through the `[database]` table:
 
 ```toml
-[global.databases.alexandrie]
+[database]
 # Replace the '<...>' placeholders by the real ones.
 url = "mysql://<user>:<password>@<hostname>:<port>/<database>"
 ```
 
-Then, you can configure the crate storage strategy and the crate index management strategy that you want to use.  
+Then, you can configure the crates' tarballs storage strategy and the crate index management strategy that you want to use.  
 Here is how to do it (these are also the defaults, you can leave them out if you want):
 
 ```toml
-[global.crate-index]
-type = "cli"
+[index]
+type = "command-line"
 path = "crate-index"
 
-[global.crate-storage]
+[storage]
 type = "disk"
 path = "crate-storage"
 ```
 
-You can also configure things like the address and port of the server, the maximum number of workers and other things:
+You can also configure things like the address and port of the server:
 
 ```toml
-[development]
-address = "localhost"
-port = 8000
-workers = 1
-
-[staging]
-address = "0.0.0.0"
-port = 8000
-workers = 2
-
-[production]
-address = "0.0.0.0"
-port = 8000
-workers = 4
+[general]
+addr = "127.0.0.1"
+port = 3000
 ```
 
-You can refer to [Rocket's configuration documentation] to have the full list of options and what they do.
-
-[Rocket's configuration documentation]: https://rocket.rs/v0.4/guide/configuration/#rockettoml
-
-To run the registry, be sure to clone your crate index at the location designated by the `path` key in `[global.crate-index]`.  
+To run the registry, be sure to clone your crate index at the location designated by the `path` key in `[index]`.  
 The default for it is `./crate-index`.  
 To clone an existing crate index, you can run:
 
@@ -100,7 +86,7 @@ Then, if you want to use this index with Cargo, you can follow these steps:
   ```toml
   # Replace the '<...>' placeholders by the real ones.
   [registries.<name-of-your-registry>]
-  index = "<link-to-the-index-git-repository>"
+  index = "<url-of-the-crate-index>"
   ```
 - Then, run `cargo login --registry <name-of-your-registry>` and enter your author token.  
   To generate a token, you need to register an author first by creating one in the database.

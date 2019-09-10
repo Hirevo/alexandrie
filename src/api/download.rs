@@ -18,7 +18,7 @@ pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
     let state = ctx.state();
     let repo = &state.repo;
 
-    state.index.refresh()?;
+    // state.index.refresh()?;
 
     let downloads = repo.run(|conn| crates::table
         .select(crates::downloads)

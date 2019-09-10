@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Register - {{ instance.title }}</title>
+    {{> partials/head}}
+    <style>
+        .hero {
+            width: 100%;
+        }
+
+        .hero-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            padding: 40px 10px 10px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: bolder;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .keywords-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .keywords {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .keywords:first-child {
+            margin-left: 0;
+        }
+
+        .separator-container {
+            width: 100%;
+            display: grid;
+            grid-template-rows: 12px 10px;
+            grid-template-columns: 1fr;
+        }
+
+        .separator-flex {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1400px;
+            height: 100%;
+            border-bottom: 2px solid var(--fg-color);
+        }
+
+        .register-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+        }
+
+        .register-content {
+            width: 100%;
+            max-width: 430px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        @media (max-width: 1400px) {
+            .register-content {
+                width: 100%;
+            }
+
+            .separator {
+                width: 90%;
+            }
+        }
+
+        .register-field {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            padding: 10px 0;
+        }
+
+        .register-label {
+            font-weight: bold;
+            padding-bottom: 5px;
+        }
+
+        .register-input {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: none;
+            border-bottom: 2px solid var(--darker-bg-color);
+            background: transparent;
+            font: inherit;
+            color: inherit;
+            background-color: inherit;
+            padding: 5px 0;
+            transition: border-color 0.15s;
+        }
+
+        .register-input:focus {
+            border-bottom: 2px solid var(--fg-color);
+        }
+
+        .register-input:invalid {
+            box-shadow: none;
+            {{!-- border-bottom: 2px solid #C00; --}}
+        }
+
+        .register-buttons {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            grid-template-columns: 1fr;
+            grid-gap: 10px;
+            width: 100%;
+        }
+
+        .register-button {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid var(--darker-bg-color);
+            border-radius: 5px;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+            font-weight: bold;
+            text-align: center;
+            color: inherit;
+            background-color: inherit;
+            padding: 7px 20px;
+            transition: background-color 0.15s, border-color 0.15s;
+        }
+
+        .register-button:hover,
+        .register-button:focus {
+            border: 2px solid var(--fg-color);
+            background-color: var(--dark-bg-color);
+        }
+
+        .register-button:disabled {
+            border: 2px solid var(--darker-bg-color);
+            background-color: var(--dark-bg-color);
+            cursor: default;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .register-input {
+                border-bottom: 2px solid var(--darker-fg-color);
+            }
+
+            .register-button {
+                border: 2px solid var(--darker-fg-color);
+            }
+
+            .register-button:disabled {
+                border: 2px solid var(--darker-fg-color);
+                background-color: var(--dark-fg-color);
+                color: var(--bg-color);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {{> partials/navbar}}
+    <div class="hero">
+        <div style="height: 50px"></div>
+        <div class="hero-content-container">
+            <div class="hero-title">Register page</div>
+            <div class="hero-subtitle">Register for a new account.</div>
+        </div>
+    </div>
+    <div class="separator-container">
+        <div class="separator-flex">
+            <div class="separator"></div>
+        </div>
+    </div>
+    <div class="register-container">
+        <form class="register-content" action="/account/register" method="POST">
+            <div class="register-field">
+                <label class="register-label" for="email">Email:</label>
+                <input class="register-input" type="email" name="email" id="email" placeholder="Email..." autocomplete="email" required>
+            </div>
+            <div class="register-field">
+                <label class="register-label" for="name">Full name:</label>
+                <input class="register-input" type="text" name="name" id="name" placeholder="Full name..." autocomplete="name" required>
+            </div>
+            <div class="register-field">
+                <label class="register-label" for="password">Password:</label>
+                <input class="register-input" type="password" name="password" id="password" placeholder="Password..." autocomplete="new-password" required>
+            </div>
+            <div class="register-field">
+                <label class="register-label" for="confirm-password">Confirm password:</label>
+                <input class="register-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." required>
+            </div>
+            <div class="register-buttons">
+                <input type="submit" value="Register" class="register-button">
+                <a href="/account/login" class="register-button">Already have an account ?</a>
+            </div>
+        </form>
+    </div>
+    <script>
+        const button = document.querySelector('input[type="submit"]');
+        const form = document.querySelector('form.register-content');
+        form.addEventListener("submit", event => {
+            button.disabled = true;
+            button.value = "Loading...";
+        }, { passive: true });
+    </script>
+</body>
+
+</html>
