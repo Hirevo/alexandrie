@@ -80,17 +80,47 @@ table! {
     }
 }
 
+table! {
+    /// The categories table (stores all unique categories).
+    categories (id) {
+        /// The category's ID.
+        id -> Unsigned<Bigint>,
+        /// The category's unique tagname.
+        tag -> Varchar,
+        /// The category's name.
+        name -> Varchar,
+        /// The category's description.
+        description -> Varchar,
+    }
+}
+
+table! {
+    /// The crate-to-categories (one-to-many) relationship table.
+    crate_categories (id) {
+        /// The relationship's ID.
+        id -> Unsigned<Bigint>,
+        /// The crate's ID.
+        crate_id -> Unsigned<Bigint>,
+        /// The category's ID.
+        category_id -> Unsigned<Bigint>,
+    }
+}
+
 joinable!(author_tokens -> authors (author_id));
 joinable!(crate_authors -> crates (crate_id));
 joinable!(crate_authors -> authors (author_id));
 joinable!(crate_keywords -> crates (crate_id));
 joinable!(crate_keywords -> keywords (keyword_id));
+joinable!(crate_categories -> crates (crate_id));
+joinable!(crate_categories -> categories (category_id));
 
 allow_tables_to_appear_in_same_query!(
     authors,
     crates,
     keywords,
+    categories,
     author_tokens,
     crate_authors,
     crate_keywords,
+    crate_categories,
 );

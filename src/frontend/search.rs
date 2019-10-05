@@ -15,12 +15,12 @@ use crate::index::Indexer;
 use crate::utils;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SearchParams {
-    q: String,
-    page: Option<NonZeroU32>,
+struct SearchParams {
+    pub q: String,
+    pub page: Option<NonZeroU32>,
 }
 
-pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
+pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
     let params = ctx.url_query::<SearchParams>().unwrap();
     let searched_text = params.q.clone();
     let q = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
@@ -29,55 +29,54 @@ pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
     let state = ctx.state();
     let repo = &state.repo;
 
-    let total_results = repo
-        .run(|conn| {
-            crates::table
-                .select(diesel::dsl::count(crates::id))
-                .filter(crates::name.like(q.as_str()))
-                .first::<i64>(&conn)
-        })
-        .await?;
+    let transaction = repo.transaction(|conn| {
+        //? Get the total count of search results.
+        let total_results = crates::table
+            .select(diesel::dsl::count(crates::id))
+            .filter(crates::name.like(q.as_str()))
+            .first::<i64>(conn)?;
 
-    let results = repo
-        .run(|conn| {
-            crates::table
-                .filter(crates::name.like(q.as_str()))
-                .limit(15)
-                .offset(15 * i64::from(page_number - 1))
-                .load::<CrateRegistration>(&conn)
-        })
-        .await?;
+        //? Get the search results for the given page number.
+        let results = crates::table
+            .filter(crates::name.like(q.as_str()))
+            .limit(15)
+            .offset(15 * i64::from(page_number - 1))
+            .load::<CrateRegistration>(conn)?;
 
-    let page_count = total_results / 15
-        + if total_results > 0 && total_results % 15 == 0 {
-            0
-        } else {
-            1
-        };
+        //? Make page number starts counting from 1 (instead of 0).
+        let page_count = total_results / 15
+            + if total_results > 0 && total_results % 15 == 0 {
+                0
+            } else {
+                1
+            };
 
-    let engine = &state.frontend.handlebars;
-    let context = json!({
-        "instance": &state.frontend.config,
-        "searched_text": searched_text,
-        "page_number": page_number,
-        "page_count": page_count,
-        "total_results": total_results,
-        "results": results.into_iter().map(|krate| {
-            let version = state.index.latest_crate(&krate.name)?.vers;
-            Ok(json!({
-                "id": krate.id,
-                "name": krate.name,
-                "version": version,
-                "description": krate.description,
-                "created_at": helpers::humanize_datetime(krate.created_at),
-                "updated_at": helpers::humanize_datetime(krate.updated_at),
-                "downloads": helpers::humanize_number(krate.downloads),
-                "documentation": krate.documentation,
-                "repository": krate.repository,
-            }))
-        }).collect::<Result<Vec<_>, Error>>()?,
+        let engine = &state.frontend.handlebars;
+        let context = json!({
+            "instance": &state.frontend.config,
+            "searched_text": searched_text,
+            "page_number": page_number,
+            "page_count": page_count,
+            "total_results": total_results,
+            "results": results.into_iter().map(|krate| {
+                let version = state.index.latest_crate(&krate.name)?.vers;
+                Ok(json!({
+                    "id": krate.id,
+                    "name": krate.name,
+                    "version": version,
+                    "description": krate.description,
+                    "created_at": helpers::humanize_datetime(krate.created_at),
+                    "updated_at": helpers::humanize_datetime(krate.updated_at),
+                    "downloads": helpers::humanize_number(krate.downloads),
+                    "documentation": krate.documentation,
+                    "repository": krate.repository,
+                }))
+            }).collect::<Result<Vec<_>, Error>>()?,
+        });
+        Ok(utils::response::html(
+            engine.render("search", &context).unwrap(),
+        ))
     });
-    Ok(utils::response::html(
-        engine.render("search", &context).unwrap(),
-    ))
+
+    transaction.await
 }

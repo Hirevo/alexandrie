@@ -1,4 +1,6 @@
-#![allow(clippy::redundant_closure, clippy::needless_lifetimes, unused)]
+#![allow(clippy::redundant_closure, clippy::needless_lifetimes)]
+#![allow(unused)]
+#![warn(missing_docs)]
 //!
 //! This is an alternative crate registry for use with Cargo, written in Rust.
 //!
@@ -100,19 +102,15 @@
 extern crate diesel;
 #[macro_use]
 extern crate log;
-#[macro_use(slog_o, slog_kv)]
+#[macro_use(slog_o)]
 extern crate slog;
 
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
 
 use diesel::MysqlConnection;
-use futures::compat::Compat01As03 as Compat;
-use path_absolutize::Absolutize;
-use tide::error::ResultExt;
 use tide::middleware::RequestLogger;
-use tide::{App, Context, Response};
+use tide::App;
 
 /// API endpoints definitions.
 pub mod api;
@@ -138,7 +136,6 @@ pub mod utils;
 pub mod frontend;
 
 use crate::config::{Config, State};
-use crate::error::Error;
 use crate::utils::static_files::StaticFiles;
 
 /// The instantiated [`crate::db::Repo`] type alias.
@@ -147,7 +144,6 @@ pub type Repo = db::Repo<MysqlConnection>;
 #[runtime::main(runtime_tokio::Tokio)]
 async fn main() -> io::Result<()> {
     let _guard = logs::init();
-    _guard.cancel_reset();
 
     let contents = fs::read("alexandrie.toml")?;
     let config: Config = toml::from_slice(contents.as_slice()).expect("invalid configuration");
@@ -162,23 +158,15 @@ async fn main() -> io::Result<()> {
     info!("setting up request logger");
     app.middleware(RequestLogger::new());
 
-    info!("mounting '/api/v1/crates/new'");
-    app.at("/api/v1/crates/new").put(api::publish::route);
-    info!("mounting '/api/v1/crates'");
-    app.at("/api/v1/crates").get(api::search::route);
-    info!("mounting '/api/v1/crates/:name/:version/download'");
-    app.at("/api/v1/crates/:name/:version/download")
-        .get(api::download::route);
-
     #[cfg(feature = "frontend")]
     {
         if frontend_enabled {
             info!("mounting '/'");
-            app.at("/").get(frontend::index::route);
+            app.at("/").get(frontend::index::get);
             info!("mounting '/search'");
-            app.at("/search").get(frontend::search::route);
+            app.at("/search").get(frontend::search::get);
             info!("mounting '/crates/:crate'");
-            app.at("/crates/:crate").get(frontend::krate::route);
+            app.at("/crates/:crate").get(frontend::krate::get);
 
             info!("mounting '/account/login'");
             app.at("/account/login")
@@ -193,6 +181,25 @@ async fn main() -> io::Result<()> {
             app.at("/assets/*path").get(StaticFiles::new("assets")?);
         }
     }
+
+    info!("mounting '/api/v1/crates'");
+    app.at("/api/v1/crates").get(api::search::get);
+    info!("mounting '/api/v1/crates/new'");
+    app.at("/api/v1/crates/new").put(api::publish::put);
+    info!("mounting '/api/v1/crates/:name/owners'");
+    app.at("/api/v1/crates/:name/owners")
+        .get(api::owners::get)
+        .put(api::owners::put)
+        .delete(api::owners::delete);
+    info!("mounting '/api/v1/crates/:name/:version/yank'");
+    app.at("/api/v1/crates/:name/:version/yank")
+        .delete(api::yank::delete);
+    info!("mounting '/api/v1/crates/:name/:version/unyank'");
+    app.at("/api/v1/crates/:name/:version/unyank")
+        .put(api::unyank::put);
+    info!("mounting '/api/v1/crates/:name/:version/download'");
+    app.at("/api/v1/crates/:name/:version/download")
+        .get(api::download::get);
 
     info!("listening on {0}", addr);
     app.serve(addr).await?;

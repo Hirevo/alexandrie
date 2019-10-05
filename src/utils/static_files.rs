@@ -1,7 +1,5 @@
-use std::fs;
-use std::future::Future;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf, Path};
 
 use futures::compat::Compat01As03 as Compat;
 use futures::future::BoxFuture;
@@ -9,19 +7,20 @@ use path_absolutize::Absolutize;
 use serde::{Deserialize, Serialize};
 use tide::error::ResultExt;
 use tide::response::IntoResponse;
-use tide::{Context, Endpoint, EndpointResult, Response};
-use tokio::codec::Decoder;
-use tokio::prelude::Stream;
+use tide::{Context, Endpoint, Response};
 
+/// The handler for serving static files.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StaticFiles {
+    /// The path to the directory to serve from.
     path: PathBuf,
 }
 
 impl StaticFiles {
-    pub fn new(path: impl Into<PathBuf>) -> io::Result<StaticFiles> {
+    /// Constructs a `StaticFiles` for the given path.
+    pub fn new(path: impl AsRef<Path>) -> io::Result<StaticFiles> {
         Ok(StaticFiles {
-            path: path.into().absolutize()?,
+            path: path.as_ref().absolutize()?,
         })
     }
 }

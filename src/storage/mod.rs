@@ -18,7 +18,6 @@ pub enum Storage {
     /// Local on-disk crate storage.
     #[serde(rename = "disk")]
     Disk(DiskStorage),
-
     // TODO: Add a `Store` implementation using S3.
     // S3(S3Storage),
 
@@ -68,7 +67,12 @@ pub trait Store {
         }))
     }
     /// Stores a new rendered README into the store.
-    fn store_readme(&self, name: &str, version: Version, rendered_readme: impl Read) -> Result<(), Error>;
+    fn store_readme(
+        &self,
+        name: &str,
+        version: Version,
+        rendered_readme: impl Read,
+    ) -> Result<(), Error>;
 }
 
 impl Store for Storage {

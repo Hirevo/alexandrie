@@ -70,6 +70,21 @@
             font-size: 17px;
         }
 
+        .stat-list {
+            display: grid;
+            grid-template-columns: min-content min-content;
+        }
+
+        .stat-list-label {
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .stat-list-value {
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
         .crate-container {
             width: 100%;
             display: flex;
@@ -181,7 +196,14 @@
     <div class="stats-container">
         <div class="stats">
             <div class="stats-block">
-                <div class="stat">Owned by&nbsp;<b>{{ authors }}</b></div>
+                <div class="stat stat-list">
+                    {{#each authors}}
+                    <div class="stat-list-label">
+                        {{#if @first}}Owned by{{else}}and{{/if}}&nbsp;
+                    </div>
+                    <div class="stat-list-value">{{ this }}</div>
+                    {{/each}}
+                </div>
                 <div class="stat">Downloaded&nbsp;<b>{{ crate.downloads }}</b>&nbsp;times</div>
                 <div class="stat">Created on&nbsp;<b>{{ crate.created_at }}</b></div>
                 <div class="stat">Last updated on&nbsp;<b>{{ crate.updated_at }}</b></div>
@@ -193,6 +215,16 @@
                 {{/if}}
                 {{#if crate.homepage}}
                 <div class="stat">Link to&nbsp;<b><a href="{{ crate.homepage }}">Homepage</a></b></div>
+                {{/if}}
+                {{#if categories}}
+                <div class="stat stat-list">
+                    {{#each categories}}
+                    <div class="stat-list-label">
+                        {{#if @first}}Part of{{else}}and{{/if}}&nbsp;
+                    </div>
+                    <div class="stat-list-value">{{ this }}</div>
+                    {{/each}}
+                </div>
                 {{/if}}
             </div>
         </div>

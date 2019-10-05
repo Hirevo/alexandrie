@@ -10,9 +10,9 @@ use semver::{SemVerError as SemverError, Version};
 use toml::de::Error as TOMLError;
 // use tide::Error as TideError;
 
-use tide::{Response};
-use tide::response::IntoResponse;
 use json::json;
+use tide::response::IntoResponse;
+use tide::Response;
 
 use crate::db::models::Author;
 
@@ -83,8 +83,8 @@ impl IntoResponse for Error {
 impl fmt::Display for AlexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            AlexError::CrateNotFound(name) => write!(f, "no crate named '{}' found", name),
-            AlexError::CrateNotOwned(name, _) => write!(f, "you are not an owner of '{}'", name),
+            AlexError::CrateNotFound(name) => write!(f, "no crate named '{0}' found", name),
+            AlexError::CrateNotOwned(name, _) => write!(f, "you are not an owner of '{0}'", name),
             AlexError::VersionTooLow {
                 hosted, published, ..
             } => write!(
@@ -93,8 +93,9 @@ impl fmt::Display for AlexError {
                 published, hosted,
             ),
             AlexError::InvalidToken => write!(f, "invalid token"),
-            AlexError::MissingQueryParams(params) =>
-                write!(f, "missing query parameters: {0:?}", params),
+            AlexError::MissingQueryParams(params) => {
+                write!(f, "missing query parameters: {0:?}", params)
+            }
         }
     }
 }

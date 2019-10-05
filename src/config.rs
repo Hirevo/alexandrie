@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use syntect::dumps;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
-use tide::cookies::ContextExt;
 use tide::http::{HeaderMap, HeaderValue};
 
 #[cfg(feature = "frontend")]
@@ -26,7 +25,7 @@ fn enabled_def() -> bool {
 /// The frontend configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FrontendConfig {
-    /// Is the frontend enabled ?
+    /// Is the frontend enabled?
     #[serde(default = "enabled_def")]
     pub enabled: bool,
     /// The instance's title.
@@ -48,22 +47,44 @@ pub struct DatabaseConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum SyntectThemesConfig {
-    Dump { path: PathBuf },
-    Directory { path: PathBuf },
+    /// Variant for loading themes from a binary dump.
+    Dump {
+        /// The path to the binary dump to load themes from.
+        path: PathBuf,
+        /// The name of the theme to use.
+        theme_name: String
+    },
+    /// Variant for recursively loading themes from a directory.
+    Directory {
+        /// The path to the directory to load themes from.
+        path: PathBuf,
+        /// The name of the theme to use.
+        theme_name: String
+    },
 }
 
 /// The syntax-highlighting syntaxes configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum SyntectSyntaxesConfig {
-    Dump { path: PathBuf },
-    Directory { path: PathBuf },
+    /// Variant for loading syntaxes from a binary dump.
+    Dump {
+        /// The path to the binary dump to load syntaxes from.
+        path: PathBuf
+    },
+    /// Variant for recursively loading syntaxes from a directory.
+    Directory {
+        /// The path to the directory to load syntaxes from.
+        path: PathBuf
+    },
 }
 
 /// The complete syntax-highlighting configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SyntectConfig {
+    /// The highlighting themes configuration.
     pub themes: SyntectThemesConfig,
+    /// The highlighting syntaxes configuration.
     pub syntaxes: SyntectSyntaxesConfig,
 }
 
@@ -96,14 +117,20 @@ pub struct Config {
 
 /// The syntax-highlighting state struct, created from [SyntectConfig].
 pub struct SyntectState {
+    /// The loaded syntax set.
     pub syntaxes: SyntaxSet,
+    /// The loaded theme set.
     pub themes: ThemeSet,
+    /// The chosen theme's name.
+    pub theme_name: String,
 }
 
 /// The frontend state struct, created from [FrontendConfig].
 #[cfg(feature = "frontend")]
 pub struct FrontendState {
+    /// The Handlebars rendering struct.
     pub handlebars: Handlebars,
+    /// The frontend configuration.
     pub config: FrontendConfig,
 }
 
@@ -125,9 +152,10 @@ pub struct State {
 impl State {
     /// Determines the author from the request's headers.
     pub async fn get_author(&self, headers: &HeaderMap<HeaderValue>) -> Option<Author> {
-        let token = headers.get("Authorization").and_then(|x| x.to_str().ok())?;
+        let token = headers.get("authorization").and_then(|x| x.to_str().ok())?;
 
         let query = self.repo.run(|conn| {
+            //? Get the author associated to this token.
             author_tokens::table
                 .inner_join(authors::table)
                 .select(authors::all_columns)
@@ -155,22 +183,31 @@ impl From<Config> for State {
 
 impl From<SyntectConfig> for SyntectState {
     fn from(config: SyntectConfig) -> SyntectState {
+        let syntaxes = match config.syntaxes {
+            SyntectSyntaxesConfig::Dump { path } => {
+                dumps::from_dump_file(&path).expect("couldn't load syntaxes' dump file")
+            }
+            SyntectSyntaxesConfig::Directory { path } => {
+                SyntaxSet::load_from_folder(&path).expect("couldn't load syntaxes from directory")
+            }
+        };
+        let (themes, theme_name) = match config.themes {
+            SyntectThemesConfig::Dump { path, theme_name } => (
+                dumps::from_dump_file(&path).expect("couldn't load themes' dump"),
+                theme_name,
+            ),
+            SyntectThemesConfig::Directory { path, theme_name } => (
+                ThemeSet::load_from_folder(&path).expect("couldn't load themes from directory"),
+                theme_name,
+            ),
+        };
+        if !themes.themes.contains_key(theme_name.as_str()) {
+            panic!("no theme named '{0}' has been found", theme_name);
+        }
         SyntectState {
-            syntaxes: match config.syntaxes {
-                SyntectSyntaxesConfig::Dump { path } => {
-                    dumps::from_dump_file(&path).expect("couldn't load syntaxes' dump file")
-                }
-                SyntectSyntaxesConfig::Directory { path } => SyntaxSet::load_from_folder(&path)
-                    .expect("couldn't load syntaxes from directory"),
-            },
-            themes: match config.themes {
-                SyntectThemesConfig::Dump { path } => {
-                    dumps::from_dump_file(&path).expect("couldn't load themes' dump")
-                }
-                SyntectThemesConfig::Directory { path } => {
-                    ThemeSet::load_from_folder(&path).expect("couldn't load themes from directory")
-                }
-            },
+            syntaxes,
+            themes,
+            theme_name,
         }
     }
 }

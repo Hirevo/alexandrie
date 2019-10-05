@@ -26,6 +26,19 @@ Current state
 - The optional front-end is in active development.
 - Currently, generating tokens is done manually through the database.
 
+Things yet to do
+----------------
+
+- [ ] Complete the front-end: in-progress
+- [x] Categories: done
+- [x] Crate yanking: done
+- [ ] User management: prototyping
+- [ ] Crate versioning in DB (download counts, etc...): prototyping
+- [x] Database transactions everywhere (in a nicer way): done
+- [ ] Ability to re-render READMEs (to migrate themes): deferred
+- [ ] More `Store` implementors: deferred
+- [ ] More `Indexer` implementors: deferred
+
 How to build
 ------------
 

@@ -28,11 +28,12 @@ impl DiskStorage {
 
     /// Generate a unique filename for the given crate name and version.
     pub fn format_name(name: &str, version: Version) -> String {
-        format!("{}-{}.crate", name, version)
+        format!("{0}-{1}.crate", name, version)
     }
 
+    /// Generate a unique filename for the html-rendered readme page for the given crate name and version.
     pub fn format_readme_name(name: &str, version: Version) -> String {
-        format!("{}-{}.readme", name, version)
+        format!("{0}-{1}.readme", name, version)
     }
 }
 
@@ -63,18 +64,24 @@ impl Store for DiskStorage {
     }
 
     fn get_readme(&self, name: &str, version: Version) -> Result<String, Error> {
-        let path = self.path.join(DiskStorage::format_readme_name(name, version));
+        let path = self
+            .path
+            .join(DiskStorage::format_readme_name(name, version));
         Ok(fs::read_to_string(path)?)
     }
 
     fn read_readme(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
-        let path = self.path.join(DiskStorage::format_readme_name(name, version));
+        let path = self
+            .path
+            .join(DiskStorage::format_readme_name(name, version));
         let file = fs::File::open(&path)?;
         Ok(Box::new(file))
     }
 
     fn store_readme(&self, name: &str, version: Version, mut data: impl Read) -> Result<(), Error> {
-        let path = self.path.join(DiskStorage::format_readme_name(name, version));
+        let path = self
+            .path
+            .join(DiskStorage::format_readme_name(name, version));
         let mut file = fs::OpenOptions::new()
             .create_new(true)
             .write(true)

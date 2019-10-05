@@ -204,23 +204,86 @@ pub struct Keyword {
 #[belongs_to(Keyword)]
 #[belongs_to(CrateRegistration, foreign_key = "crate_id")]
 #[primary_key(id)]
-/// Represents a crate-to-author relationship in the database.
+/// Represents a crate-to-keyword relationship in the database.
 pub struct CrateKeyword {
     /// The relationship's ID.
     pub id: u64,
     /// The crate's ID.
     pub crate_id: u64,
-    /// The author's ID.
+    /// The keyword's ID.
     pub keyword_id: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "crate_keywords"]
-/// Represents a crate-to-author relationship in the database,
+/// Represents a crate-to-keyword relationship in the database,
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateKeyword {
     /// The crate's ID.
     pub crate_id: u64,
-    /// The author's ID.
+    /// The keyword's ID.
     pub keyword_id: u64,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    Identifiable,
+    Associations,
+    AsChangeset,
+)]
+#[table_name = "categories"]
+#[primary_key(id)]
+/// Represents a category entry in the database.
+pub struct Category {
+    /// The category's ID.
+    pub id: u64,
+    /// The category's unique tagname.
+    pub tag: String,
+    /// The category's name.
+    pub name: String,
+    /// The category's description.
+    pub description: String,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    Identifiable,
+    Associations,
+    AsChangeset,
+)]
+#[table_name = "crate_categories"]
+#[belongs_to(Category)]
+#[belongs_to(CrateRegistration, foreign_key = "crate_id")]
+#[primary_key(id)]
+/// Represents a crate-to-category relationship in the database.
+pub struct CrateCategory {
+    /// The relationship's ID.
+    pub id: u64,
+    /// The crate's ID.
+    pub crate_id: u64,
+    /// The category's ID.
+    pub category_id: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "crate_categories"]
+/// Represents a crate-to-category relationship in the database,
+/// suitable to create an entry while letting the database assign a relationship ID.
+pub struct NewCrateCategory {
+    /// The crate's ID.
+    pub crate_id: u64,
+    /// The category's ID.
+    pub category_id: u64,
 }

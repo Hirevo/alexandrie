@@ -58,14 +58,17 @@ pub(crate) fn hbs_humanize_number(
     Ok(())
 }
 
+/// Humanizes a `NaiveDateTime` struct (to something like "Jul 18 2019, 18:19").
 pub fn humanize_datetime(date: NaiveDateTime) -> String {
     date.format("%b %-d %Y, %H:%M").to_string()
 }
 
+/// Humanizes a `NaiveDate` struct (to something like "Jul 18 2019").
 pub fn humanize_date(date: NaiveDate) -> String {
     date.format("%b %-d %Y").to_string()
 }
 
+/// Humanizes a number (to something like "432'523.452").
 pub fn humanize_number(num: impl ToFormattedString) -> String {
     num.to_formatted_string(&Locale::en)
 }

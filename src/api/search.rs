@@ -13,13 +13,13 @@ use crate::error::{AlexError, Error};
 use crate::index::Indexer;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SearchResponse {
+struct SearchResponse {
     pub crates: Vec<SearchResult>,
     pub meta: SearchMeta,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SearchResult {
+struct SearchResult {
     pub name: String,
     pub max_version: Version,
     pub description: Option<String>,
@@ -31,93 +31,87 @@ pub struct SearchResult {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SearchMeta {
+struct SearchMeta {
     pub total: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SearchParams {
-    q: String,
-    per_page: Option<NonZeroU32>,
-    page: Option<NonZeroU32>,
+struct SearchParams {
+    pub q: String,
+    pub per_page: Option<NonZeroU32>,
+    pub page: Option<NonZeroU32>,
 }
 
 /// Route to search through crates (used by `cargo search`).
-pub(crate) async fn route(ctx: Context<State>) -> Result<Response, Error> {
+pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
     let params = ctx
         .url_query::<SearchParams>()
         .map_err(|_| AlexError::MissingQueryParams(&["q"]))?;
     let state = ctx.state();
     let repo = &state.repo;
 
-    // //? Fetch the latest index changes.
+    //? Fetch the latest index changes.
     // state.index.refresh()?;
 
     //? Build the search pattern.
-    let name_pattern = format!("%{}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
+    let name_pattern = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
 
-    //? Limit the result count depending on parameters.
-    let results = match (params.per_page, params.page) {
-        (Some(per_page), Some(page)) => {
-            repo.run(|conn| {
+    let transaction = repo.transaction(|conn| {
+        //? Limit the result count depending on parameters.
+        let results = match (params.per_page, params.page) {
+            (Some(per_page), Some(page)) => {
+                //? Get search results for the given page number and entries per page.
                 crates::table
                     .filter(crates::name.like(name_pattern.as_str()))
                     .limit(i64::from(per_page.get()))
                     .offset(i64::from((page.get() - 1) * per_page.get()))
-                    .load::<CrateRegistration>(&conn)
-            })
-            .await?
-        }
-        (Some(per_page), None) => {
-            repo.run(|conn| {
+                    .load::<CrateRegistration>(conn)?
+            }
+            (Some(per_page), None) => {
+                //? Get the first page of search results with the given entries per page.
                 crates::table
                     .filter(crates::name.like(name_pattern.as_str()))
                     .limit(i64::from(per_page.get()))
-                    .load::<CrateRegistration>(&conn)
-            })
-            .await?
-        }
-        _ => {
-            repo.run(|conn| {
+                    .load::<CrateRegistration>(conn)?
+            }
+            _ => {
+                //? Get ALL the crates (might be too much, tbh).
                 crates::table
                     .filter(crates::name.like(name_pattern.as_str()))
-                    .load::<CrateRegistration>(&conn)
+                    .load::<CrateRegistration>(conn)?
+            }
+        };
+
+        //? Fetch the total result count.
+        let total = crates::table
+            .select(diesel::dsl::count(crates::name))
+            .filter(crates::name.like(name_pattern.as_str()))
+            .first::<i64>(conn)?;
+
+        let crates = results
+            .into_iter()
+            .map(|krate| {
+                let latest = state.index.latest_crate(krate.name.as_str())?;
+                Ok(SearchResult {
+                    name: krate.name,
+                    max_version: latest.vers,
+                    description: krate.description,
+                    downloads: krate.downloads,
+                    created_at: krate.created_at,
+                    updated_at: krate.updated_at,
+                    documentation: krate.documentation,
+                    repository: krate.repository,
+                })
             })
-            .await?
-        }
-    };
+            .collect::<Result<Vec<SearchResult>, Error>>()?;
 
-    //? Fetch the total result count.
-    let total = repo
-        .run(|conn| {
-            crates::table
-                .select(diesel::dsl::count(crates::name))
-                .filter(crates::name.like(name_pattern.as_str()))
-                .first::<i64>(&conn)
-        })
-        .await?;
+        Ok(tide::response::json(SearchResponse {
+            crates,
+            meta: SearchMeta {
+                total: total as u64,
+            },
+        }))
+    });
 
-    let crates = results
-        .into_iter()
-        .map(|krate| {
-            let latest = state.index.latest_crate(krate.name.as_str())?;
-            Ok(SearchResult {
-                name: krate.name,
-                max_version: latest.vers,
-                description: krate.description,
-                downloads: krate.downloads,
-                created_at: krate.created_at,
-                updated_at: krate.updated_at,
-                documentation: krate.documentation,
-                repository: krate.repository,
-            })
-        })
-        .collect::<Result<Vec<SearchResult>, Error>>()?;
-
-    Ok(tide::response::json(SearchResponse {
-        crates,
-        meta: SearchMeta {
-            total: total as u64,
-        },
-    }))
+    transaction.await
 }

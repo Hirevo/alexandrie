@@ -6,20 +6,24 @@ use syntect::html::{
 
 use crate::config::SyntectState;
 
+/// Stores the location and level of an header tag inside a Markdown document.
 #[derive(Debug, Clone, PartialEq)]
 struct HeaderRef {
+    /// The header tag's level (1 to 6).
     pub level: i32,
+    /// The header tag's start index in the event list.
     pub start: usize,
+    /// The header tag's end index in the event list.
     pub end: usize,
 }
 
+/// Renders a Markdown document to HTML using the provided configuration.
 pub fn render_readme(config: &SyntectState, contents: &str) -> String {
     let mut highlighter: Option<HighlightLines> = None;
     let events = Parser::new_ext(contents, Options::all()).collect::<Vec<_>>();
     let mut events = events
         .into_iter()
-        .enumerate()
-        .map(|(idx, event)| match event {
+        .map(|event| match event {
             Event::Text(text) => {
                 if let Some(ref mut highlighter) = highlighter {
                     let highlighted = highlighter.highlight(&text, &config.syntaxes);
@@ -31,7 +35,7 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
                 }
             }
             Event::Start(Tag::CodeBlock(info)) => {
-                let theme = &config.themes.themes["frontier-contrast"];
+                let theme = &config.themes.themes[&config.theme_name];
 
                 highlighter = Some(match info.split(' ').next() {
                     Some(lang) => {
@@ -79,12 +83,10 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
 
     for href in header_refs.into_iter() {
         fn get_text(events: &[Event]) -> String {
-            events
-                .iter()
-                .fold(String::new(), |mut acc, event| match event {
-                    Event::Text(text) | Event::Code(text) => acc + text,
-                    _ => acc,
-                })
+            events.iter().fold(String::new(), |acc, event| match event {
+                Event::Text(text) | Event::Code(text) => acc + text,
+                _ => acc,
+            })
         }
 
         let mut id = get_text(&events[(href.start + 1)..href.end])
