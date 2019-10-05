@@ -217,69 +217,85 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
             documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
             repository: metadata.repository.as_ref().map(|s| s.as_str()),
         };
-        let result = diesel::insert_into(crates::table)
-            .values(new_crate)
-            .execute(conn)?;
+
+        //? Does the crate already exists?
+        let exists = utils::checks::crate_exists(conn, new_crate.name)?;
+
+        //? Are we adding a new crate or updating a new one?
+        let operation = match exists {
+            true => "Updating",
+            false => {
+                //? Insert the new crate (as it doesn't already exists).
+                diesel::insert_into(crates::table)
+                    .values(new_crate)
+                    .execute(conn)?;
+                "Adding"
+            }
+        };
 
         //? Fetch the newly inserted (or already existant) crate.
-        let krate = crates::table
+        let krate: CrateRegistration = crates::table
             .filter(crates::name.eq(crate_desc.name.as_str()))
-            .first::<CrateRegistration>(conn)?;
+            .first(conn)?;
 
         //? If newly inserted, add the current user as an author.
         //? Else:
-        //?  - check if the current user is indeed an author of the crate.
-        //?  - check if the version number is higher than the latest stored one.
+        //?  - check if the current user is an author of the crate: if not, emit error.
+        //?  - check if the version number is higher than the latest stored one: if not, emit error.
         //?  - update the crate's metadata.
-        let operation = if result == 1 {
-            diesel::insert_into(crate_authors::table)
-                .values(NewCrateAuthor {
-                    crate_id: krate.id,
-                    author_id: author.id,
-                })
-                .execute(conn)?;
-            "Adding"
-        } else {
-            //? Is the user a registered author?
-            let not_owned = CrateAuthor::belonging_to(&krate)
-                .filter(crate_authors::author_id.eq(&author.id))
-                .first::<CrateAuthor>(conn)
-                .optional()?
-                .is_none();
-            if not_owned {
-                return Err(Error::from(AlexError::CrateNotOwned(krate.name, author)));
-            }
-
-            //? Is the version higher than the latest known one?
-            let krate::Crate { vers: latest, .. } =
-                state.index.latest_crate(krate.name.as_str())?;
-            if crate_desc.vers <= latest {
-                return Err(Error::from(AlexError::VersionTooLow {
-                    krate: krate.name,
-                    hosted: latest,
-                    published: crate_desc.vers,
-                }));
-            }
-
-            //? Update the crate's metadata.
-            let description = metadata.description.as_ref().map(|s| s.as_str());
-            let documentation = metadata.documentation.as_ref().map(|s| s.as_str());
-            let repository = metadata.repository.as_ref().map(|s| s.as_str());
-            diesel::update(crates::table.filter(crates::id.eq(krate.id)))
-                .set((
-                    crates::description.eq(description),
-                    crates::documentation.eq(documentation),
-                    crates::repository.eq(repository),
-                    crates::updated_at.eq(chrono::Utc::now().naive_utc()),
+        match exists {
+            true => {
+                //? Is the user an author of this crate?
+                let not_owned: bool = diesel::dsl::select(diesel::dsl::exists(
+                    crate_authors::table
+                        .filter(crate_authors::crate_id.eq(&krate.id))
+                        .filter(crate_authors::author_id.eq(&author.id)),
                 ))
-                .execute(conn)?;
-            "Updating"
+                .get_result(conn)?;
+                if not_owned {
+                    return Err(Error::from(AlexError::CrateNotOwned(krate.name, author)));
+                }
+
+                //? Is the version higher than the latest known one?
+                let krate::Crate { vers: latest, .. } =
+                    state.index.latest_crate(krate.name.as_str())?;
+                if crate_desc.vers <= latest {
+                    return Err(Error::from(AlexError::VersionTooLow {
+                        krate: krate.name,
+                        hosted: latest,
+                        published: crate_desc.vers,
+                    }));
+                }
+
+                //? Update the crate's metadata.
+                let description = metadata.description.as_ref().map(|s| s.as_str());
+                let documentation = metadata.documentation.as_ref().map(|s| s.as_str());
+                let repository = metadata.repository.as_ref().map(|s| s.as_str());
+                diesel::update(crates::table.filter(crates::id.eq(krate.id)))
+                    .set((
+                        crates::description.eq(description),
+                        crates::documentation.eq(documentation),
+                        crates::repository.eq(repository),
+                        crates::updated_at.eq(chrono::Utc::now().naive_utc()),
+                    ))
+                    .execute(conn)?;
+            }
+            false => {
+                //? Insert the current user as an initial author of the crate.
+                diesel::insert_into(crate_authors::table)
+                    .values(NewCrateAuthor {
+                        crate_id: krate.id,
+                        author_id: author.id,
+                    })
+                    .execute(conn)?;
+            }
         };
 
         //? Update keywords.
         let keywords = metadata.keywords.as_ref().map(|vec| vec.as_slice());
         link_keywords(conn, krate.id, keywords)?;
 
+        //? Update categories.
         let categories = metadata.categories.as_ref().map(|vec| vec.as_slice());
         link_categories(conn, krate.id, categories)?;
 

@@ -1,5 +1,5 @@
 use std::io;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use futures::compat::Compat01As03 as Compat;
 use futures::future::BoxFuture;

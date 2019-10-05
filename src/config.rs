@@ -52,14 +52,14 @@ pub enum SyntectThemesConfig {
         /// The path to the binary dump to load themes from.
         path: PathBuf,
         /// The name of the theme to use.
-        theme_name: String
+        theme_name: String,
     },
     /// Variant for recursively loading themes from a directory.
     Directory {
         /// The path to the directory to load themes from.
         path: PathBuf,
         /// The name of the theme to use.
-        theme_name: String
+        theme_name: String,
     },
 }
 
@@ -70,12 +70,12 @@ pub enum SyntectSyntaxesConfig {
     /// Variant for loading syntaxes from a binary dump.
     Dump {
         /// The path to the binary dump to load syntaxes from.
-        path: PathBuf
+        path: PathBuf,
     },
     /// Variant for recursively loading syntaxes from a directory.
     Directory {
         /// The path to the directory to load syntaxes from.
-        path: PathBuf
+        path: PathBuf,
     },
 }
 
