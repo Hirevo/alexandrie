@@ -246,13 +246,13 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
         match exists {
             true => {
                 //? Is the user an author of this crate?
-                let not_owned: bool = diesel::dsl::select(diesel::dsl::exists(
+                let owned: bool = diesel::dsl::select(diesel::dsl::exists(
                     crate_authors::table
                         .filter(crate_authors::crate_id.eq(&krate.id))
                         .filter(crate_authors::author_id.eq(&author.id)),
                 ))
                 .get_result(conn)?;
-                if not_owned {
+                if !owned {
                     return Err(Error::from(AlexError::CrateNotOwned(krate.name, author)));
                 }
 
