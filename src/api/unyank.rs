@@ -44,7 +44,7 @@ pub(crate) async fn put(ctx: Context<State>) -> Result<Response, Error> {
         state.index.commit_and_push(msg.as_str())?;
 
         Ok(tide::response::json(json!({
-            "ok": "true"
+            "ok": true
         })))
     });
 
