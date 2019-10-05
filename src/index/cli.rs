@@ -142,7 +142,7 @@ impl Indexer for CommandLineIndex {
             .into_iter()
             .map(|krate| json::to_string(&krate))
             .collect::<Result<Vec<String>, _>>()?;
-        fs::write(path.as_path(), lines.join("\n"))?;
+        fs::write(path.as_path(), lines.join("\n") + "\n")?;
 
         Ok(())
     }
