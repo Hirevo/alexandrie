@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use syntect::dumps;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
-use tide::http::{HeaderMap, HeaderValue};
+use http::{HeaderMap, HeaderValue};
 
 #[cfg(feature = "frontend")]
 use handlebars::Handlebars;
@@ -22,6 +22,16 @@ fn enabled_def() -> bool {
 }
 
 #[cfg(feature = "frontend")]
+/// Represent a link entry.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Link {
+    /// The name of the related link.
+    pub name: String,
+    /// The target of the related link.
+    pub href: String,
+}
+
+#[cfg(feature = "frontend")]
 /// The frontend configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FrontendConfig {
@@ -34,6 +44,8 @@ pub struct FrontendConfig {
     pub description: Option<String>,
     /// The path to the instance's favicon.
     pub favicon: Option<String>,
+    /// Some related links.
+    pub links: Option<Vec<Link>>,
 }
 
 /// The database configuration struct.
@@ -160,7 +172,7 @@ impl State {
                 .inner_join(authors::table)
                 .select(authors::all_columns)
                 .filter(author_tokens::token.eq(token))
-                .first::<Author>(&conn)
+                .first::<Author>(conn)
                 .ok()
         });
 

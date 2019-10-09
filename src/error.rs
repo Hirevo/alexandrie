@@ -75,7 +75,7 @@ impl IntoResponse for Error {
                 "detail": message,
             }]
         }));
-        *response.status_mut() = tide::http::StatusCode::INTERNAL_SERVER_ERROR;
+        *response.status_mut() = http::StatusCode::INTERNAL_SERVER_ERROR;
         response
     }
 }

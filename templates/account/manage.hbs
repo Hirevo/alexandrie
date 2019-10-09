@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {{> partials/head}}
+    <style>
+        .hero {
+            width: 100%;
+        }
+
+        .hero-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            padding: 40px 10px 10px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: bolder;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .stats-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding-top: 10px;
+        }
+
+        .stats {
+            align-items: center;
+            justify-content: center;
+            white-space: normal;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            width: 1400px;
+            border-top: 2px solid var(--fg-color);
+            border-bottom: 2px solid var(--fg-color);
+        }
+
+        .stat {
+            font-size: 17px;
+        }
+
+        .manage-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+        }
+
+        .manage-grid {
+            width: 1400px;
+            padding: 10px;
+            display: grid;
+            grid-template-rows: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 1400px) {
+            .manage-grid {
+                width: 100%;
+            }
+
+            .stats {
+                width: 90%;
+            }
+        }
+
+        .card-content {
+            flex-grow: 1;
+        }
+
+        .manage-passwd,
+        .manage-tokens {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-rows: min-content 1fr min-content;
+            grid-template-columns: 1fr;
+            padding: 10px 20px;
+        }
+
+        .manage-passwd {
+            border-right: 1px solid var(--fg-color);
+        }
+
+        .manage-tokens {
+            border-left: 1px solid var(--fg-color);
+        }
+
+        .manage-passwd-title,
+        .manage-tokens-title {
+            width: 100%;
+            text-align: center;
+            font-size: 21px;
+            font-weight: bold;
+            padding: 5px 0;
+        }
+
+        .manage-passwd-field,
+        .manage-tokens-field {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            padding: 10px 0;
+        }
+
+        .manage-passwd-label,
+        .manage-tokens-label {
+            font-weight: bold;
+            padding-bottom: 5px;
+        }
+
+        .manage-passwd-input,
+        .manage-tokens-input {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: none;
+            border-bottom: 2px solid var(--darker-bg-color);
+            background: transparent;
+            font: inherit;
+            color: inherit;
+            background-color: inherit;
+            padding: 5px 0;
+            transition: border-color 0.15s;
+        }
+
+        .manage-passwd-input:focus,
+        .manage-tokens-input:focus {
+            border-bottom: 2px solid var(--fg-color);
+        }
+
+        .manage-passwd-input:invalid,
+        .manage-tokens-input:invalid {
+            box-shadow: none;
+            {{!-- border-bottom: 2px solid #C00; --}}
+        }
+
+        .manage-passwd-button,
+        .manage-tokens-button {
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid var(--darker-bg-color);
+            border-radius: 5px;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+            font-weight: bold;
+            text-align: center;
+            color: inherit;
+            background-color: inherit;
+            padding: 7px 20px;
+            transition: background-color 0.15s, border-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manage-passwd-button:hover,
+        .manage-passwd-button:focus,
+        .manage-tokens-button:hover,
+        .manage-tokens-button:focus {
+            border: 2px solid var(--fg-color);
+            background-color: var(--dark-bg-color);
+        }
+
+        .manage-passwd-button:disabled,
+        .manage-tokens-button:disabled {
+            border: 2px solid var(--darker-bg-color);
+            background-color: var(--dark-bg-color);
+            cursor: default;
+        }
+
+        .manage-passwd-success-msg {
+            padding: 10px;
+            background-color: var(--success-bg-color);
+            color: var(--success-fg-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .manage-passwd-error-msg {
+            padding: 10px;
+            background-color: var(--danger-bg-color);
+            color: var(--danger-fg-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .manage-tokens-entries {
+            width: 100%;
+            counter-reset: rank;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .manage-tokens-entry {
+            width: 100%;
+            margin-top: 10px;
+            font-weight: bold;
+            display: grid;
+            grid-template-columns: min-content min-content;
+            grid-template-rows: 1fr;
+            grid-gap: 10px;
+        }
+
+        .manage-tokens-entry:first-child {
+            margin-top: 0;
+        }
+
+        .manage-tokens-entry-name {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            white-space: nowrap;
+        }
+
+        .manage-tokens-entry-revoke {
+            border: 2px solid var(--darker-bg-color);
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            padding: 3px 10px;
+            transition: background-color 0.15s, border-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manage-tokens-entry-revoke:hover,
+        .manage-tokens-entry-revoke:focus {
+            border: 2px solid var(--fg-color);
+            background-color: var(--dark-bg-color);
+        }
+
+        .manage-tokens-entry-revoke-dis {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--fg-color);
+            background-color: var(--lighter-bg-color);
+            padding: 5px 10px;
+            box-shadow: 0 0 10px #0006;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .manage-tokens-entry-revoke::before {
+            font-family: alexicons;
+            content: "\e901";
+        }
+
+        .manage-tokens-entry-revoke-dis:hover {
+            transform: scale(1.1);
+        }
+
+        .manage-tokens-empty {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .manage-tokens-create {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .manage-tokens-success-msg {
+            padding: 10px;
+            background-color: var(--success-bg-color);
+            color: var(--success-fg-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1000px) {
+            .manage-grid {
+                grid-template-rows: repeat(2, 1fr);
+                grid-template-columns: 1fr;
+            }
+
+            .manage-passwd,
+            .manage-tokens {
+                border-right: none;
+                border-left: none;
+            }
+
+            .manage-tokens {
+                padding-top: 5px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .manage-passwd-input,
+            .manage-tokens-input {
+                border-bottom: solid 2px var(--darker-fg-color);
+            }
+
+            .manage-passwd-button,
+            .manage-tokens-button,
+            .manage-tokens-entry-revoke {
+                border: solid 2px var(--darker-fg-color);
+            }
+
+
+            .manage-passwd-button:disabled,
+            .manage-tokens-button:disabled,
+            .manage-tokens-entry-revoke:disabled {
+                border: 2px solid var(--darker-fg-color);
+                background-color: var(--dark-fg-color);
+                color: var(--bg-color);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {{> partials/navbar}}
+    <div class="hero">
+        <div style="height: 50px"></div>
+        <div class="hero-content-container">
+            <div class="hero-title">Account management</div>
+            <div class="hero-subtitle">Manage your account settings here.</div>
+        </div>
+    </div>
+    <div class="stats-container">
+        <div class="stats">
+            <div class="stats-block">
+                <div class="stat">Name:&nbsp;<b>{{ author.name }}</b></div>
+                <div class="stat">Email:&nbsp;<b>{{ author.email }}</b></div>
+                <div class="stat"><b>{{ owned_crates_count }}</b>&nbsp;crates owned</div>
+                <div class="stat"><b>{{ open_sessions_count }}</b>&nbsp;currently open sessions</div>
+            </div>
+        </div>
+    </div>
+    <div class="manage-container">
+        <div class="manage-grid">
+            <form class="manage-passwd" method="POST" action="/account/manage/password">
+                <div class="manage-passwd-title">Change password</div>
+                <div class="manage-passwd-fields">
+                    <div class="manage-passwd-field">
+                        <label class="manage-passwd-label" for="current-password">Current password:</label>
+                        <input class="manage-passwd-input" type="password" name="password" id="current-password" placeholder="Current password..." autocomplete="current-password" required>
+                    </div>
+                    <div class="manage-passwd-field">
+                        <label class="manage-passwd-label" for="new-password">New password:</label>
+                        <input class="manage-passwd-input" type="password" name="new-password" id="new-password" placeholder="New password..." autocomplete="new-password" required>
+                    </div>
+                    <div class="manage-passwd-field">
+                        <label class="manage-passwd-label" for="confirm-password">Confirm new password:</label>
+                        <input class="manage-passwd-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." autocomplete="off" required>
+                    </div>
+                    {{#if passwd_success_msg}}
+                    <div class="manage-passwd-field manage-passwd-success-msg">
+                        Success: {{ passwd_success_msg }}
+                    </div>
+                    {{/if}}
+                    {{#if passwd_error_msg}}
+                    <div class="manage-passwd-field manage-passwd-error-msg">
+                        Error: {{ passwd_error_msg }}
+                    </div>
+                    {{/if}}
+                </div>
+                <input type="submit" value="Change password" class="manage-passwd-button">
+            </form>
+            <div class="manage-tokens">
+                <div class="manage-tokens-title">Tokens</div>
+                <div class="manage-tokens-entries">
+                    {{#if tokens}}
+                    {{#each tokens}}
+                    <div class="manage-tokens-entry">
+                        <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}"></a>
+                        <div class="manage-tokens-entry-name">{{ this.name }}</div>
+                    </div>
+                    {{/each}}
+                    {{else}}
+                    <div class="manage-tokens-empty">No tokens...</div>
+                    {{/if}}
+                </div>
+                {{#if token_success_msg}}
+                <div class="manage-tokens-field manage-tokens-success-msg">
+                    Created token: {{ token_success_msg }}
+                </div>
+                {{/if}}
+                <form class="manage-tokens-create" method="POST" action="/account/manage/tokens">
+                    <div class="manage-tokens-field">
+                        <label class="manage-tokens-label" for="token-name">New token name:</label>
+                        <input class="manage-tokens-input" type="text" name="token-name" id="token-name" placeholder="New token name..." required>
+                    </div>
+                    <input class="manage-tokens-button" type="submit" value="Create token">
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import init, * as Rust from "/assets/wasm/wasm_pbkdf2.js";
+
+        (async () => {
+            await init();
+            const form = document.querySelector('form.manage-passwd');
+            const password = form.querySelector('input[type="password"]#current-password');
+            const new_password = form.querySelector('input[type="password"]#new-password');
+            const confirm_password = form.querySelector('input[type="password"]#confirm-password');
+            const button = form.querySelector('input[type="submit"]');
+            const email = "{{ user.email }}";
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                button.disabled = true;
+                button.value = "Loading...";
+                password.value = Rust.pbkdf2_encode(password.value, email, 5000);   
+                new_password.value = Rust.pbkdf2_encode(new_password.value, email, 5000);
+                confirm_password.value = Rust.pbkdf2_encode(confirm_password.value, email, 5000);
+                this.submit();
+            });
+        })();
+    </script>
+    <script>
+        const form = document.querySelector('form.manage-tokens-create');
+        const button = form.querySelector('input[type="submit"]');
+        form.addEventListener("submit", function (event) {
+            button.disabled = true;
+            button.value = "Loading...";
+        }, { passive: true });
+    </script>
+</body>
+
+</html>

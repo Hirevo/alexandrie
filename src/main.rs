@@ -1,3 +1,4 @@
+#![feature(inner_deref)]
 #![allow(clippy::redundant_closure, clippy::needless_lifetimes)]
 #![allow(unused)]
 #![warn(missing_docs)]
@@ -15,7 +16,6 @@
 //!
 //! - Offer customizable crate storage strategies (local on-disk, S3, Git Repo, etc...).
 //! - An optional integrated (server-side rendered) front-end.
-//! - Be performant.
 //!
 //! Current state
 //! -------------
@@ -24,78 +24,10 @@
 //! - The optional front-end is in active development.
 //! - Currently, generating tokens is done manually through the database.
 //!
-//! How to build
-//! ------------
+//! How is it built
+//! ---------------
 //!
-//! Alexandrie is built using Tide and currently requires a MySQL database (MariaDB and PostgreSQL are such databases).  
-//! To build, you can run `cargo build [--release]`.  
-//!
-//! Before running it, you need to configure the instance in the `alexandrie.toml` file.
-//!
-//! The database is configured through the `[database]` table:
-//!
-//! ```toml
-//! [database]
-//! # Replace the '<...>' placeholders by the real ones.
-//! url = "mysql://<user>:<password>@<hostname>:<port>/<database>"
-//! ```
-//!
-//! Then, you can configure the crates' tarballs storage strategy and the crate index management strategy that you want to use.  
-//! Here is how to do it (these are also the defaults, you can leave them out if you want):
-//!
-//! ```toml
-//! [index]
-//! type = "command-line"
-//! path = "crate-index"
-//!
-//! [storage]
-//! type = "disk"
-//! path = "crate-storage"
-//! ```
-//!
-//! You can also configure things like the address and port of the server:
-//!
-//! ```toml
-//! [general]
-//! addr = "127.0.0.1"
-//! port = 3000
-//! ```
-//!
-//! To run the registry, be sure to clone your crate index at the location designated by the `path` key in `[index]`.  
-//! The default for it is `./crate-index`.  
-//! To clone an existing crate index, you can run:
-//!
-//! ```bash
-//! # Replace the '<...>' placeholders by the real ones.
-//! git clone <url-of-the-crate-index> <path-from-config>
-//! ```
-//!
-//! If you want to create one, you can refer to the [Cargo's Alternative Registries RFC] to learn about the layout of such an index.  
-//! You can also visit the [crates.io index] or the [crates.polomack.eu index] as deployed examples.  
-//!
-//! [crates.io index]: https://github.com/rust-lang/crates.io-index
-//! [crates.polomack.eu index]: https://github.com/Hirevo/alexandrie-index
-//!
-//! Once everything is configured, you can run with: `cargo run [--release]`.
-//!
-//! Then, if you want to use this index with Cargo, you can follow these steps:
-//!
-//! - Edit or create the `~/.cargo/config` file, and add the following code:
-//!   ```toml
-//!   # Replace the '<...>' placeholders by the real ones.
-//!   [registries.<name-of-your-registry>]
-//!   index = "<url-of-the-crate-index>"
-//!   ```
-//! - Then, run `cargo login --registry <name-of-your-registry>` and enter your author token.  
-//!   To generate a token, you need to register an author first by creating one in the database.
-//!   You can do it like this:
-//!   ```sql
-//!   -- Replace the '<...>' placeholders by the real ones.
-//!   insert into `authors` (`email`, `name`, `passwd`) values ("<email>", "<displayable-name>", sha2("<passwd>", 512));
-//!   insert into `author_tokens` (`author_id`, `token`) values (1, sha2(concat(now(), rand(), uuid()), 512));
-//!   select token from `author_tokens` limit 1; -- This will display the token back to you.
-//!   ```
-//! - You can now use the registry using `cargo [search|publish] --registry <name-of-your-registry>`
+//! Alexandrie is built using Tide and requires a MySQL database.  
 //!
 
 #[macro_use]
@@ -108,9 +40,14 @@ extern crate slog;
 use std::fs;
 use std::io;
 
+use std::sync::Arc;
+
 use diesel::MysqlConnection;
 use tide::middleware::RequestLogger;
 use tide::App;
+
+#[cfg(feature = "frontend")]
+use tide::cookies::CookiesMiddleware;
 
 /// API endpoints definitions.
 pub mod api;
@@ -135,11 +72,17 @@ pub mod utils;
 #[cfg(feature = "frontend")]
 pub mod frontend;
 
-use crate::config::{Config, State};
+use crate::config::Config;
 use crate::utils::static_files::StaticFiles;
+
+#[cfg(feature = "frontend")]
+use crate::utils::auth::AuthMiddleware;
 
 /// The instantiated [`crate::db::Repo`] type alias.
 pub type Repo = db::Repo<MysqlConnection>;
+
+/// The instantiated [`crate::db::Repo`] type alias.
+pub type State = Arc<config::State>;
 
 #[runtime::main(runtime_tokio::Tokio)]
 async fn main() -> io::Result<()> {
@@ -152,15 +95,20 @@ async fn main() -> io::Result<()> {
     #[cfg(feature = "frontend")]
     let frontend_enabled = config.frontend.enabled;
 
-    let state: State = config.into();
-    let mut app = App::with_state(state);
+    let state: config::State = config.into();
+    let mut app = App::with_state(Arc::new(state));
 
-    info!("setting up request logger");
+    info!("setting up request logger middleware");
     app.middleware(RequestLogger::new());
 
     #[cfg(feature = "frontend")]
     {
         if frontend_enabled {
+            info!("setting up cookie middleware");
+            app.middleware(CookiesMiddleware::new());
+            info!("setting up authentication middleware");
+            app.middleware(AuthMiddleware::new());
+
             info!("mounting '/'");
             app.at("/").get(frontend::index::get);
             info!("mounting '/search'");
@@ -172,10 +120,22 @@ async fn main() -> io::Result<()> {
             app.at("/account/login")
                 .get(frontend::account::login::get)
                 .post(frontend::account::login::post);
+            info!("mounting '/account/logout'");
+            app.at("/account/logout")
+                .get(frontend::account::logout::get);
             info!("mounting '/account/register'");
             app.at("/account/register")
                 .get(frontend::account::register::get)
                 .post(frontend::account::register::post);
+            info!("mounting '/account/manage'");
+            app.at("/account/manage")
+                .get(frontend::account::manage::get);
+            info!("mounting '/account/manage/password'");
+            app.at("/account/manage/password")
+                .post(frontend::account::manage::passwd::post);
+            info!("mounting '/account/manage/tokens'");
+            app.at("/account/manage/tokens")
+                .post(frontend::account::manage::tokens::post);
 
             info!("mounting '/assets/*path'");
             app.at("/assets/*path").get(StaticFiles::new("assets")?);

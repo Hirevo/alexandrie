@@ -29,22 +29,6 @@
             text-align: center;
         }
 
-        .keywords-container {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .keywords {
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        .keywords:first-child {
-            margin-left: 0;
-        }
-
         .separator-container {
             width: 100%;
             display: grid;
@@ -132,6 +116,12 @@
             {{!-- border-bottom: 2px solid #C00; --}}
         }
 
+        .login-checkbox {
+            position: relative;
+            vertical-align: middle;
+            bottom: 1px;
+        }
+
         .login-buttons {
             display: grid;
             grid-template-rows: 1fr 1fr;
@@ -155,6 +145,9 @@
             background-color: inherit;
             padding: 7px 20px;
             transition: background-color 0.15s, border-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .login-button:hover,
@@ -167,6 +160,15 @@
             border: 2px solid var(--darker-bg-color);
             background-color: var(--dark-bg-color);
             cursor: default;
+        }
+
+        .login-error-msg {
+            padding: 10px;
+            background-color: var(--danger-bg-color);
+            color: var(--danger-fg-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -202,7 +204,7 @@
         </div>
     </div>
     <div class="login-container">
-        <form class="login-content" action="/account/login" method="POST">
+        <form class="login-content" method="POST" action="/account/login">
             <div class="login-field">
                 <label class="login-label" for="email">Email:</label>
                 <input class="login-input" type="email" name="email" id="email" placeholder="Email..." autocomplete="email" required>
@@ -211,19 +213,40 @@
                 <label class="login-label" for="password">Password:</label>
                 <input class="login-input" type="password" name="password" id="password" placeholder="Password..." autocomplete="current-password" required>
             </div>
+            <div class="login-field">
+                <label class="login-label">
+                    <input class="login-checkbox" type="checkbox" name="remember">
+                    Remember me for 30 days
+                </label>
+            </div>
+            {{#if error_msg}}
+            <div class="login-field login-error-msg">
+                Error: {{ error_msg }}
+            </div>
+            {{/if}}
             <div class="login-buttons">
                 <input type="submit" value="Log in" class="login-button">
                 <a href="/account/register" class="login-button">Need to create an account ?</a>
             </div>
         </form>
     </div>
-    <script>
-        const button = document.querySelector('input[type="submit"]');
-        const form = document.querySelector('form.login-content');
-        form.addEventListener("submit", event => {
-            button.disabled = true;
-            button.value = "Loading...";
-        }, { passive: true });
+    <script type="module">
+        import init, * as Rust from "/assets/wasm/wasm_pbkdf2.js";
+
+        (async () => {
+            await init();
+            const form = document.querySelector('form.login-content');
+            const email = form.querySelector('input[type="email"]');
+            const password = form.querySelector('input[type="password"]');
+            const button = form.querySelector('input[type="submit"]');
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                button.disabled = true;
+                button.value = "Loading...";
+                password.value = Rust.pbkdf2_encode(password.value, email.value, 5000);
+                this.submit();
+            });
+        })();
     </script>
 </body>
 

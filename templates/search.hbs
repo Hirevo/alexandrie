@@ -119,6 +119,20 @@
             font-size: 18px;
         }
 
+        .search-result-keywords {
+            display: flex;
+            margin-top: 2px;
+        }
+
+        .search-result-keyword {
+            margin-left: 7px;
+            font-weight: bold;
+        }
+
+        .search-result-keyword:first-child {
+            margin-left: 0;
+        }
+
         .search-result-stats {
             border-left: solid 2px var(--fg-color);
             padding: 10px;
@@ -174,11 +188,18 @@
                 <div class="search-result-infos">
                     <div class="search-result-title">{{ this.name }} #{{ this.version }}</div>
                     <div class="search-result-desc">{{ this.description }}</div>
+                    {{#if this.keywords}}
+                    <div class="search-result-keywords">
+                        {{#each this.keywords}}
+                        <div class="search-result-keyword">#{{ this }}</div>
+                        {{/each}}
+                    </div>
+                    {{/if}}
                 </div>
                 <div class="search-result-stats">
-                    <div class="search-result-stats-entry">{{ this.downloads }} downloads</div>
-                    <div class="search-result-stats-entry">Created on {{ this.updated_at }}</div>
-                    <div class="search-result-stats-entry">Last updated on {{ this.updated_at }}</div>
+                    <div class="search-result-stats-entry"><b>{{ this.downloads }}</b> downloads</div>
+                    <div class="search-result-stats-entry">Created on <b>{{ this.updated_at }}</b></div>
+                    <div class="search-result-stats-entry">Last updated on <b>{{ this.updated_at }}</b></div>
                 </div>
             </a>
             {{/each}}

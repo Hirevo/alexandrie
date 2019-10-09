@@ -6,3 +6,10 @@ pub mod rendering;
 pub mod response;
 /// A HTTP handler for serving static files.
 pub mod static_files;
+
+/// Various authentication-related utilities.
+#[cfg(feature = "frontend")]
+pub mod auth;
+/// Utilities for using flash cookies.
+#[cfg(feature = "frontend")]
+pub mod flash;

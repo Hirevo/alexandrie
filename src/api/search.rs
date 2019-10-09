@@ -1,16 +1,17 @@
 use std::num::NonZeroU32;
 
+use diesel::dsl as sql;
 use diesel::prelude::*;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tide::querystring::ContextExt;
 use tide::{Context, Response};
 
-use crate::config::State;
 use crate::db::models::CrateRegistration;
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
 use crate::index::Indexer;
+use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct SearchResponse {
@@ -84,7 +85,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
 
         //? Fetch the total result count.
         let total = crates::table
-            .select(diesel::dsl::count(crates::name))
+            .select(sql::count(crates::name))
             .filter(crates::name.like(name_pattern.as_str()))
             .first::<i64>(conn)?;
 

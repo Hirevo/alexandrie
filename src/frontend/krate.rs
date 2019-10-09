@@ -2,7 +2,6 @@ use diesel::prelude::*;
 use json::json;
 use tide::{Context, Response};
 
-use crate::config::State;
 use crate::db::models::{CrateAuthor, CrateCategory, CrateKeyword, CrateRegistration, Keyword};
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
@@ -10,9 +9,13 @@ use crate::frontend::helpers;
 use crate::index::Indexer;
 use crate::storage::Store;
 use crate::utils;
+use crate::utils::auth::AuthExt;
+use crate::State;
 
 pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
     let name = ctx.param::<String>("crate").unwrap();
+
+    let user = ctx.get_author();
     let state = ctx.state();
     let repo = &state.repo;
 
@@ -21,8 +24,19 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
         let crate_desc = crates::table
             .filter(crates::name.eq(&name))
             .first::<CrateRegistration>(conn)
-            .optional()?
-            .ok_or_else(|| Error::from(AlexError::CrateNotFound(name)))?;
+            .optional()?;
+        let crate_desc = match crate_desc {
+            Some(crate_desc) => crate_desc,
+            None => {
+                let response = utils::response::error_html(
+                    state.as_ref(),
+                    user,
+                    http::StatusCode::NOT_FOUND,
+                    format!("No crate named '{0}' has been found.", name),
+                );
+                return Ok(response);
+            }
+        };
         let krate = state.index.latest_crate(&crate_desc.name)?;
 
         //? Get the HTML-rendered README page of this crate.
@@ -51,6 +65,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
 
         let engine = &state.frontend.handlebars;
         let context = json!({
+            "user": user,
             "instance": &state.frontend.config,
             "crate": {
                 "id": crate_desc.id,

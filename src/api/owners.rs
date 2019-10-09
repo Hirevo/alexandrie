@@ -1,14 +1,14 @@
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::http::status::StatusCode;
+use http::status::StatusCode;
 use tide::{Context, Response};
 
-use crate::config::State;
 use crate::db::models::{Author, NewCrateAuthor};
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
 use crate::utils;
+use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct OwnerListResponse {

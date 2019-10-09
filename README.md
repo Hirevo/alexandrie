@@ -17,7 +17,6 @@ Goals
 
 - Offer customizable crate storage strategies (local on-disk, S3, Git Repo, etc...).
 - An optional integrated (server-side rendered) front-end.
-- Be performant.
 
 Current state
 -------------
@@ -32,12 +31,13 @@ Things yet to do
 - [ ] Complete the front-end: in-progress
 - [x] Categories: done
 - [x] Crate yanking: done
-- [ ] User management: prototyping
-- [ ] Crate versioning in DB (download counts, etc...): prototyping
+- [ ] User management: in-progress
+- [ ] Crate versioning in DB (download counts, etc...): planned
 - [x] Database transactions everywhere (in a nicer way): done
-- [ ] Ability to re-render READMEs (to migrate themes): deferred
-- [ ] More `Store` implementors: deferred
-- [ ] More `Indexer` implementors: deferred
+- [ ] Ability to re-render READMEs (to migrate themes): planned
+- [ ] Search by keywords or categories: planned
+- [ ] More `Store` implementors: planned
+- [ ] More `Indexer` implementors: planned
 
 How to build
 ------------

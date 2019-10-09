@@ -1,12 +1,12 @@
 use json::json;
 use semver::Version;
-use tide::http::status::StatusCode;
+use http::status::StatusCode;
 use tide::{Context, Response};
 
-use crate::config::State;
 use crate::error::{AlexError, Error};
 use crate::index::Indexer;
 use crate::utils;
+use crate::State;
 
 pub(crate) async fn delete(ctx: Context<State>) -> Result<Response, Error> {
     let name = ctx.param::<String>("name").unwrap();

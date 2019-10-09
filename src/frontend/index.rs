@@ -1,27 +1,30 @@
 use bigdecimal::{BigDecimal, ToPrimitive};
+use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use tide::{Context, Response};
 
-use crate::config::State;
 use crate::db::schema::*;
 use crate::error::Error;
 use crate::frontend::helpers;
 use crate::utils;
+use crate::utils::auth::AuthExt;
+use crate::State;
 
 pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
+    let user = ctx.get_author();
     let state = ctx.state();
     let repo = &state.repo;
 
     let transaction = repo.transaction(|conn| {
         //? Get total number of crates.
         let crate_count = crates::table
-            .select(diesel::dsl::count(crates::id))
+            .select(sql::count(crates::id))
             .first::<i64>(conn)?;
 
         //? Get total number of crate downloads.
         let total_downloads = crates::table
-            .select(diesel::dsl::sum(crates::downloads))
+            .select(sql::sum(crates::downloads))
             .first::<Option<BigDecimal>>(conn)?
             .map_or(0, |dec| {
                 dec.to_u64()
@@ -44,6 +47,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
 
         let engine = &state.frontend.handlebars;
         let context = json!({
+            "user": user,
             "instance": &state.frontend.config,
             "total_downloads": helpers::humanize_number(total_downloads),
             "crate_count": helpers::humanize_number(crate_count),

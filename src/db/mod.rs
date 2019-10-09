@@ -43,7 +43,7 @@ where
     /// The closure will be passed a `Connection` from the pool to use.
     pub async fn run<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(PooledConnection<ConnectionManager<T>>) -> R + Send + std::marker::Unpin,
+        F: FnOnce(&PooledConnection<ConnectionManager<T>>) -> R + Send + std::marker::Unpin,
         T: Send,
     {
         let pool = self.connection_pool.clone();
@@ -54,8 +54,12 @@ where
         // multiple times if `poll_fn` is called multple times.
         let mut f = Some(f);
         let future = Compat::new(futures_01::future::poll_fn(|| {
-            tokio_threadpool::blocking(|| (f.take().unwrap())(pool.get().unwrap()))
-                .map_err(|_| panic!("the threadpool shut down"))
+            tokio_threadpool::blocking(|| {
+                let f = f.take().unwrap();
+                let conn = pool.get().unwrap();
+                f(&conn)
+            })
+            .map_err(|_| panic!("the threadpool shut down"))
         }));
 
         future.await.expect("Error running async database task.")

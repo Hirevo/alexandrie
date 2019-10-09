@@ -1,4 +1,5 @@
 use diesel::connection::Connection;
+use diesel::dsl as sql;
 use diesel::mysql::Mysql;
 use diesel::prelude::*;
 
@@ -10,10 +11,8 @@ pub fn crate_exists<Conn>(conn: &Conn, name: &str) -> Result<bool, Error>
 where
     Conn: Connection<Backend = Mysql>,
 {
-    let exists: bool = diesel::dsl::select(diesel::dsl::exists(
-        crates::table.filter(crates::name.eq(name)),
-    ))
-    .get_result(conn)?;
+    let exists: bool =
+        sql::select(sql::exists(crates::table.filter(crates::name.eq(name)))).get_result(conn)?;
 
     Ok(exists)
 }
@@ -23,7 +22,7 @@ pub fn is_crate_author<Conn>(conn: &Conn, crate_name: &str, author_id: u64) -> R
 where
     Conn: Connection<Backend = Mysql>,
 {
-    let exists: bool = diesel::dsl::select(diesel::dsl::exists(
+    let exists: bool = sql::select(sql::exists(
         crate_authors::table
             .inner_join(authors::table)
             .inner_join(crates::table)

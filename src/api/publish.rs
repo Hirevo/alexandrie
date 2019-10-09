@@ -5,17 +5,17 @@ use std::path::PathBuf;
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use diesel::connection::Connection;
+use diesel::dsl as sql;
 use diesel::mysql::Mysql;
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use futures::stream::StreamExt;
+use ring::digest as hasher;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use tar::Archive;
 use tide::{Body, Context, Response};
 
-use crate::config::State;
 use crate::db::models::{
     CrateAuthor, CrateRegistration, NewCrateAuthor, NewCrateCategory, NewCrateKeyword,
     NewCrateRegistration,
@@ -26,6 +26,7 @@ use crate::index::Indexer;
 use crate::krate;
 use crate::storage::Store;
 use crate::utils;
+use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct PublishResponse {}
@@ -170,7 +171,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
     let crate_size = cursor.read_u32::<LittleEndian>()?;
     let mut crate_bytes = vec![0u8; crate_size as usize];
     cursor.read_exact(&mut crate_bytes)?;
-    let hash = hex::encode(&Sha256::digest(&crate_bytes));
+    let hash = hex::encode(hasher::digest(&hasher::SHA256, &crate_bytes).as_ref());
 
     let state = ctx.state();
     let repo = &state.repo;
@@ -222,15 +223,14 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
         let exists = utils::checks::crate_exists(conn, new_crate.name)?;
 
         //? Are we adding a new crate or updating a new one?
-        let operation = match exists {
-            true => "Updating",
-            false => {
-                //? Insert the new crate (as it doesn't already exists).
-                diesel::insert_into(crates::table)
-                    .values(new_crate)
-                    .execute(conn)?;
-                "Adding"
-            }
+        let operation = if exists {
+            "Updating"
+        } else {
+            //? Insert the new crate (as it doesn't already exists).
+            diesel::insert_into(crates::table)
+                .values(new_crate)
+                .execute(conn)?;
+            "Adding"
         };
 
         //? Fetch the newly inserted (or already existant) crate.
@@ -243,52 +243,49 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
         //?  - check if the current user is an author of the crate: if not, emit error.
         //?  - check if the version number is higher than the latest stored one: if not, emit error.
         //?  - update the crate's metadata.
-        match exists {
-            true => {
-                //? Is the user an author of this crate?
-                let owned: bool = diesel::dsl::select(diesel::dsl::exists(
-                    crate_authors::table
-                        .filter(crate_authors::crate_id.eq(&krate.id))
-                        .filter(crate_authors::author_id.eq(&author.id)),
+        if exists {
+            //? Is the user an author of this crate?
+            let owned: bool = sql::select(sql::exists(
+                crate_authors::table
+                    .filter(crate_authors::crate_id.eq(&krate.id))
+                    .filter(crate_authors::author_id.eq(&author.id)),
+            ))
+            .get_result(conn)?;
+            if !owned {
+                return Err(Error::from(AlexError::CrateNotOwned(krate.name, author)));
+            }
+
+            //? Is the version higher than the latest known one?
+            let krate::Crate { vers: latest, .. } =
+                state.index.latest_crate(krate.name.as_str())?;
+            if crate_desc.vers <= latest {
+                return Err(Error::from(AlexError::VersionTooLow {
+                    krate: krate.name,
+                    hosted: latest,
+                    published: crate_desc.vers,
+                }));
+            }
+
+            //? Update the crate's metadata.
+            let description = metadata.description.as_ref().map(|s| s.as_str());
+            let documentation = metadata.documentation.as_ref().map(|s| s.as_str());
+            let repository = metadata.repository.as_ref().map(|s| s.as_str());
+            diesel::update(crates::table.filter(crates::id.eq(krate.id)))
+                .set((
+                    crates::description.eq(description),
+                    crates::documentation.eq(documentation),
+                    crates::repository.eq(repository),
+                    crates::updated_at.eq(chrono::Utc::now().naive_utc()),
                 ))
-                .get_result(conn)?;
-                if !owned {
-                    return Err(Error::from(AlexError::CrateNotOwned(krate.name, author)));
-                }
-
-                //? Is the version higher than the latest known one?
-                let krate::Crate { vers: latest, .. } =
-                    state.index.latest_crate(krate.name.as_str())?;
-                if crate_desc.vers <= latest {
-                    return Err(Error::from(AlexError::VersionTooLow {
-                        krate: krate.name,
-                        hosted: latest,
-                        published: crate_desc.vers,
-                    }));
-                }
-
-                //? Update the crate's metadata.
-                let description = metadata.description.as_ref().map(|s| s.as_str());
-                let documentation = metadata.documentation.as_ref().map(|s| s.as_str());
-                let repository = metadata.repository.as_ref().map(|s| s.as_str());
-                diesel::update(crates::table.filter(crates::id.eq(krate.id)))
-                    .set((
-                        crates::description.eq(description),
-                        crates::documentation.eq(documentation),
-                        crates::repository.eq(repository),
-                        crates::updated_at.eq(chrono::Utc::now().naive_utc()),
-                    ))
-                    .execute(conn)?;
-            }
-            false => {
-                //? Insert the current user as an initial author of the crate.
-                diesel::insert_into(crate_authors::table)
-                    .values(NewCrateAuthor {
-                        crate_id: krate.id,
-                        author_id: author.id,
-                    })
-                    .execute(conn)?;
-            }
+                .execute(conn)?;
+        } else {
+            //? Insert the current user as an initial author of the crate.
+            diesel::insert_into(crate_authors::table)
+                .values(NewCrateAuthor {
+                    crate_id: krate.id,
+                    author_id: author.id,
+                })
+                .execute(conn)?;
         };
 
         //? Update keywords.

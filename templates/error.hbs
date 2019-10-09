@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Login - {{ instance.title }}</title>
+    {{> partials/head}}
+    <style>
+        .hero {
+            width: 100%;
+        }
+
+        .hero-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            padding: 40px 10px 10px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: bolder;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .separator-container {
+            width: 100%;
+            display: grid;
+            grid-template-rows: 12px 10px;
+            grid-template-columns: 1fr;
+        }
+
+        .separator-flex {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1400px;
+            height: 100%;
+            border-bottom: 2px solid var(--fg-color);
+        }
+
+        .error-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+        }
+
+        .error-content {
+            width: 100%;
+            max-width: 430px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .error-msg {
+            padding: 10px;
+            background-color: var(--danger-bg-color);
+            color: var(--danger-fg-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1400px) {
+            .error-content {
+                width: 100%;
+            }
+
+            .separator {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {{> partials/navbar}}
+    <div class="hero">
+        <div style="height: 50px"></div>
+        <div class="hero-content-container">
+            <div class="hero-title">Error page</div>
+            <div class="hero-subtitle">An error was encountered.</div>
+        </div>
+    </div>
+    <div class="separator-container">
+        <div class="separator-flex">
+            <div class="separator"></div>
+        </div>
+    </div>
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-msg">
+                {{ error_msg }}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

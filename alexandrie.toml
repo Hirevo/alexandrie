@@ -7,6 +7,9 @@ enabled = true
 title = "Alexandrie"
 description = "An alternative crate registry for Cargo, the Rust package manager."
 # favicon = ""
+links = [
+    { name = "Github repository", href = "https://github.com/Hirevo/alexandrie" },
+]
 
 [database]
 url = "mysql://root:root@127.0.0.1:3306/alexandrie"

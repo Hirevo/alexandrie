@@ -2,10 +2,10 @@ use diesel::prelude::*;
 use semver::Version;
 use tide::{Body, Context, Response};
 
-use crate::config::State;
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
 use crate::storage::Store;
+use crate::State;
 
 /// Route to download a crate's tarball (used by `cargo build`).
 ///
@@ -35,7 +35,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             let mut krate = state.storage.read_crate(&name, version)?;
             let mut buf = Vec::new();
             krate.read_to_end(&mut buf)?;
-            Ok(tide::http::Response::builder()
+            Ok(http::Response::builder()
                 .header("content-type", "application/octet-stream")
                 .body(Body::from(buf))
                 .unwrap())

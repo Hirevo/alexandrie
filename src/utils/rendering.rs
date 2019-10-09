@@ -8,7 +8,7 @@ use crate::config::SyntectState;
 
 /// Stores the location and level of an header tag inside a Markdown document.
 #[derive(Debug, Clone, PartialEq)]
-struct HeaderRef {
+pub struct HeaderRef {
     /// The header tag's level (1 to 6).
     pub level: i32,
     /// The header tag's start index in the event list.

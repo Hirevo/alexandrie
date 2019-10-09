@@ -51,10 +51,12 @@ table! {
     author_tokens (id) {
         /// The token's ID.
         id -> Unsigned<Bigint>,
-        /// The author's ID.
-        author_id -> Unsigned<Bigint>,
+        /// The token's name.
+        name -> Varchar,
         /// The token itself.
         token -> Varchar,
+        /// The author's ID.
+        author_id -> Unsigned<Bigint>,
     }
 }
 
@@ -106,6 +108,32 @@ table! {
     }
 }
 
+table! {
+    /// The user sessions table.
+    sessions (id) {
+        /// The session's ID.
+        id -> Unsigned<Bigint>,
+        /// The session's token.
+        token -> Varchar,
+        /// The session's related author ID.
+        author_id -> Unsigned<Bigint>,
+        /// The session's expire date.
+        expires -> Datetime,
+    }
+}
+
+table! {
+    /// The user password salts table.
+    salts (id) {
+        /// The salt's ID.
+        id -> Unsigned<Bigint>,
+        /// The salt itself.
+        salt -> Varchar,
+        /// The salt's related author ID.
+        author_id -> Unsigned<Bigint>,
+    }
+}
+
 joinable!(author_tokens -> authors (author_id));
 joinable!(crate_authors -> crates (crate_id));
 joinable!(crate_authors -> authors (author_id));
@@ -113,6 +141,8 @@ joinable!(crate_keywords -> crates (crate_id));
 joinable!(crate_keywords -> keywords (keyword_id));
 joinable!(crate_categories -> crates (crate_id));
 joinable!(crate_categories -> categories (category_id));
+joinable!(sessions -> authors (author_id));
+joinable!(salts -> authors (author_id));
 
 allow_tables_to_appear_in_same_query!(
     authors,
@@ -123,4 +153,6 @@ allow_tables_to_appear_in_same_query!(
     crate_authors,
     crate_keywords,
     crate_categories,
+    sessions,
+    salts,
 );

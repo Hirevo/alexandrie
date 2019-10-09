@@ -37,15 +37,15 @@ impl<State: Send + Sync + 'static> Endpoint<State> for StaticFiles {
             if path.starts_with(&served) {
                 let metadata = Compat::new(tokio::fs::metadata(path.clone())).await.server_err()?;
                 let bytes = Compat::new(tokio::fs::read(path.clone())).await.server_err()?;
-                let mut builder = tide::http::Response::builder();
-                builder.status(tide::http::StatusCode::OK);
+                let mut builder = http::Response::builder();
+                builder.status(http::StatusCode::OK);
                 builder.header("content-length", metadata.len());
                 if let Some(guess) = mime_guess::from_path(&path).first() {
                     builder.header("content-type", guess.as_ref());
                 }
                 Ok(builder.body(tide::Body::from(bytes)).unwrap())
             } else {
-                Err(tide::error::Error::from(tide::http::StatusCode::NOT_FOUND))
+                Err(tide::error::Error::from(http::StatusCode::NOT_FOUND))
             }
         };
 

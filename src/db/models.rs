@@ -104,6 +104,19 @@ pub struct Author {
     pub passwd: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "authors"]
+/// Represents an author in the database,
+/// suitable to create an entry while letting the database assign an author ID.
+pub struct NewAuthor<'a> {
+    /// The author's email address.
+    pub email: &'a str,
+    /// The author's displayable name.
+    pub name: &'a str,
+    /// The author's SHA512-hashed password.
+    pub passwd: &'a str,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -160,10 +173,25 @@ pub struct NewCrateAuthor {
 pub struct AuthorToken {
     /// The token's ID.
     pub id: u64,
-    /// The author's ID.
-    pub author_id: u64,
+    /// The token's name.
+    pub name: String,
     /// The token itself.
     pub token: String,
+    /// The token's related author ID.
+    pub author_id: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "author_tokens"]
+/// Represents a author-to-token relationship in the database,
+/// suitable to create an entry while letting the database assign a relationship ID.
+pub struct NewAuthorToken<'a> {
+    /// The token's name.
+    pub name: &'a str,
+    /// The token itself.
+    pub token: &'a str,
+    /// The token's related author ID.
+    pub author_id: u64,
 }
 
 #[derive(
@@ -286,4 +314,80 @@ pub struct NewCrateCategory {
     pub crate_id: u64,
     /// The category's ID.
     pub category_id: u64,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    Identifiable,
+    Associations,
+    AsChangeset,
+)]
+#[table_name = "sessions"]
+#[belongs_to(Author)]
+#[primary_key(id)]
+/// Represents a session in the database.
+pub struct Session {
+    /// The session's ID.
+    pub id: u64,
+    /// The session's token.
+    pub token: String,
+    /// The session's related author ID.
+    pub author_id: u64,
+    /// The session's expiry date.
+    pub expires: NaiveDateTime,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "sessions"]
+/// Represents a session in the database,
+/// suitable to create an entry while letting the database assign it an ID.
+pub struct NewSession<'a> {
+    /// The session's token.
+    pub token: &'a str,
+    /// The session's related author ID.
+    pub author_id: u64,
+    /// The session's expiry date.
+    pub expires: NaiveDateTime,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    Identifiable,
+    Associations,
+    AsChangeset,
+)]
+#[table_name = "salts"]
+#[belongs_to(Author)]
+#[primary_key(id)]
+/// Represents a salt in the database.
+pub struct Salt {
+    /// The salt's ID.
+    pub id: u64,
+    /// The salt itself.
+    pub salt: String,
+    /// The salt's related author ID.
+    pub author_id: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "salts"]
+/// Represents a salt in the database,
+/// suitable to create an entry while letting the database assign it an ID.
+pub struct NewSalt<'a> {
+    /// The salt itself.
+    pub salt: &'a str,
+    /// The salt's related author ID.
+    pub author_id: u64,
 }

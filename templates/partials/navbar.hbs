@@ -27,6 +27,7 @@
         color: var(--fg-color);
         font-weight: bold;
         padding: 0 10px;
+        white-space: nowrap;
     }
 
     .navbar-tag:hover {
@@ -211,6 +212,12 @@
             grid-template-columns: 1fr 1fr;
         }
     }
+
+    @media (prefers-color-scheme: dark) {
+        .navbar-search:focus {
+            border: 2px solid var(--darker-fg-color);
+        }
+    }
 </style>
 <input class="navbar-burger-input" type="checkbox" id="burger-checkbox" hidden>
 <div class="navbar">
@@ -226,8 +233,7 @@
     </div>
     <div class="navbar-login-container">
         {{#if user}}
-        <span>Welcome, {{ user.name }} !</span>
-        <a href="/account/settings" class="navbar-tag">Settings</a>
+        <a href="/account/manage" class="navbar-tag">Manage account</a>
         <a href="/account/logout" class="navbar-tag">Logout</a>
         {{else}}
         <a href="/account/login" class="navbar-tag">Login</a>
@@ -246,8 +252,7 @@
     </div>
     <div class="navbar-login-container-mobile">
         {{#if user}}
-        <span>Welcome, {{ user.name }} !</span>
-        <a href="/account/settings" class="navbar-tag">Settings</a>
+        <a href="/account/manage" class="navbar-tag">Manage account</a>
         <a href="/account/logout" class="navbar-tag">Logout</a>
         {{else}}
         <a href="/account/login" class="navbar-tag">Login</a>

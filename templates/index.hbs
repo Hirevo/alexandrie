@@ -28,6 +28,28 @@
             text-align: center;
         }
 
+        .hero-links {
+            margin-top: 7px;
+            display: flex;
+        }
+
+        .hero-link {
+            display: block;
+            border-radius: 5px;
+            border: solid 1.5px var(--fg-color);
+            margin-left: 5px;
+            padding: 2px 8px;
+        }
+
+        .hero-link:first-child {
+            margin-left: 0;
+        }
+
+        .hero-link:hover {
+            background-color: var(--fg-color);
+            color: var(--bg-color);
+        }
+
         .stats-container {
             width: 100%;
             display: flex;
@@ -216,6 +238,13 @@
         <div class="hero-content-container">
             <div class="hero-title">Welcome to {{ instance.title }} !</div>
             <div class="hero-subtitle">{{ instance.description }}</div>
+            {{#if instance.links}}
+            <div class="hero-links">
+                {{#each instance.links}}
+                <a class="hero-link" href="{{ this.href }}">{{ this.name }}</a>
+                {{/each}}
+            </div>
+            {{/if}}
         </div>
     </div>
     <div class="stats-container">
