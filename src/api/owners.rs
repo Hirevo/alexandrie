@@ -1,7 +1,7 @@
 use diesel::prelude::*;
+use http::status::StatusCode;
 use json::json;
 use serde::{Deserialize, Serialize};
-use http::status::StatusCode;
 use tide::{Context, Response};
 
 use crate::db::models::{Author, NewCrateAuthor};

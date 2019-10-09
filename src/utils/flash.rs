@@ -1,20 +1,9 @@
 use std::ops::{Deref, DerefMut};
 
 use cookie::Cookie;
-use diesel::prelude::*;
-use futures::future::BoxFuture;
-use http::header::HeaderValue;
-use ring::digest as hasher;
-use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
 use tide::cookies::ContextExt as CookieExt;
-use tide::middleware::{Middleware, Next};
-use tide::response::IntoResponse;
-use tide::{Context, Response};
-
-use crate::db::models::Author;
-use crate::db::schema::*;
-use crate::error::Error;
+use tide::Context;
 
 /// Flash cookie's name.
 pub const COOKIE_NAME: &str = "flash";
@@ -67,8 +56,6 @@ impl DerefMut for FlashMessage {
         &mut self.0
     }
 }
-
-struct SetFlashMessage(FlashMessage);
 
 /// A trait to extend `Context` with helper methods for manipulating flash cookies.
 pub trait FlashExt {

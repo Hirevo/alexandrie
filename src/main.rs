@@ -1,7 +1,6 @@
 #![feature(inner_deref)]
 #![allow(clippy::redundant_closure, clippy::needless_lifetimes)]
-#![allow(unused)]
-#![warn(missing_docs)]
+#![warn(unused, missing_docs)]
 //!
 //! This is an alternative crate registry for use with Cargo, written in Rust.
 //!
@@ -73,10 +72,11 @@ pub mod utils;
 pub mod frontend;
 
 use crate::config::Config;
-use crate::utils::static_files::StaticFiles;
 
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
+#[cfg(feature = "frontend")]
+use crate::utils::static_files::StaticFiles;
 
 /// The instantiated [`crate::db::Repo`] type alias.
 pub type Repo = db::Repo<MysqlConnection>;
@@ -111,6 +111,8 @@ async fn main() -> io::Result<()> {
 
             info!("mounting '/'");
             app.at("/").get(frontend::index::get);
+            info!("mounting '/me'");
+            app.at("/me").get(frontend::me::get);
             info!("mounting '/search'");
             app.at("/search").get(frontend::search::get);
             info!("mounting '/crates/:crate'");
@@ -136,6 +138,9 @@ async fn main() -> io::Result<()> {
             info!("mounting '/account/manage/tokens'");
             app.at("/account/manage/tokens")
                 .post(frontend::account::manage::tokens::post);
+            info!("mounting '/account/manage/tokens/:token-id/revoke'");
+            app.at("/account/manage/tokens/:token-id/revoke")
+                .get(frontend::account::manage::tokens::revoke::get);
 
             info!("mounting '/assets/*path'");
             app.at("/assets/*path").get(StaticFiles::new("assets")?);

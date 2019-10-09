@@ -1,6 +1,6 @@
+use http::status::StatusCode;
 use json::json;
 use semver::Version;
-use http::status::StatusCode;
 use tide::{Context, Response};
 
 use crate::error::{AlexError, Error};

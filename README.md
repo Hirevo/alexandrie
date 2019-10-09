@@ -21,19 +21,18 @@ Goals
 Current state
 -------------
 
-- The core Cargo APIs are functional but not yet complete.
-- The optional front-end is in active development.
-- Currently, generating tokens is done manually through the database.
+- The core Cargo APIs are all functional.
+- The optional front-end is very usable, although still in active development.
 
 Things yet to do
 ----------------
 
 - [ ] Complete the front-end: in-progress
+- [x] Keywords: done
 - [x] Categories: done
-- [x] Crate yanking: done
-- [ ] User management: in-progress
-- [ ] Crate versioning in DB (download counts, etc...): planned
-- [x] Database transactions everywhere (in a nicer way): done
+- [x] Crate (un)yanking: done
+- [x] User management: done
+- [ ] Crate version tracking in DB (download counts per version, etc...): planned
 - [ ] Ability to re-render READMEs (to migrate themes): planned
 - [ ] Search by keywords or categories: planned
 - [ ] More `Store` implementors: planned
@@ -42,10 +41,10 @@ Things yet to do
 How to build
 ------------
 
-Alexandrie is built using Tide and currently requires a MySQL database (MariaDB and PostgreSQL are such databases).  
+Alexandrie is built using Tide and requires a MySQL database (MariaDB is an example of such a database).  
 To build, you can run `cargo build [--release]`.  
 
-Before running it, you need to configure the instance in the `alexandrie.toml` file.
+Before running it, you need to configure your instance in the `alexandrie.toml` file.
 
 The database is configured through the `[database]` table:
 
@@ -102,12 +101,8 @@ Then, if you want to use this index with Cargo, you can follow these steps:
   index = "<url-of-the-crate-index>"
   ```
 - Then, run `cargo login --registry <name-of-your-registry>` and enter your author token.  
-  To generate a token, you need to register an author first by creating one in the database.
-  You can do it like this:
-  ```sql
-  -- Replace the '<...>' placeholders by the real ones.
-  insert into `authors` (`email`, `name`, `passwd`) values ("<email>", "<displayable-name>", sha2("<passwd>", 512));
-  insert into `author_tokens` (`author_id`, `token`) values (1, sha2(concat(now(), rand(), uuid()), 512));
-  select token from `author_tokens` limit 1; -- This will display the token back to you.
-  ```
+  To generate a token, you need to register as an author first.
+  You can do this using the frontend by:
+  - Registering at `/account/register`.
+  - Generating a token at `/account/manage`.
 - You can now use the registry using `cargo [search|publish] --registry <name-of-your-registry>`

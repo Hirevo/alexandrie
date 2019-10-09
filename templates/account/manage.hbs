@@ -307,6 +307,15 @@
             font-weight: bold;
         }
 
+        .manage-tokens-error-msg {
+            padding: 10px;
+            background-color: var(--danger-bg-color);
+            color: var(--danger-fg-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
         @media (max-width: 1000px) {
             .manage-grid {
                 grid-template-rows: repeat(2, 1fr);
@@ -384,14 +393,14 @@
                         <label class="manage-passwd-label" for="confirm-password">Confirm new password:</label>
                         <input class="manage-passwd-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." autocomplete="off" required>
                     </div>
-                    {{#if passwd_success_msg}}
+                    {{#if passwd_change_success_msg}}
                     <div class="manage-passwd-field manage-passwd-success-msg">
-                        Success: {{ passwd_success_msg }}
+                        Success: {{ passwd_change_success_msg }}
                     </div>
                     {{/if}}
-                    {{#if passwd_error_msg}}
+                    {{#if passwd_change_error_msg}}
                     <div class="manage-passwd-field manage-passwd-error-msg">
-                        Error: {{ passwd_error_msg }}
+                        Error: {{ passwd_change_error_msg }}
                     </div>
                     {{/if}}
                 </div>
@@ -403,7 +412,7 @@
                     {{#if tokens}}
                     {{#each tokens}}
                     <div class="manage-tokens-entry">
-                        <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}"></a>
+                        <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}/revoke"></a>
                         <div class="manage-tokens-entry-name">{{ this.name }}</div>
                     </div>
                     {{/each}}
@@ -411,16 +420,26 @@
                     <div class="manage-tokens-empty">No tokens...</div>
                     {{/if}}
                 </div>
-                {{#if token_success_msg}}
-                <div class="manage-tokens-field manage-tokens-success-msg">
-                    Created token: {{ token_success_msg }}
-                </div>
-                {{/if}}
                 <form class="manage-tokens-create" method="POST" action="/account/manage/tokens">
                     <div class="manage-tokens-field">
                         <label class="manage-tokens-label" for="token-name">New token name:</label>
                         <input class="manage-tokens-input" type="text" name="token-name" id="token-name" placeholder="New token name..." required>
                     </div>
+                    {{#if token_generation_success_msg}}
+                    <div class="manage-tokens-field manage-tokens-success-msg">
+                        Created token: {{ token_generation_success_msg }}
+                    </div>
+                    {{/if}}
+                    {{#if token_revocation_success_msg}}
+                    <div class="manage-tokens-field manage-tokens-success-msg">
+                        Success: {{ token_revocation_success_msg }}
+                    </div>
+                    {{/if}}
+                    {{#if token_revocation_error_msg}}
+                    <div class="manage-tokens-field manage-tokens-error-msg">
+                        Error: {{ token_revocation_error_msg }}
+                    </div>
+                    {{/if}}
                     <input class="manage-tokens-button" type="submit" value="Create token">
                 </form>
             </div>

@@ -2,11 +2,11 @@ use std::net;
 use std::path::PathBuf;
 
 use diesel::prelude::*;
+use http::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 use syntect::dumps;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
-use http::{HeaderMap, HeaderValue};
 
 #[cfg(feature = "frontend")]
 use handlebars::Handlebars;
@@ -17,6 +17,7 @@ use crate::index::Index;
 use crate::storage::Storage;
 use crate::Repo;
 
+#[cfg(feature = "frontend")]
 fn enabled_def() -> bool {
     true
 }

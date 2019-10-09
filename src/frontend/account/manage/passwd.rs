@@ -1,19 +1,14 @@
 use std::num::NonZeroU32;
 
-use diesel::dsl as sql;
 use diesel::prelude::*;
-use json::json;
 use ring::digest as hasher;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use tide::cookies::ContextExt as CookieExt;
 use tide::forms::ContextExt as FormExt;
 use tide::{Context, Response};
 
-use crate::db::models::AuthorToken;
 use crate::db::schema::*;
-use crate::error::{AlexError, Error};
-use crate::frontend::helpers;
+use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::utils::flash::{FlashExt, FlashMessage};
@@ -50,15 +45,16 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             || form.confirm_password.is_empty()
         {
             let error_msg =
-                ManageFlashError::PasswordError(String::from("some fields were left empty."));
+                ManageFlashError::PasswordChangeError(String::from("some fields were left empty."));
             ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
 
         //? Does the two passwords match (consistency check)?
         if form.new_password != form.confirm_password {
-            let error_msg =
-                ManageFlashError::PasswordError(String::from("the two passwords did not match."));
+            let error_msg = ManageFlashError::PasswordChangeError(String::from(
+                "the two passwords did not match.",
+            ));
             ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
@@ -92,7 +88,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
 
         if !password_match {
             let error_msg =
-                ManageFlashError::PasswordError(String::from("invalid current password."));
+                ManageFlashError::PasswordChangeError(String::from("invalid current password."));
             ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
@@ -115,7 +111,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .set(authors::passwd.eq(encoded_derived_hash.as_str()))
             .execute(conn)?;
 
-        let success_msg = ManageFlashError::PasswordSuccess(String::from(
+        let success_msg = ManageFlashError::PasswordChangeSuccess(String::from(
             "the password was successfully changed.",
         ));
         ctx.set_flash_message(FlashMessage::from_json(&success_msg)?);

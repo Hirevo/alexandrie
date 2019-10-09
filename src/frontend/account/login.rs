@@ -3,9 +3,7 @@ use std::num::NonZeroU32;
 use cookie::Cookie;
 use diesel::prelude::*;
 use json::json;
-use ring::digest as hasher;
 use ring::pbkdf2;
-use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
 use tide::cookies::ContextExt as CookieExt;
 use tide::forms::ContextExt as FormExt;
@@ -13,7 +11,7 @@ use tide::{Context, Response};
 
 use crate::db::models::NewSession;
 use crate::db::schema::*;
-use crate::error::{AlexError, Error};
+use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::utils::flash::{FlashExt, FlashMessage};

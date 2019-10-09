@@ -7,7 +7,9 @@ use tide::{Body, Response};
 #[cfg(feature = "frontend")]
 pub mod common;
 
+#[cfg(feature = "frontend")]
 use crate::config::State;
+#[cfg(feature = "frontend")]
 use crate::db::models::Author;
 
 /// Constructs a HTML response with the provided body.

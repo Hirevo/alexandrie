@@ -1,15 +1,14 @@
-use diesel::dsl as sql;
 use diesel::prelude::*;
-use json::json;
 use serde::{Deserialize, Serialize};
-use tide::cookies::ContextExt as CookieExt;
 use tide::forms::ContextExt as FormExt;
 use tide::{Context, Response};
 
+/// Token revocation routes (eg. "/account/manage/tokens/5/revoke").
+pub mod revoke;
+
 use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
-use crate::error::{AlexError, Error};
-use crate::frontend::helpers;
+use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::utils::flash::{FlashExt, FlashMessage};
@@ -49,7 +48,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             })
             .execute(conn)?;
 
-        let error_msg = ManageFlashError::TokenSuccess(String::from(token));
+        let error_msg = ManageFlashError::TokenGenerationSuccess(String::from(token));
         ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
         Ok(utils::response::redirect("/account/manage"))
     });

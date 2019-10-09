@@ -4,7 +4,7 @@ use tide::{Context, Response};
 
 use crate::db::models::{CrateAuthor, CrateCategory, CrateKeyword, CrateRegistration, Keyword};
 use crate::db::schema::*;
-use crate::error::{AlexError, Error};
+use crate::error::Error;
 use crate::frontend::helpers;
 use crate::index::Indexer;
 use crate::storage::Store;

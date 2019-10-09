@@ -4,6 +4,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use handlebars::{Context, Handlebars, Helper, HelperResult, Output, RenderContext, RenderError};
 use num_format::{Locale, ToFormattedString};
 
+#[allow(unused)]
 pub(crate) fn hbs_humanize_datetime(
     h: &Helper,
     _: &Handlebars,
@@ -21,6 +22,7 @@ pub(crate) fn hbs_humanize_datetime(
     Ok(())
 }
 
+#[allow(unused)]
 pub(crate) fn hbs_humanize_date(
     h: &Helper,
     _: &Handlebars,
@@ -37,6 +39,7 @@ pub(crate) fn hbs_humanize_date(
     Ok(())
 }
 
+#[allow(unused)]
 pub(crate) fn hbs_humanize_number(
     h: &Helper,
     _: &Handlebars,

@@ -17,8 +17,7 @@ use tar::Archive;
 use tide::{Body, Context, Response};
 
 use crate::db::models::{
-    CrateAuthor, CrateRegistration, NewCrateAuthor, NewCrateCategory, NewCrateKeyword,
-    NewCrateRegistration,
+    CrateRegistration, NewCrateAuthor, NewCrateCategory, NewCrateKeyword, NewCrateRegistration,
 };
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};

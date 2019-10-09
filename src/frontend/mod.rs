@@ -6,5 +6,7 @@ pub mod helpers;
 pub mod index;
 /// Crate-dedicated pages (eg. "/crates/\<name\>").
 pub mod krate;
+/// Shortcut to account page (eg. "/me" -> "/account/manage").
+pub mod me;
 /// Search pages (eg. "/search?q=\<term\>").
 pub mod search;
