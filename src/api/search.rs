@@ -47,7 +47,9 @@ struct SearchParams {
 pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
     let params = ctx
         .url_query::<SearchParams>()
-        .map_err(|_| AlexError::MissingQueryParams(&["q"]))?;
+        .map_err(|_| AlexError::MissingQueryParams {
+            missing_params: &["q"],
+        })?;
     let state = ctx.state();
     let repo = &state.repo;
 

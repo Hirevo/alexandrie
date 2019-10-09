@@ -1,6 +1,4 @@
 use std::convert::TryInto;
-use std::error;
-use std::fmt;
 use std::io;
 
 use diesel::result::Error as SQLError;
@@ -9,42 +7,61 @@ use json::Error as JSONError;
 use semver::{SemVerError as SemverError, Version};
 use toml::de::Error as TOMLError;
 // use tide::Error as TideError;
+use thiserror::Error;
 
-use json::json;
 use tide::response::IntoResponse;
 use tide::Response;
 
 use crate::db::models::Author;
+use crate::utils;
 
 /// The Error type for the registry.
 ///  
 /// It can represent any kind of error the registry might encounter.
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum Error {
-    /// An I/O error (file not found, access forbidden, etc...).
-    IOError(IOError),
+    /// An IO error (file not found, access forbidden, etc...).
+    #[error("IO error: {0}")]
+    IOError(#[source] IOError),
     /// JSON (de)serialization error (invalid JSON parsed, etc...).
-    JSONError(JSONError),
+    #[error("JSON error: {0}")]
+    JSONError(#[source] JSONError),
     /// TOML (de)serialization error (invalid TOML parsed, etc...).
-    TOMLError(TOMLError),
+    #[error("TOML error: {0}")]
+    TOMLError(#[source] TOMLError),
     /// SQL error (invalid queries, database disconnections, etc...).
-    SQLError(SQLError),
+    #[error("SQL error: {0}")]
+    SQLError(#[source] SQLError),
     /// Version parsing errors (invalid version format parsed, etc...).
-    SemverError(SemverError),
-    /// Tide error (invalid query params, could not keep up with the rising tide, etc...).
-    // TideError(TideError),
+    #[error("Semver error: {0}")]
+    SemverError(#[source] SemverError),
+    // /// Tide error (invalid query params, could not keep up with the rising tide, etc...).
+    // #[error("Tide error: {0}")]
+    // TideError(#[source] TideError),
     /// Alexandrie's custom errors (crate not found, invalid token, etc...).
-    AlexError(AlexError),
+    #[error("Alexandrie error: {0}")]
+    AlexError(#[source] AlexError),
 }
 
 /// The Error type for Alexandrie's own errors.
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum AlexError {
     /// The requested crate cannot be found.
-    CrateNotFound(String),
+    #[error("no crate named '{name}' found")]
+    CrateNotFound {
+        /// The requested crate's name.
+        name: String,
+    },
     /// The crate is not owned by the user.
-    CrateNotOwned(String, Author),
+    #[error("you are not an owner of '{name}'")]
+    CrateNotOwned {
+        /// The involved crate's name.
+        name: String,
+        /// The involved author.
+        author: Author,
+    },
     /// The published crate version is lower than the current hosted version.
+    #[error("the published version is too low (hosted version is {hosted}, and thus {published} <= {hosted})")]
     VersionTooLow {
         /// The krate's name.
         krate: String,
@@ -54,9 +71,14 @@ pub enum AlexError {
         published: Version,
     },
     /// The token used to access the registry is invalid.
+    #[error("invalid token")]
     InvalidToken,
     /// The request is invalid because of a required query parameter.
-    MissingQueryParams(&'static [&'static str]),
+    #[error("missing query parameters: {missing_params:?}")]
+    MissingQueryParams {
+        /// The list of missing query parameters.
+        missing_params: &'static [&'static str],
+    },
 }
 
 impl IntoResponse for Error {
@@ -67,64 +89,11 @@ impl IntoResponse for Error {
             Error::TOMLError(_) => "internal server error".to_string(),
             Error::SQLError(_) => "internal server error".to_string(),
             Error::SemverError(_) => "internal server error".to_string(),
+            // Error::TideError(_) => "internal server error".to_string(),
             Error::AlexError(err) => err.to_string(),
         };
 
-        let mut response = tide::response::json(json!({
-            "errors": [{
-                "detail": message,
-            }]
-        }));
-        *response.status_mut() = http::StatusCode::INTERNAL_SERVER_ERROR;
-        response
-    }
-}
-
-impl fmt::Display for AlexError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            AlexError::CrateNotFound(name) => write!(f, "no crate named '{0}' found", name),
-            AlexError::CrateNotOwned(name, _) => write!(f, "you are not an owner of '{0}'", name),
-            AlexError::VersionTooLow {
-                hosted, published, ..
-            } => write!(
-                f,
-                "the published version is too low (hosted version is {1}, {0} <= {1})",
-                published, hosted,
-            ),
-            AlexError::InvalidToken => write!(f, "invalid token"),
-            AlexError::MissingQueryParams(params) => {
-                write!(f, "missing query parameters: {0:?}", params)
-            }
-        }
-    }
-}
-
-impl error::Error for AlexError {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::IOError(err) => err.fmt(f),
-            Error::JSONError(err) => err.fmt(f),
-            Error::TOMLError(err) => err.fmt(f),
-            Error::SQLError(err) => err.fmt(f),
-            Error::SemverError(err) => err.fmt(f),
-            Error::AlexError(err) => err.fmt(f),
-        }
-    }
-}
-
-impl error::Error for Error {
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        match self {
-            Error::IOError(err) => err.source(),
-            Error::JSONError(err) => err.source(),
-            Error::TOMLError(err) => err.source(),
-            Error::SQLError(err) => err.source(),
-            Error::SemverError(err) => err.source(),
-            Error::AlexError(err) => err.source(),
-        }
+        utils::response::error(http::StatusCode::INTERNAL_SERVER_ERROR, message)
     }
 }
 

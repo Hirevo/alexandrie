@@ -88,7 +88,9 @@ impl Indexer for CommandLineIndex {
     fn match_crate(&self, name: &str, req: VersionReq) -> Result<Crate, Error> {
         let path = self.index_crate(name);
         let file = fs::File::open(path).map_err(|err| match err.kind() {
-            io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound(String::from(name))),
+            io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound {
+                name: String::from(name),
+            }),
             _ => Error::from(err),
         })?;
         let found = io::BufReader::new(file)
@@ -97,7 +99,9 @@ impl Indexer for CommandLineIndex {
             .flat_map(|ret: Option<Crate>| ret.into_iter())
             .filter(|krate| req.matches(&krate.vers))
             .max_by(|k1, k2| k1.vers.cmp(&k2.vers));
-        Ok(found.ok_or_else(|| AlexError::CrateNotFound(String::from(name)))?)
+        Ok(found.ok_or_else(|| AlexError::CrateNotFound {
+            name: String::from(name),
+        })?)
     }
 
     fn latest_crate(&self, name: &str) -> Result<Crate, Error> {
@@ -118,7 +122,9 @@ impl Indexer for CommandLineIndex {
     {
         let path = self.index_crate(name);
         let file = fs::File::open(path.as_path()).map_err(|err| match err.kind() {
-            io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound(String::from(name))),
+            io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound {
+                name: String::from(name),
+            }),
             _ => Error::from(err),
         })?;
         let mut krates: Vec<Crate> = {
@@ -132,7 +138,11 @@ impl Indexer for CommandLineIndex {
         let found = krates
             .iter_mut()
             .find(|krate| krate.vers == version)
-            .ok_or_else(|| Error::from(AlexError::CrateNotFound(String::from(name))))?;
+            .ok_or_else(|| {
+                Error::from(AlexError::CrateNotFound {
+                    name: String::from(name),
+                })
+            })?;
 
         func(found);
 

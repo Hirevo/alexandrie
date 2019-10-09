@@ -40,7 +40,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 .body(Body::from(buf))
                 .unwrap())
         } else {
-            Err(Error::from(AlexError::CrateNotFound(name)))
+            Err(Error::from(AlexError::CrateNotFound { name }))
         }
     });
 

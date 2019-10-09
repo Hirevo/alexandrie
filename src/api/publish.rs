@@ -251,7 +251,10 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
             ))
             .get_result(conn)?;
             if !owned {
-                return Err(Error::from(AlexError::CrateNotOwned(krate.name, author)));
+                return Err(Error::from(AlexError::CrateNotOwned {
+                    author,
+                    name: krate.name,
+                }));
             }
 
             //? Is the version higher than the latest known one?

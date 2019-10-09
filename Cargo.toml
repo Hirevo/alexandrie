@@ -45,6 +45,9 @@ tokio-threadpool = { version = "0.1.15" }
 futures_01 = { package = "futures", version = "0.1.28" }
 futures-preview = { version = "0.3.0-alpha.18", features = ["nightly", "async-await", "compat"] }
 
+# error handling
+thiserror = { version = "1.0.1" }
+
 # README rendering
 syntect = { version = "3.2.0" }
 cmark = { package = "pulldown-cmark", version = "0.5.2" }

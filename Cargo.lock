@@ -50,6 +50,7 @@ dependencies = [
  "slog-term 2.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "syntect 3.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tar 0.4.26 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tide 0.2.0 (git+https://github.com/rustasync/tide?rev=af0b900)",
  "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2147,6 +2148,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "thiserror"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "thiserror-impl 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "proc-macro2 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "thread_local"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3018,6 +3037,8 @@ dependencies = [
 "checksum term 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "edd106a334b7657c10b7c540a0106114feadeb4dc314513e97df481d5d966f42"
 "checksum termcolor 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "96d6098003bde162e4277c70665bd87c326f5a0c3f3fbfb285787fa482d54e6e"
 "checksum textwrap 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
+"checksum thiserror 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "76a6728729f99559e9ec7e39848ea39623849aa1d7d3bb99b30ec349a2ffc730"
+"checksum thiserror-impl 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e9d53f5a0d2bd66d1d841e69a4beb74a226216b3f158ff0c534578f76e7beac9"
 "checksum thread_local 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c6b53e329000edc2b34dbe8545fd20e55a333362d0a321909685a19bd28c3f1b"
 "checksum tide 0.2.0 (git+https://github.com/rustasync/tide?rev=af0b900)" = "<none>"
 "checksum tide-cookies 0.2.0 (git+https://github.com/rustasync/tide?rev=af0b900)" = "<none>"
