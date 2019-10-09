@@ -56,7 +56,7 @@ pub struct DatabaseConfig {
     pub url: String,
 }
 
-/// The syntax-highlighting theme configuration struct.
+/// The syntax-highlighting themes configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum SyntectThemesConfig {

@@ -38,12 +38,9 @@ pub trait Indexer {
     /// Commits and pushes changes upstream.
     fn commit_and_push(&self, msg: &str) -> Result<(), Error>;
     /// Alters the index's crate record with the passed-in function.
-    fn alter_crate(
-        &self,
-        name: &str,
-        version: Version,
-        func: impl FnOnce(&mut Crate),
-    ) -> Result<(), Error>;
+    fn alter_crate<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
+    where
+        F: FnOnce(&mut Crate);
     /// Yanks a crate version.
     fn yank_crate(&self, name: &str, version: Version) -> Result<(), Error> {
         self.alter_crate(name, version, |krate| krate.yanked = Some(true))
@@ -91,12 +88,10 @@ impl Indexer for Index {
         }
     }
 
-    fn alter_crate(
-        &self,
-        name: &str,
-        version: Version,
-        func: impl FnOnce(&mut Crate),
-    ) -> Result<(), Error> {
+    fn alter_crate<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
+    where
+        F: FnOnce(&mut Crate),
+    {
         match self {
             Index::CommandLine(idx) => idx.alter_crate(name, version, func),
         }

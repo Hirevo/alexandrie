@@ -81,7 +81,7 @@ use crate::utils::static_files::StaticFiles;
 /// The instantiated [`crate::db::Repo`] type alias.
 pub type Repo = db::Repo<MysqlConnection>;
 
-/// The instantiated [`crate::db::Repo`] type alias.
+/// The application state type used for the web server.
 pub type State = Arc<config::State>;
 
 #[runtime::main(runtime_tokio::Tokio)]

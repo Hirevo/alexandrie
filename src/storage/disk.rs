@@ -53,7 +53,10 @@ impl Store for DiskStorage {
         Ok(Box::new(file))
     }
 
-    fn store_crate(&self, name: &str, version: Version, mut data: impl Read) -> Result<(), Error> {
+    fn store_crate<T>(&self, name: &str, version: Version, mut data: T) -> Result<(), Error>
+    where
+        T: Read,
+    {
         let path = self.path.join(DiskStorage::format_name(name, version));
         let mut file = fs::OpenOptions::new()
             .create_new(true)
@@ -78,7 +81,10 @@ impl Store for DiskStorage {
         Ok(Box::new(file))
     }
 
-    fn store_readme(&self, name: &str, version: Version, mut data: impl Read) -> Result<(), Error> {
+    fn store_readme<T>(&self, name: &str, version: Version, mut data: T) -> Result<(), Error>
+    where
+        T: Read,
+    {
         let path = self
             .path
             .join(DiskStorage::format_readme_name(name, version));

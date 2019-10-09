@@ -112,12 +112,10 @@ impl Indexer for CommandLineIndex {
             .expect("at least one version to exist"))
     }
 
-    fn alter_crate(
-        &self,
-        name: &str,
-        version: Version,
-        func: impl FnOnce(&mut Crate),
-    ) -> Result<(), Error> {
+    fn alter_crate<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
+    where
+        F: FnOnce(&mut Crate),
+    {
         let path = self.index_crate(name);
         let file = fs::File::open(path.as_path()).map_err(|err| match err.kind() {
             io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound(String::from(name))),

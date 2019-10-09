@@ -46,7 +46,9 @@ pub trait Store {
         }))
     }
     /// Save a new crate tarball into the store.
-    fn store_crate(&self, name: &str, version: Version, data: impl Read) -> Result<(), Error>;
+    fn store_crate<T>(&self, name: &str, version: Version, data: T) -> Result<(), Error>
+    where
+        T: Read;
 
     /// Retrieves a rendered README from the store.
     fn get_readme(&self, name: &str, version: Version) -> Result<String, Error>;
@@ -67,12 +69,9 @@ pub trait Store {
         }))
     }
     /// Stores a new rendered README into the store.
-    fn store_readme(
-        &self,
-        name: &str,
-        version: Version,
-        rendered_readme: impl Read,
-    ) -> Result<(), Error>;
+    fn store_readme<T>(&self, name: &str, version: Version, data: T) -> Result<(), Error>
+    where
+        T: Read;
 }
 
 impl Store for Storage {
@@ -88,7 +87,10 @@ impl Store for Storage {
         }
     }
 
-    fn store_crate(&self, name: &str, version: Version, data: impl Read) -> Result<(), Error> {
+    fn store_crate<T>(&self, name: &str, version: Version, data: T) -> Result<(), Error>
+    where
+        T: Read,
+    {
         match self {
             Storage::Disk(storage) => storage.store_crate(name, version, data),
         }
@@ -106,7 +108,10 @@ impl Store for Storage {
         }
     }
 
-    fn store_readme(&self, name: &str, version: Version, data: impl Read) -> Result<(), Error> {
+    fn store_readme<T>(&self, name: &str, version: Version, data: T) -> Result<(), Error>
+    where
+        T: Read,
+    {
         match self {
             Storage::Disk(storage) => storage.store_readme(name, version, data),
         }
