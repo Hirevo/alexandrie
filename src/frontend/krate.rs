@@ -87,5 +87,6 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             engine.render("crate", &context).unwrap(),
         ))
     });
+
     transaction.await
 }
