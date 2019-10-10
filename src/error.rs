@@ -16,7 +16,7 @@ use crate::db::models::Author;
 use crate::utils;
 
 /// The Error type for the registry.
-///  
+///
 /// It can represent any kind of error the registry might encounter.
 #[derive(Error, Debug)]
 pub enum Error {
