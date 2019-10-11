@@ -18,7 +18,7 @@ pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
         }
     };
 
-    let id = ctx.param::<u64>("token-id").unwrap();
+    let id = ctx.param::<i64>("token-id").unwrap();
 
     let state = ctx.state().clone();
     let repo = &state.repo;
@@ -27,7 +27,7 @@ pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
         let token_author_id = author_tokens::table
             .select(author_tokens::author_id)
             .filter(author_tokens::id.eq(id))
-            .first::<u64>(conn)
+            .first::<i64>(conn)
             .optional()?;
 
         match token_author_id {

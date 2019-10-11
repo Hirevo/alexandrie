@@ -4,9 +4,7 @@ use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use diesel::connection::Connection;
 use diesel::dsl as sql;
-use diesel::mysql::Mysql;
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use futures::stream::StreamExt;
@@ -20,6 +18,8 @@ use crate::db::models::{
     CrateRegistration, NewCrateAuthor, NewCrateCategory, NewCrateKeyword, NewCrateRegistration,
 };
 use crate::db::schema::*;
+use crate::db::Connection;
+use crate::db::DATETIME_FORMAT;
 use crate::error::{AlexError, Error};
 use crate::index::Indexer;
 use crate::krate;
@@ -79,10 +79,11 @@ async fn read_at_most(body: &mut Body, size: usize) -> Result<Vec<u8>, io::Error
     Ok(output)
 }
 
-fn link_keywords<Conn>(conn: &Conn, crate_id: u64, keywords: Option<&[String]>) -> Result<(), Error>
-where
-    Conn: Connection<Backend = Mysql>,
-{
+fn link_keywords(
+    conn: &Connection,
+    crate_id: i64,
+    keywords: Option<&[String]>,
+) -> Result<(), Error> {
     diesel::delete(crate_keywords::table.filter(crate_keywords::crate_id.eq(crate_id)))
         .execute(conn)?;
 
@@ -92,14 +93,21 @@ where
             .map(|keyword| keywords::name.eq(keyword.as_str()))
             .collect();
 
+        #[cfg(any(feature = "mysql", feature = "sqlite"))]
         diesel::insert_or_ignore_into(keywords::table)
             .values(&exprs)
+            .execute(conn)?;
+
+        #[cfg(feature = "postgres")]
+        diesel::insert_into(keywords::table)
+            .values(&exprs)
+            .on_conflict_do_nothing()
             .execute(conn)?;
 
         let ids = keywords::table
             .select(keywords::id)
             .filter(keywords::name.eq_any(keywords))
-            .load::<u64>(conn)?;
+            .load::<i64>(conn)?;
 
         let entries: Vec<_> = ids
             .into_iter()
@@ -117,14 +125,11 @@ where
     Ok(())
 }
 
-fn link_categories<Conn>(
-    conn: &Conn,
-    crate_id: u64,
+fn link_categories(
+    conn: &Connection,
+    crate_id: i64,
     categories: Option<&[String]>,
-) -> Result<(), Error>
-where
-    Conn: Connection<Backend = Mysql>,
-{
+) -> Result<(), Error> {
     diesel::delete(crate_categories::table.filter(crate_categories::crate_id.eq(crate_id)))
         .execute(conn)?;
 
@@ -132,7 +137,7 @@ where
         let category_ids = categories::table
             .select(categories::id)
             .filter(categories::tag.eq_any(categories))
-            .load::<u64>(conn)?;
+            .load::<i64>(conn)?;
 
         let entries: Vec<_> = category_ids
             .into_iter()
@@ -143,7 +148,7 @@ where
             .collect();
 
         diesel::insert_into(crate_categories::table)
-            .values(entries.as_slice())
+            .values(&entries)
             .execute(conn)?;
     }
 
@@ -277,7 +282,11 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
                     crates::description.eq(description),
                     crates::documentation.eq(documentation),
                     crates::repository.eq(repository),
-                    crates::updated_at.eq(chrono::Utc::now().naive_utc()),
+                    crates::updated_at.eq(chrono::Utc::now()
+                        .naive_utc()
+                        .format(DATETIME_FORMAT)
+                        .to_string()
+                        .as_str()),
                 ))
                 .execute(conn)?;
         } else {

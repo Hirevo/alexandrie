@@ -11,6 +11,7 @@ use tide::{Context, Response};
 
 use crate::db::models::NewSession;
 use crate::db::schema::*;
+use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
@@ -64,7 +65,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .inner_join(authors::table)
             .select((authors::id, salts::salt, authors::passwd))
             .filter(authors::email.eq(form.email.as_str()))
-            .first::<(u64, String, String)>(conn)
+            .first::<(i64, String, String)>(conn)
             .optional()?;
 
         //? Does the user exist?
@@ -116,7 +117,10 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .values(NewSession {
                 author_id,
                 token: session_token.as_str(),
-                expires: (chrono::Utc::now() + max_age).naive_utc(),
+                expires: (chrono::Utc::now() + max_age)
+                    .naive_utc()
+                    .format(DATETIME_FORMAT)
+                    .to_string(),
             })
             .execute(conn)?;
 

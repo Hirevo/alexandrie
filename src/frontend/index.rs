@@ -5,6 +5,7 @@ use json::json;
 use tide::{Context, Response};
 
 use crate::db::schema::*;
+use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::frontend::helpers;
 use crate::utils;
@@ -36,14 +37,14 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             .select((crates::name, crates::downloads))
             .order_by(crates::downloads.desc())
             .limit(10)
-            .load::<(String, u64)>(conn)?;
+            .load::<(String, i64)>(conn)?;
 
         //? Get the 10 most recently updated crates.
         let last_updated = crates::table
             .select((crates::name, crates::updated_at))
             .order_by(crates::updated_at.desc())
             .limit(10)
-            .load::<(String, chrono::NaiveDateTime)>(conn)?;
+            .load::<(String, String)>(conn)?;
 
         let engine = &state.frontend.handlebars;
         let context = json!({
@@ -55,10 +56,13 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 "name": name,
                 "downloads": helpers::humanize_number(downloads),
             })).collect::<Vec<_>>(),
-            "last_updated": last_updated.into_iter().map(|(name, date)| json!({
-                "name": name,
-                "updated_at": helpers::humanize_datetime(date),
-            })).collect::<Vec<_>>(),
+            "last_updated": last_updated.into_iter().map(|(name, date)| {
+                let updated_at = chrono::NaiveDateTime::parse_from_str(date.as_str(), DATETIME_FORMAT).unwrap();
+                json!({
+                    "name": name,
+                    "updated_at": helpers::humanize_datetime(updated_at),
+                })
+            }).collect::<Vec<_>>(),
         });
         Ok(utils::response::html(
             engine.render("index", &context).unwrap(),

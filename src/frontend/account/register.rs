@@ -14,6 +14,7 @@ use tide::{Context, Response};
 
 use crate::db::models::{NewAuthor, NewSalt, NewSession};
 use crate::db::schema::*;
+use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
@@ -132,7 +133,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         let author_id = authors::table
             .select(authors::id)
             .filter(authors::email.eq(form.email.as_str()))
-            .first::<u64>(conn)?;
+            .first::<i64>(conn)?;
 
         //? Store the author's newly-generated authentication salt.
         let encoded_generated_salt = hex::encode(decoded_generated_salt.as_ref());
@@ -157,7 +158,10 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .values(NewSession {
                 author_id,
                 token: session_token.as_str(),
-                expires: (chrono::Utc::now() + max_age).naive_utc(),
+                expires: (chrono::Utc::now() + max_age)
+                    .naive_utc()
+                    .format(DATETIME_FORMAT)
+                    .to_string(),
             })
             .execute(conn)?;
 

@@ -41,7 +41,6 @@ use std::io;
 
 use std::sync::Arc;
 
-use diesel::MysqlConnection;
 use tide::middleware::RequestLogger;
 use tide::App;
 
@@ -79,7 +78,7 @@ use crate::utils::auth::AuthMiddleware;
 use crate::utils::static_files::StaticFiles;
 
 /// The instantiated [`crate::db::Repo`] type alias.
-pub type Repo = db::Repo<MysqlConnection>;
+pub type Repo = db::Repo<db::Connection>;
 
 /// The application state type used for the web server.
 pub type State = Arc<config::State>;

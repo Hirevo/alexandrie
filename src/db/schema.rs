@@ -2,7 +2,7 @@ table! {
     /// The author table.
     authors (id) {
         /// The author's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The author's email address.
         email -> Varchar,
         /// The author's displayable name.
@@ -16,17 +16,17 @@ table! {
     /// The crate metadata table.
     crates (id) {
         /// The crate's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The crate's name.
         name -> Varchar,
         /// The crate's descripton.
         description -> Nullable<Varchar>,
         /// The crate's creation date.
-        created_at -> Datetime,
+        created_at -> Varchar,
         /// The crate's last updated date.
-        updated_at -> Datetime,
+        updated_at -> Varchar,
         /// The crate's download count.
-        downloads -> Unsigned<Bigint>,
+        downloads -> Bigint,
         /// The URL to the crate's documentation.
         documentation -> Nullable<Varchar>,
         /// The URL to the crate's repository.
@@ -38,11 +38,11 @@ table! {
     /// The crate-to-authors (one-to-many) relationship table.
     crate_authors (id) {
         /// The relationship's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The crate's ID.
-        crate_id -> Unsigned<Bigint>,
+        crate_id -> Bigint,
         /// The author's ID.
-        author_id -> Unsigned<Bigint>,
+        author_id -> Bigint,
     }
 }
 
@@ -50,13 +50,13 @@ table! {
     /// The author-to-tokens (one-to-many) relationship table.
     author_tokens (id) {
         /// The token's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The token's name.
         name -> Varchar,
         /// The token itself.
         token -> Varchar,
         /// The author's ID.
-        author_id -> Unsigned<Bigint>,
+        author_id -> Bigint,
     }
 }
 
@@ -64,7 +64,7 @@ table! {
     /// The keywords table (stores all unique keywords).
     keywords (id) {
         /// The keyword's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The keyword itself.
         name -> Varchar,
     }
@@ -74,11 +74,11 @@ table! {
     /// The crate-to-keywords (one-to-many) relationship table.
     crate_keywords (id) {
         /// The relationship's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The crate's ID.
-        crate_id -> Unsigned<Bigint>,
+        crate_id -> Bigint,
         /// The keyword's ID.
-        keyword_id -> Unsigned<Bigint>,
+        keyword_id -> Bigint,
     }
 }
 
@@ -86,7 +86,7 @@ table! {
     /// The categories table (stores all unique categories).
     categories (id) {
         /// The category's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The category's unique tagname.
         tag -> Varchar,
         /// The category's name.
@@ -100,11 +100,11 @@ table! {
     /// The crate-to-categories (one-to-many) relationship table.
     crate_categories (id) {
         /// The relationship's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The crate's ID.
-        crate_id -> Unsigned<Bigint>,
+        crate_id -> Bigint,
         /// The category's ID.
-        category_id -> Unsigned<Bigint>,
+        category_id -> Bigint,
     }
 }
 
@@ -112,13 +112,13 @@ table! {
     /// The user sessions table.
     sessions (id) {
         /// The session's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The session's token.
         token -> Varchar,
         /// The session's related author ID.
-        author_id -> Unsigned<Bigint>,
+        author_id -> Bigint,
         /// The session's expire date.
-        expires -> Datetime,
+        expires -> Varchar,
     }
 }
 
@@ -126,11 +126,11 @@ table! {
     /// The user password salts table.
     salts (id) {
         /// The salt's ID.
-        id -> Unsigned<Bigint>,
+        id -> Bigint,
         /// The salt itself.
         salt -> Varchar,
         /// The salt's related author ID.
-        author_id -> Unsigned<Bigint>,
+        author_id -> Bigint,
     }
 }
 

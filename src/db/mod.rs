@@ -1,5 +1,4 @@
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
-use diesel::Connection;
 use futures::compat::Compat01As03 as Compat;
 
 /// The database models (struct representations of tables).
@@ -7,20 +6,44 @@ pub mod models;
 /// The database schema definitions (in SQL types).
 pub mod schema;
 
+/// The format in which datetime records are saved in the database.
+pub static DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+/// The connection type (MySQL database).
+#[cfg(feature = "mysql")]
+pub type Connection = diesel::mysql::MysqlConnection;
+/// The backend type (MySQL database).
+#[cfg(feature = "mysql")]
+pub type Backend = diesel::mysql::Mysql;
+
+/// The connection type (SQLite database).
+#[cfg(feature = "sqlite")]
+pub type Connection = diesel::sqlite::SqliteConnection;
+/// The backend type (SQLite database).
+#[cfg(feature = "sqlite")]
+pub type Backend = diesel::sqlite::Sqlite;
+
+/// The connection type (PostgreSQL database).
+#[cfg(feature = "postgres")]
+pub type Connection = diesel::pg::PgConnection;
+/// The backend type (PostgreSQL database).
+#[cfg(feature = "postgres")]
+pub type Backend = diesel::pg::Pg;
+
 /// A database "repository", for running database workloads.
 /// Manages a connection pool and running blocking tasks in a
 /// way that does not block the tokio event loop.
 #[derive(Debug, Clone)]
 pub struct Repo<T>
 where
-    T: Connection + 'static,
+    T: diesel::Connection + 'static,
 {
     connection_pool: Pool<ConnectionManager<T>>,
 }
 
 impl<T> Repo<T>
 where
-    T: Connection + 'static,
+    T: diesel::Connection + 'static,
 {
     /// Constructs a `Repo<T>` for the given database URL (creates a connection pool).
     pub fn new(database_url: &str) -> Self {

@@ -12,7 +12,9 @@ links = [
 ]
 
 [database]
-url = "mysql://root:root@127.0.0.1:3306/alexandrie"
+# url = "mysql://root:root@127.0.0.1:3306/alexandrie"
+url = "postgresql://nicolaspolomack@127.0.0.1:5432/alexandrie"
+# url = "sqlite.db"
 
 [index]
 type = "command-line"

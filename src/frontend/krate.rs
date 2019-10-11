@@ -4,6 +4,7 @@ use tide::{Context, Response};
 
 use crate::db::models::{CrateAuthor, CrateCategory, CrateKeyword, CrateRegistration, Keyword};
 use crate::db::schema::*;
+use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::frontend::helpers;
 use crate::index::Indexer;
@@ -63,6 +64,13 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             .select(categories::name)
             .load::<String>(conn)?;
 
+        let created_at =
+            chrono::NaiveDateTime::parse_from_str(crate_desc.created_at.as_str(), DATETIME_FORMAT)
+                .unwrap();
+        let updated_at =
+            chrono::NaiveDateTime::parse_from_str(crate_desc.updated_at.as_str(), DATETIME_FORMAT)
+                .unwrap();
+
         let engine = &state.frontend.handlebars;
         let context = json!({
             "user": user,
@@ -73,8 +81,8 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 "version": krate.vers,
                 "description": crate_desc.description,
                 "downloads": helpers::humanize_number(crate_desc.downloads),
-                "created_at": helpers::humanize_datetime(crate_desc.created_at),
-                "updated_at": helpers::humanize_datetime(crate_desc.updated_at),
+                "created_at": helpers::humanize_datetime(created_at),
+                "updated_at": helpers::humanize_datetime(updated_at),
                 "documentation": crate_desc.documentation,
                 "repository": crate_desc.repository,
             },
