@@ -32,6 +32,8 @@
 #[macro_use]
 extern crate diesel;
 #[macro_use]
+extern crate diesel_migrations;
+#[macro_use]
 extern crate log;
 #[macro_use(slog_o)]
 extern crate slog;
@@ -83,6 +85,13 @@ pub type Repo = db::Repo<db::Connection>;
 /// The application state type used for the web server.
 pub type State = Arc<config::State>;
 
+#[cfg(feature = "mysql")]
+embed_migrations!("migrations/mysql");
+#[cfg(feature = "sqlite")]
+embed_migrations!("migrations/sqlite");
+#[cfg(feature = "postgres")]
+embed_migrations!("migrations/postgres");
+
 #[runtime::main(runtime_tokio::Tokio)]
 async fn main() -> io::Result<()> {
     let _guard = logs::init();
@@ -95,6 +104,12 @@ async fn main() -> io::Result<()> {
     let frontend_enabled = config.frontend.enabled;
 
     let state: config::State = config.into();
+
+    info!("running database migrations");
+    #[rustfmt::skip]
+    state.repo.run(|conn| embedded_migrations::run(conn)).await
+        .expect("migration execution error");
+
     let mut app = App::with_state(Arc::new(state));
 
     info!("setting up request logger middleware");

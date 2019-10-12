@@ -38,6 +38,7 @@ percent-encoding = { version = "2.1.0" }
 
 # database
 diesel = { version = "1.4.2", features = ["r2d2", "chrono", "numeric"] }
+diesel_migrations = { version = "1.4.0" }
 
 # async primitives
 tokio = { version = "0.1.19" }
@@ -63,7 +64,7 @@ bigdecimal = { version = "0.0.14", features = ["serde"], optional = true }
 
 # logs
 log = { version = "0.3.6" }
-slog = { version = "2.5.2" }
+slog = { version = "2.5.2", features = ["max_level_trace"] }
 slog-stdlog = { version = "3.0.5" }
 slog-scope = { version = "4.1.2" }
 slog-term = { version = "2.4.1" }
@@ -77,6 +78,6 @@ mime_guess = { version = "2.0.1" }
 [features]
 default = ["frontend", "mysql"]
 frontend = ["handlebars", "num-format", "bigdecimal", "cookie", "time"]
-mysql = ["diesel/mysql"]
-sqlite = ["diesel/sqlite"]
-postgres = ["diesel/postgres"]
+mysql = ["diesel/mysql", "diesel_migrations/mysql"]
+sqlite = ["diesel/sqlite", "diesel_migrations/sqlite"]
+postgres = ["diesel/postgres", "diesel_migrations/postgres"]
