@@ -12,23 +12,24 @@ pub static DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 /// The connection type (MySQL database).
 #[cfg(feature = "mysql")]
 pub type Connection = diesel::mysql::MysqlConnection;
-/// The backend type (MySQL database).
-#[cfg(feature = "mysql")]
-pub type Backend = diesel::mysql::Mysql;
 
 /// The connection type (SQLite database).
 #[cfg(feature = "sqlite")]
 pub type Connection = diesel::sqlite::SqliteConnection;
-/// The backend type (SQLite database).
-#[cfg(feature = "sqlite")]
-pub type Backend = diesel::sqlite::Sqlite;
 
 /// The connection type (PostgreSQL database).
 #[cfg(feature = "postgres")]
 pub type Connection = diesel::pg::PgConnection;
-/// The backend type (PostgreSQL database).
-#[cfg(feature = "postgres")]
-pub type Backend = diesel::pg::Pg;
+
+#[cfg(not(any(feature = "mysql", feature = "sqlite", feature = "postgres")))]
+compile_error!("At least one database backend must be enabled to build this crate (eg. by passing argument `--features [mysql|sqlite|postgres]`).");
+
+#[cfg(any(
+    all(feature = "mysql", feature = "sqlite"),
+    all(feature = "mysql", feature = "postgres"),
+    all(feature = "sqlite", feature = "postgres")
+))]
+compile_error!("Only one database backend can be enabled at a time.");
 
 /// A database "repository", for running database workloads.
 /// Manages a connection pool and running blocking tasks in a
