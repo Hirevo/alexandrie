@@ -64,7 +64,7 @@ bigdecimal = { version = "0.0.14", features = ["serde"], optional = true }
 
 # logs
 log = { version = "0.3.6" }
-slog = { version = "2.5.2", features = ["max_level_trace"] }
+slog = { version = "2.5.2" }
 slog-stdlog = { version = "3.0.5" }
 slog-scope = { version = "4.1.2" }
 slog-term = { version = "2.4.1" }
