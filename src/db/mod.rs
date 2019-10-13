@@ -23,6 +23,8 @@ pub type Connection = diesel::pg::PgConnection;
 
 #[cfg(not(any(feature = "mysql", feature = "sqlite", feature = "postgres")))]
 compile_error!("At least one database backend must be enabled to build this crate (eg. by passing argument `--features [mysql|sqlite|postgres]`).");
+#[cfg(not(any(feature = "mysql", feature = "sqlite", feature = "postgres")))]
+pub type Connection = unimplemented!();
 
 #[cfg(any(
     all(feature = "mysql", feature = "sqlite"),
