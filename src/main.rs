@@ -14,14 +14,14 @@
 //! -----
 //!
 //! - Offer customizable crate storage strategies (local on-disk, S3, Git Repo, etc...).
+//! - Offer multiple backing database options (MySQL, PostgreSQL or SQLite).
 //! - An optional integrated (server-side rendered) front-end.
 //!
 //! Current state
 //! -------------
 //!
-//! - The core Cargo APIs are functional but not yet complete.
-//! - The optional front-end is in active development.
-//! - Currently, generating tokens is done manually through the database.
+//! - The core Cargo APIs are all functional.
+//! - The optional front-end is very usable, although still in active development.
 //!
 //! How is it built
 //! ---------------
