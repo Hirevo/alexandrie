@@ -16,6 +16,7 @@ Goals
 -----
 
 - Offer customizable crate storage strategies (local on-disk, S3, Git Repo, etc...).
+- Offer multiple backing database options (MySQL, PostgreSQL or SQLite).
 - An optional integrated (server-side rendered) front-end.
 
 Current state
