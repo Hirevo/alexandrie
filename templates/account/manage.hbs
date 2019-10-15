@@ -62,8 +62,12 @@
             flex-direction: column;
         }
 
-        .manage-grid {
+        .manage-grid-container {
             width: 1400px;
+        }
+
+        .manage-grid {
+            width: 100%;
             padding: 10px;
             display: grid;
             grid-template-rows: 1fr;
@@ -73,7 +77,7 @@
         }
 
         @media (max-width: 1400px) {
-            .manage-grid {
+            .manage-grid-container {
                 width: 100%;
             }
 
@@ -86,7 +90,15 @@
             flex-grow: 1;
         }
 
-        .manage-passwd,
+        .manage-passwd {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-rows: repeat(3, min-content);
+            grid-template-columns: 1fr;
+            padding: 10px 20px;
+        }
+
         .manage-tokens {
             width: 100%;
             height: 100%;
@@ -217,18 +229,21 @@
             padding: 10px;
         }
 
+        .manage-tokens-entry-container {
+            margin-top: 10px;
+        }
+
+        .manage-tokens-entry-container:first-child {
+            margin-top: 0;
+        }
+
         .manage-tokens-entry {
             width: 100%;
-            margin-top: 10px;
             font-weight: bold;
             display: grid;
             grid-template-columns: min-content min-content;
             grid-template-rows: 1fr;
             grid-gap: 10px;
-        }
-
-        .manage-tokens-entry:first-child {
-            margin-top: 0;
         }
 
         .manage-tokens-entry-name {
@@ -319,7 +334,12 @@
 
         @media (max-width: 1000px) {
             .manage-grid {
-                grid-template-rows: repeat(2, 1fr);
+                grid-template-rows: repeat(2, min-content);
+                grid-template-columns: 1fr;
+            }
+
+            .manage-passwd {
+                grid-template-rows: repeat(3, min-content);
                 grid-template-columns: 1fr;
             }
 
@@ -378,71 +398,75 @@
         </div>
     </div>
     <div class="manage-container">
-        <div class="manage-grid">
-            <form class="manage-passwd" method="POST" action="/account/manage/password">
-                <div class="manage-passwd-title">Change password</div>
-                <div class="manage-passwd-fields">
-                    <div class="manage-passwd-field">
-                        <label class="manage-passwd-label" for="current-password">Current password:</label>
-                        <input class="manage-passwd-input" type="password" name="password" id="current-password" placeholder="Current password..." autocomplete="current-password" required>
+        <div class="manage-grid-container">
+            <div class="manage-grid">
+                <form class="manage-passwd" method="POST" action="/account/manage/password">
+                    <div class="manage-passwd-title">Change password</div>
+                    <div class="manage-passwd-fields">
+                        <div class="manage-passwd-field">
+                            <label class="manage-passwd-label" for="current-password">Current password:</label>
+                            <input class="manage-passwd-input" type="password" name="password" id="current-password" placeholder="Current password..." autocomplete="current-password" required>
+                        </div>
+                        <div class="manage-passwd-field">
+                            <label class="manage-passwd-label" for="new-password">New password:</label>
+                            <input class="manage-passwd-input" type="password" name="new-password" id="new-password" placeholder="New password..." autocomplete="new-password" required>
+                        </div>
+                        <div class="manage-passwd-field">
+                            <label class="manage-passwd-label" for="confirm-password">Confirm new password:</label>
+                            <input class="manage-passwd-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." autocomplete="off" required>
+                        </div>
+                        {{#if passwd_change_success_msg}}
+                        <div class="manage-passwd-field manage-passwd-success-msg">
+                            Success: {{ passwd_change_success_msg }}
+                        </div>
+                        {{/if}}
+                        {{#if passwd_change_error_msg}}
+                        <div class="manage-passwd-field manage-passwd-error-msg">
+                            Error: {{ passwd_change_error_msg }}
+                        </div>
+                        {{/if}}
                     </div>
-                    <div class="manage-passwd-field">
-                        <label class="manage-passwd-label" for="new-password">New password:</label>
-                        <input class="manage-passwd-input" type="password" name="new-password" id="new-password" placeholder="New password..." autocomplete="new-password" required>
-                    </div>
-                    <div class="manage-passwd-field">
-                        <label class="manage-passwd-label" for="confirm-password">Confirm new password:</label>
-                        <input class="manage-passwd-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." autocomplete="off" required>
-                    </div>
-                    {{#if passwd_change_success_msg}}
-                    <div class="manage-passwd-field manage-passwd-success-msg">
-                        Success: {{ passwd_change_success_msg }}
-                    </div>
-                    {{/if}}
-                    {{#if passwd_change_error_msg}}
-                    <div class="manage-passwd-field manage-passwd-error-msg">
-                        Error: {{ passwd_change_error_msg }}
-                    </div>
-                    {{/if}}
-                </div>
-                <input type="submit" value="Change password" class="manage-passwd-button">
-            </form>
-            <div class="manage-tokens">
-                <div class="manage-tokens-title">Tokens</div>
-                <div class="manage-tokens-entries">
-                    {{#if tokens}}
-                    {{#each tokens}}
-                    <div class="manage-tokens-entry">
-                        <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}/revoke"></a>
-                        <div class="manage-tokens-entry-name">{{ this.name }}</div>
-                    </div>
-                    {{/each}}
-                    {{else}}
-                    <div class="manage-tokens-empty">No tokens...</div>
-                    {{/if}}
-                </div>
-                <form class="manage-tokens-create" method="POST" action="/account/manage/tokens">
-                    <div class="manage-tokens-field">
-                        <label class="manage-tokens-label" for="token-name">New token name:</label>
-                        <input class="manage-tokens-input" type="text" name="token-name" id="token-name" placeholder="New token name..." required>
-                    </div>
-                    {{#if token_generation_success_msg}}
-                    <div class="manage-tokens-field manage-tokens-success-msg">
-                        Created token: {{ token_generation_success_msg }}
-                    </div>
-                    {{/if}}
-                    {{#if token_revocation_success_msg}}
-                    <div class="manage-tokens-field manage-tokens-success-msg">
-                        Success: {{ token_revocation_success_msg }}
-                    </div>
-                    {{/if}}
-                    {{#if token_revocation_error_msg}}
-                    <div class="manage-tokens-field manage-tokens-error-msg">
-                        Error: {{ token_revocation_error_msg }}
-                    </div>
-                    {{/if}}
-                    <input class="manage-tokens-button" type="submit" value="Create token">
+                    <input type="submit" value="Change password" class="manage-passwd-button">
                 </form>
+                <div class="manage-tokens">
+                    <div class="manage-tokens-title">Tokens</div>
+                    <div class="manage-tokens-entries">
+                        {{#if tokens}}
+                        {{#each tokens}}
+                        <div class="manage-tokens-entry-container">
+                            <div class="manage-tokens-entry">
+                                <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}/revoke"></a>
+                                <div class="manage-tokens-entry-name">{{ this.name }}</div>
+                            </div>
+                        </div>
+                        {{/each}}
+                        {{else}}
+                        <div class="manage-tokens-empty">No tokens...</div>
+                        {{/if}}
+                    </div>
+                    <form class="manage-tokens-create" method="POST" action="/account/manage/tokens">
+                        <div class="manage-tokens-field">
+                            <label class="manage-tokens-label" for="token-name">New token name:</label>
+                            <input class="manage-tokens-input" type="text" name="token-name" id="token-name" placeholder="New token name..." required>
+                        </div>
+                        {{#if token_generation_success_msg}}
+                        <div class="manage-tokens-field manage-tokens-success-msg">
+                            Created token: {{ token_generation_success_msg }}
+                        </div>
+                        {{/if}}
+                        {{#if token_revocation_success_msg}}
+                        <div class="manage-tokens-field manage-tokens-success-msg">
+                            Success: {{ token_revocation_success_msg }}
+                        </div>
+                        {{/if}}
+                        {{#if token_revocation_error_msg}}
+                        <div class="manage-tokens-field manage-tokens-error-msg">
+                            Error: {{ token_revocation_error_msg }}
+                        </div>
+                        {{/if}}
+                        <input class="manage-tokens-button" type="submit" value="Create token">
+                    </form>
+                </div>
             </div>
         </div>
     </div>
