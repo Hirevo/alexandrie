@@ -234,6 +234,15 @@
     <script type="module">
         import init, * as Rust from "/assets/wasm/wasm_pbkdf2.js";
 
+        // A byte order mark character can show up as a result of the conversion
+        // between Rust strings (UTF-8) and JavaScript strings (UTF-16).
+        // This function removes it if there is one.
+        function removeByteOrderMark(inputString) {
+            return (inputString.charCodeAt(0) === 0xFEFF)
+                ? inputString.substr(1)
+                : inputString;
+        }
+
         (async () => {
             await init();
             const form = document.querySelector('form.login-content');
@@ -244,7 +253,7 @@
                 event.preventDefault();
                 button.disabled = true;
                 button.value = "Loading...";
-                password.value = Rust.pbkdf2_encode(password.value, email.value, 5000);
+                password.value = removeByteOrderMark(Rust.pbkdf2_encode(password.value, email.value, 5000));
                 this.submit();
             });
         })();
