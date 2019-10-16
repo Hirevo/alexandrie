@@ -17,7 +17,7 @@ struct OwnerListResponse {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct OwnerListEntry {
-    pub id: u64,
+    pub id: i64,
     pub login: String,
     pub name: String,
 }
@@ -94,7 +94,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
         let crate_id = crates::table
             .select(crates::id)
             .filter(crates::name.eq(name.as_str()))
-            .first::<u64>(conn)
+            .first::<i64>(conn)
             .optional()?;
         let crate_id = match crate_id {
             Some(id) => id,
@@ -112,7 +112,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
             .inner_join(crates::table)
             .select(authors::id)
             .filter(crates::name.eq(name.as_str()))
-            .load::<u64>(conn)?;
+            .load::<i64>(conn)?;
 
         //? Check if user is one of these authors.
         if !crate_authors.contains(&author.id) {
@@ -129,7 +129,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
             .select((authors::id, authors::name))
             .filter(authors::id.ne_all(crate_authors.as_slice()))
             .filter(authors::email.eq_any(new_authors.as_slice()))
-            .load::<(u64, String)>(conn)?;
+            .load::<(i64, String)>(conn)?;
 
         let (new_authors_ids, new_authors_names) = {
             let len = new_authors.len();
@@ -153,7 +153,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
         //? Insert the new authors.
         diesel::insert_into(crate_authors::table)
             .values(new_authors)
-            .execute(conn)?;
+            .execute(&**conn)?;
 
         let authors_list = match new_authors_names.len() {
             0 => String::new(),
@@ -191,7 +191,7 @@ pub(crate) async fn delete(mut ctx: Context<State>) -> Result<Response, Error> {
         let crate_id = crates::table
             .select(crates::id)
             .filter(crates::name.eq(name.as_str()))
-            .first::<u64>(conn)
+            .first::<i64>(conn)
             .optional()?;
         let crate_id = match crate_id {
             Some(id) => id,
@@ -209,7 +209,7 @@ pub(crate) async fn delete(mut ctx: Context<State>) -> Result<Response, Error> {
             .inner_join(crates::table)
             .select(authors::id)
             .filter(crates::name.eq(name.as_str()))
-            .load::<u64>(conn)?;
+            .load::<i64>(conn)?;
 
         //? Check if user is one of these authors.
         if !crate_authors.contains(&author.id) {
@@ -226,7 +226,7 @@ pub(crate) async fn delete(mut ctx: Context<State>) -> Result<Response, Error> {
             .select((authors::id, authors::name))
             .filter(authors::id.eq_any(crate_authors.as_slice()))
             .filter(authors::email.eq_any(old_authors.as_slice()))
-            .load::<(u64, String)>(conn)?;
+            .load::<(i64, String)>(conn)?;
 
         //? Check if there will remain at least one author for this crate.
         if crate_authors.len() == 1 && old_authors.len() == 1 {

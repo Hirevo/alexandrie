@@ -1,5 +1,4 @@
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
-use diesel::Connection;
 use futures::compat::Compat01As03 as Compat;
 
 /// The database models (struct representations of tables).
@@ -7,20 +6,47 @@ pub mod models;
 /// The database schema definitions (in SQL types).
 pub mod schema;
 
+/// The format in which datetime records are saved in the database.
+pub static DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+/// The connection type (MySQL database).
+#[cfg(feature = "mysql")]
+pub type Connection = diesel::mysql::MysqlConnection;
+
+/// The connection type (SQLite database).
+#[cfg(feature = "sqlite")]
+pub type Connection = diesel::sqlite::SqliteConnection;
+
+/// The connection type (PostgreSQL database).
+#[cfg(feature = "postgres")]
+pub type Connection = diesel::pg::PgConnection;
+
+#[cfg(not(any(feature = "mysql", feature = "sqlite", feature = "postgres")))]
+compile_error!("At least one database backend must be enabled to build this crate (eg. by passing argument `--features [mysql|sqlite|postgres]`).");
+#[cfg(not(any(feature = "mysql", feature = "sqlite", feature = "postgres")))]
+pub type Connection = unimplemented!();
+
+#[cfg(any(
+    all(feature = "mysql", feature = "sqlite"),
+    all(feature = "mysql", feature = "postgres"),
+    all(feature = "sqlite", feature = "postgres")
+))]
+compile_error!("Only one database backend can be enabled at a time.");
+
 /// A database "repository", for running database workloads.
 /// Manages a connection pool and running blocking tasks in a
 /// way that does not block the tokio event loop.
 #[derive(Debug, Clone)]
 pub struct Repo<T>
 where
-    T: Connection + 'static,
+    T: diesel::Connection + 'static,
 {
     connection_pool: Pool<ConnectionManager<T>>,
 }
 
 impl<T> Repo<T>
 where
-    T: Connection + 'static,
+    T: diesel::Connection + 'static,
 {
     /// Constructs a `Repo<T>` for the given database URL (creates a connection pool).
     pub fn new(database_url: &str) -> Self {

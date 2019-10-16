@@ -16,6 +16,7 @@ Goals
 -----
 
 - Offer customizable crate storage strategies (local on-disk, S3, Git Repo, etc...).
+- Offer multiple backing database options (MySQL, PostgreSQL or SQLite).
 - An optional integrated (server-side rendered) front-end.
 
 Current state
@@ -41,7 +42,7 @@ Things yet to do
 How to build
 ------------
 
-Alexandrie is built using Tide and requires a MySQL database (MariaDB is an example of such a database).  
+Alexandrie is built using [**Tide**][Tide] and offers multiple options to be used as its database.  
 To build, you can run `cargo build [--release]`.  
 
 Before running it, you need to configure your instance in the `alexandrie.toml` file.
@@ -50,8 +51,18 @@ The database is configured through the `[database]` table:
 
 ```toml
 [database]
-# Replace the '<...>' placeholders by the real ones.
+# Replace the '<...>' placeholders by the real values.
+
+# For MySQL
 url = "mysql://<user>:<password>@<hostname>:<port>/<database>"
+
+# For PostgreSQL
+url = "postgresql://<user>:<password>@<hostname>:<port>/<database>"
+
+# For SQLite
+url = "<path-to-sqlite-file>"
+# or:
+url = ":memory:" # ephemeral in-memory database, doesn't persists between restarts
 ```
 
 Then, you can configure the crates' tarballs storage strategy and the crate index management strategy that you want to use.  

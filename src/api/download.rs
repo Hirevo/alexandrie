@@ -24,7 +24,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
         let downloads = crates::table
             .select(crates::downloads)
             .filter(crates::name.eq(name.as_str()))
-            .first::<u64>(conn)
+            .first::<i64>(conn)
             .optional()?;
 
         if let Some(downloads) = downloads {

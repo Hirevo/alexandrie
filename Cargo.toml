@@ -37,7 +37,8 @@ base64 = { version = "0.10.1" }
 percent-encoding = { version = "2.1.0" }
 
 # database
-diesel = { version = "1.4.2", features = ["r2d2", "mysql", "chrono", "numeric"] }
+diesel = { version = "1.4.2", features = ["r2d2", "chrono", "numeric"] }
+diesel_migrations = { version = "1.4.0" }
 
 # async primitives
 tokio = { version = "0.1.19" }
@@ -75,5 +76,8 @@ path-absolutize = { version = "1.1.6" }
 mime_guess = { version = "2.0.1" }
 
 [features]
-default = ["frontend"]
+default = ["frontend", "sqlite"]
 frontend = ["handlebars", "num-format", "bigdecimal", "cookie", "time"]
+mysql = ["diesel/mysql", "diesel_migrations/mysql"]
+sqlite = ["diesel/sqlite", "diesel_migrations/sqlite"]
+postgres = ["diesel/postgres", "diesel_migrations/postgres"]

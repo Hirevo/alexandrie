@@ -52,7 +52,7 @@ pub(crate) fn hbs_humanize_number(
         .ok_or_else(|| RenderError::new("humanize_number: missing parameter"))?;
     let formatted = param
         .value()
-        .as_u64()
+        .as_i64()
         .map(humanize_number)
         .or_else(|| param.value().as_i64().map(humanize_number))
         .ok_or_else(|| {

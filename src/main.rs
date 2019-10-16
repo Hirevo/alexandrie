@@ -14,14 +14,14 @@
 //! -----
 //!
 //! - Offer customizable crate storage strategies (local on-disk, S3, Git Repo, etc...).
+//! - Offer multiple backing database options (MySQL, PostgreSQL or SQLite).
 //! - An optional integrated (server-side rendered) front-end.
 //!
 //! Current state
 //! -------------
 //!
-//! - The core Cargo APIs are functional but not yet complete.
-//! - The optional front-end is in active development.
-//! - Currently, generating tokens is done manually through the database.
+//! - The core Cargo APIs are all functional.
+//! - The optional front-end is very usable, although still in active development.
 //!
 //! How is it built
 //! ---------------
@@ -32,6 +32,8 @@
 #[macro_use]
 extern crate diesel;
 #[macro_use]
+extern crate diesel_migrations;
+#[macro_use]
 extern crate log;
 #[macro_use(slog_o)]
 extern crate slog;
@@ -41,7 +43,6 @@ use std::io;
 
 use std::sync::Arc;
 
-use diesel::MysqlConnection;
 use tide::middleware::RequestLogger;
 use tide::App;
 
@@ -79,10 +80,17 @@ use crate::utils::auth::AuthMiddleware;
 use crate::utils::static_files::StaticFiles;
 
 /// The instantiated [`crate::db::Repo`] type alias.
-pub type Repo = db::Repo<MysqlConnection>;
+pub type Repo = db::Repo<db::Connection>;
 
 /// The application state type used for the web server.
 pub type State = Arc<config::State>;
+
+#[cfg(feature = "mysql")]
+embed_migrations!("migrations/mysql");
+#[cfg(feature = "sqlite")]
+embed_migrations!("migrations/sqlite");
+#[cfg(feature = "postgres")]
+embed_migrations!("migrations/postgres");
 
 #[runtime::main(runtime_tokio::Tokio)]
 async fn main() -> io::Result<()> {
@@ -96,6 +104,12 @@ async fn main() -> io::Result<()> {
     let frontend_enabled = config.frontend.enabled;
 
     let state: config::State = config.into();
+
+    info!("running database migrations");
+    #[rustfmt::skip]
+    state.repo.run(|conn| embedded_migrations::run(conn)).await
+        .expect("migration execution error");
+
     let mut app = App::with_state(Arc::new(state));
 
     info!("setting up request logger middleware");

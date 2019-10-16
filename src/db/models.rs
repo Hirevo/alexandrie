@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::db::schema::*;
@@ -19,17 +18,17 @@ use crate::db::schema::*;
 /// Represents a complete crate entry, as stored in the database.
 pub struct CrateRegistration {
     /// The crate's ID.
-    pub id: u64,
+    pub id: i64,
     /// The crate's name.
     pub name: String,
     /// The crate's description.
     pub description: Option<String>,
     /// The crate's creation date.
-    pub created_at: NaiveDateTime,
+    pub created_at: String,
     /// The crate's last updated date.
-    pub updated_at: NaiveDateTime,
+    pub updated_at: String,
     /// The crate's download count.
-    pub downloads: u64,
+    pub downloads: i64,
     /// The URL to the crate's documentation.
     pub documentation: Option<String>,
     /// The URL to the crate's repository.
@@ -53,7 +52,7 @@ pub struct CrateRegistration {
 /// suitable to edit an entry while letting the database maintain the updated date of the row.
 pub struct ModifyCrateRegistration<'a> {
     /// The crate's ID.
-    pub id: u64,
+    pub id: i64,
     /// The crate's name.
     pub name: &'a str,
     /// The crate's description.
@@ -95,7 +94,7 @@ pub struct NewCrateRegistration<'a> {
 /// Represents a complete author entry, as stored in the database.
 pub struct Author {
     /// The author's ID.
-    pub id: u64,
+    pub id: i64,
     /// The author's email address.
     pub email: String,
     /// The author's displayable name.
@@ -136,11 +135,11 @@ pub struct NewAuthor<'a> {
 /// Represents a crate-to-author relationship in the database.
 pub struct CrateAuthor {
     /// The relationship's ID.
-    pub id: u64,
+    pub id: i64,
     /// The crate's ID.
-    pub crate_id: u64,
+    pub crate_id: i64,
     /// The author's ID.
-    pub author_id: u64,
+    pub author_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
@@ -149,9 +148,9 @@ pub struct CrateAuthor {
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateAuthor {
     /// The crate's ID.
-    pub crate_id: u64,
+    pub crate_id: i64,
     /// The author's ID.
-    pub author_id: u64,
+    pub author_id: i64,
 }
 
 #[derive(
@@ -172,13 +171,13 @@ pub struct NewCrateAuthor {
 /// Represents a author-to-token relationship in the database.
 pub struct AuthorToken {
     /// The token's ID.
-    pub id: u64,
+    pub id: i64,
     /// The token's name.
     pub name: String,
     /// The token itself.
     pub token: String,
     /// The token's related author ID.
-    pub author_id: u64,
+    pub author_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
@@ -191,7 +190,7 @@ pub struct NewAuthorToken<'a> {
     /// The token itself.
     pub token: &'a str,
     /// The token's related author ID.
-    pub author_id: u64,
+    pub author_id: i64,
 }
 
 #[derive(
@@ -211,7 +210,7 @@ pub struct NewAuthorToken<'a> {
 /// Represents a keyword entry in the database.
 pub struct Keyword {
     /// The keyword's ID.
-    pub id: u64,
+    pub id: i64,
     /// The keyword itself.
     pub name: String,
 }
@@ -235,11 +234,11 @@ pub struct Keyword {
 /// Represents a crate-to-keyword relationship in the database.
 pub struct CrateKeyword {
     /// The relationship's ID.
-    pub id: u64,
+    pub id: i64,
     /// The crate's ID.
-    pub crate_id: u64,
+    pub crate_id: i64,
     /// The keyword's ID.
-    pub keyword_id: u64,
+    pub keyword_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
@@ -248,9 +247,9 @@ pub struct CrateKeyword {
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateKeyword {
     /// The crate's ID.
-    pub crate_id: u64,
+    pub crate_id: i64,
     /// The keyword's ID.
-    pub keyword_id: u64,
+    pub keyword_id: i64,
 }
 
 #[derive(
@@ -270,7 +269,7 @@ pub struct NewCrateKeyword {
 /// Represents a category entry in the database.
 pub struct Category {
     /// The category's ID.
-    pub id: u64,
+    pub id: i64,
     /// The category's unique tagname.
     pub tag: String,
     /// The category's name.
@@ -298,11 +297,11 @@ pub struct Category {
 /// Represents a crate-to-category relationship in the database.
 pub struct CrateCategory {
     /// The relationship's ID.
-    pub id: u64,
+    pub id: i64,
     /// The crate's ID.
-    pub crate_id: u64,
+    pub crate_id: i64,
     /// The category's ID.
-    pub category_id: u64,
+    pub category_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
@@ -311,9 +310,9 @@ pub struct CrateCategory {
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateCategory {
     /// The crate's ID.
-    pub crate_id: u64,
+    pub crate_id: i64,
     /// The category's ID.
-    pub category_id: u64,
+    pub category_id: i64,
 }
 
 #[derive(
@@ -334,13 +333,13 @@ pub struct NewCrateCategory {
 /// Represents a session in the database.
 pub struct Session {
     /// The session's ID.
-    pub id: u64,
+    pub id: i64,
     /// The session's token.
     pub token: String,
     /// The session's related author ID.
-    pub author_id: u64,
+    pub author_id: i64,
     /// The session's expiry date.
-    pub expires: NaiveDateTime,
+    pub expires: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
@@ -351,9 +350,9 @@ pub struct NewSession<'a> {
     /// The session's token.
     pub token: &'a str,
     /// The session's related author ID.
-    pub author_id: u64,
+    pub author_id: i64,
     /// The session's expiry date.
-    pub expires: NaiveDateTime,
+    pub expires: String,
 }
 
 #[derive(
@@ -374,11 +373,11 @@ pub struct NewSession<'a> {
 /// Represents a salt in the database.
 pub struct Salt {
     /// The salt's ID.
-    pub id: u64,
+    pub id: i64,
     /// The salt itself.
     pub salt: String,
     /// The salt's related author ID.
-    pub author_id: u64,
+    pub author_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
@@ -389,5 +388,5 @@ pub struct NewSalt<'a> {
     /// The salt itself.
     pub salt: &'a str,
     /// The salt's related author ID.
-    pub author_id: u64,
+    pub author_id: i64,
 }

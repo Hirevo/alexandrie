@@ -9,6 +9,7 @@ use tide::{Context, Response};
 
 use crate::db::models::Author;
 use crate::db::schema::*;
+use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::State;
 
@@ -45,24 +46,29 @@ impl Middleware<State> for AuthMiddleware {
                 let state = ctx.state();
                 let repo = &state.repo;
 
-                let author = repo.run(|conn| {
-                    //? Get the non-expired session matching the user-provided token.
+                let query = repo.run(|conn| {
+                    //? Get the session matching the user-provided token.
                     sessions::table
                         .inner_join(authors::table)
-                        .select(authors::all_columns)
+                        .select((sessions::expires, authors::all_columns))
                         .filter(sessions::token.eq(cookie.value()))
-                        .filter(sessions::expires.gt(&now))
-                        .first::<Author>(conn)
+                        .first::<(String, Author)>(conn)
                         .optional()
                 });
 
-                let author = match author.await {
-                    Ok(author) => author,
+                let results = match query.await {
+                    Ok(results) => results,
                     Err(err) => return Error::from(err).into_response(),
                 };
 
-                if let Some(author) = author {
-                    ctx.extensions_mut().insert(author);
+                if let Some((expires, author)) = results {
+                    let expires =
+                        chrono::NaiveDateTime::parse_from_str(expires.as_str(), DATETIME_FORMAT)
+                            .unwrap();
+
+                    if expires > now {
+                        ctx.extensions_mut().insert(author);
+                    }
                 }
             }
 
