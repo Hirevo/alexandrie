@@ -10,3 +10,7 @@ pub mod krate;
 pub mod me;
 /// Search pages (eg. "/search?q=\<term\>").
 pub mod search;
+/// Most downloaded crates (eg. "/most-downloaded").
+pub mod most_downloaded;
+/// Last updated crates (eg. "/last-updated").
+pub mod last_updated;

@@ -9,7 +9,6 @@ use tide::{Context, Response};
 
 use crate::db::models::CrateRegistration;
 use crate::db::schema::*;
-use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::frontend::helpers;
 use crate::index::Indexer;
@@ -18,15 +17,12 @@ use crate::utils::auth::AuthExt;
 use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct SearchParams {
-    pub q: String,
+struct Params {
     pub page: Option<NonZeroU32>,
 }
 
 pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
-    let params = ctx.url_query::<SearchParams>().unwrap();
-    let searched_text = params.q.clone();
-    let q = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
+    let params = ctx.url_query::<Params>().unwrap_or(Params { page: None });
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
     let user = ctx.get_author();
@@ -37,12 +33,11 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
         //? Get the total count of search results.
         let total_results = crates::table
             .select(sql::count(crates::id))
-            .filter(crates::name.like(q.as_str()))
             .first::<i64>(conn)?;
 
         //? Get the search results for the given page number.
         let results: Vec<CrateRegistration> = crates::table
-            .filter(crates::name.like(q.as_str()))
+            .order_by(crates::updated_at.desc())
             .limit(15)
             .offset(15 * i64::from(page_number - 1))
             .load(conn)?;
@@ -67,17 +62,13 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 1
             }) as u32;
 
-        let encoded_q = percent_encoding::percent_encode(
-            params.q.as_bytes(),
-            percent_encoding::NON_ALPHANUMERIC,
-        );
         let next_page = if page_number < page_count {
-            Some(format!("/search?q={0}&page={1}", encoded_q, page_number + 1))
+            Some(format!("/last-updated?page={0}", page_number + 1))
         } else {
             None
         };
         let prev_page = if page_number > 1 {
-            Some(format!("/search?q={0}&page={1}", encoded_q, page_number - 1))
+            Some(format!("/last-updated?page={0}", page_number - 1))
         } else {
             None
         };
@@ -86,7 +77,6 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
         let context = json!({
             "user": user,
             "instance": &state.frontend.config,
-            "searched_text": searched_text,
             "total_results": total_results,
             "pagination": {
                 "current": page_number,
@@ -96,19 +86,13 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             },
             "results": results.into_iter().map(|(krate, keywords)| {
                 let version = state.index.latest_crate(&krate.name)?.vers;
-                let created_at =
-                    chrono::NaiveDateTime::parse_from_str(krate.created_at.as_str(), DATETIME_FORMAT)
-                        .unwrap();
-                let updated_at =
-                    chrono::NaiveDateTime::parse_from_str(krate.updated_at.as_str(), DATETIME_FORMAT)
-                        .unwrap();
                 Ok(json!({
                     "id": krate.id,
                     "name": krate.name,
                     "version": version,
                     "description": krate.description,
-                    "created_at": helpers::humanize_datetime(created_at),
-                    "updated_at": helpers::humanize_datetime(updated_at),
+                    "created_at": helpers::humanize_datetime(krate.created_at),
+                    "updated_at": helpers::humanize_datetime(krate.updated_at),
                     "downloads": helpers::humanize_number(krate.downloads),
                     "documentation": krate.documentation,
                     "repository": krate.repository,
@@ -117,7 +101,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             }).collect::<Result<Vec<_>, Error>>()?,
         });
         Ok(utils::response::html(
-            engine.render("search", &context).unwrap(),
+            engine.render("last-updated", &context).unwrap(),
         ))
     });
 

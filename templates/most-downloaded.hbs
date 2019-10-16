@@ -244,8 +244,8 @@
     <div class="hero">
         <div style="height: 50px"></div>
         <div class="hero-content-container">
-            <div class="hero-title">Search results</div>
-            <div class="hero-subtitle">Searched for: {{ searched_text }}</div>
+            <div class="hero-title">Most downloaded crates</div>
+            <div class="hero-subtitle">All crates sorted by download count.</div>
         </div>
     </div>
     <div class="stats-container">
@@ -280,7 +280,7 @@
             </a>
             {{/each}}
             {{else}}
-            <div class="search-results-empty">No search results...</div>
+            <div class="search-results-empty">No crates...</div>
             {{/if}}
         </div>
         {{> partials/pagination pagination}}

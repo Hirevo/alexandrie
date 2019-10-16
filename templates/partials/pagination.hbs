@@ -1,0 +1,19 @@
+<div class="pagination-container">
+    <div class="pagination">
+        <div class="pagination-button">
+            {{#if prev}}
+            <a class="pagination-prev" href="{{ prev }}">Prev</a>
+            {{else}}
+            <div class="pagination-prev pagination-disabled">Prev</div>
+            {{/if}}
+        </div>
+        <div class="pagination-current">Page {{ current }} / {{ total_count }}</div>
+        <div class="pagination-button">
+            {{#if next}}
+            <a class="pagination-next" href="{{ next }}">Next</a>
+            {{else}}
+            <div class="pagination-next pagination-disabled">Next</div>
+            {{/if}}
+        </div>
+    </div>
+</div>
