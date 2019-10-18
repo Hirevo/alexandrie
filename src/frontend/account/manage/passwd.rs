@@ -32,8 +32,18 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         }
     };
 
-    // TODO: remove this `unwrap` ASAP!
-    let form: ChangePasswordForm = ctx.body_form().await.unwrap();
+    //? Deserialize form data.
+    let form: ChangePasswordForm = match ctx.body_form().await {
+        Ok(form) => form,
+        Err(_) => {
+            return Ok(utils::response::error_html(
+                ctx.state(),
+                Some(author),
+                http::StatusCode::BAD_REQUEST,
+                "could not deseriailize form data",
+            ));
+        }
+    };
 
     let state = ctx.state().clone();
     let repo = &state.repo;
@@ -44,17 +54,16 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             || form.new_password.is_empty()
             || form.confirm_password.is_empty()
         {
-            let error_msg =
-                ManageFlashError::PasswordChangeError(String::from("some fields were left empty."));
+            let error_msg = String::from("some fields were left empty.");
+            let error_msg = ManageFlashError::PasswordChangeError(error_msg);
             ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
 
         //? Does the two passwords match (consistency check)?
         if form.new_password != form.confirm_password {
-            let error_msg = ManageFlashError::PasswordChangeError(String::from(
-                "the two passwords did not match.",
-            ));
+            let error_msg = String::from("the two passwords did not match.");
+            let error_msg = ManageFlashError::PasswordChangeError(error_msg);
             ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
@@ -67,11 +76,28 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .first::<String>(conn)?;
 
         //? Decode hex-encoded hashes.
-        // TODO: remove these `unwrap` ASAP!
-        let decoded_salt = hex::decode(encoded_salt).unwrap();
-        let decoded_current_password = hex::decode(form.password.as_bytes()).unwrap();
-        let decoded_desired_password = hex::decode(form.new_password.as_bytes()).unwrap();
-        let decoded_expected_hash = hex::decode(author.passwd.as_bytes()).unwrap();
+        let decode_results: Result<_, hex::FromHexError> = try {
+            let salt = hex::decode(encoded_salt.as_str())?;
+            let current_password = hex::decode(form.password.as_str())?;
+            let desired_password = hex::decode(form.new_password.as_str())?;
+            let expected_hash = hex::decode(author.passwd.as_str())?;
+            (salt, current_password, desired_password, expected_hash)
+        };
+
+        let (
+            decoded_salt,
+            decoded_current_password,
+            decoded_desired_password,
+            decoded_expected_hash,
+        ) = match decode_results {
+            Ok(results) => results,
+            Err(_) => {
+                let error_msg = String::from("password/salt decoding issue.");
+                let error_msg = ManageFlashError::PasswordChangeError(error_msg);
+                ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                return Ok(utils::response::redirect("/account/manage"));
+            }
+        };
 
         //? Verify client password against the expected hash (through PBKDF2).
         let password_match = {

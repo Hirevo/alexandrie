@@ -58,8 +58,18 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         return Ok(utils::response::redirect("/account/register"));
     }
 
-    // TODO: remove this `unwrap` ASAP!
-    let form: RegisterForm = ctx.body_form().await.unwrap();
+    //? Deserialize form data.
+    let form: RegisterForm = match ctx.body_form().await {
+        Ok(form) => form,
+        Err(_) => {
+            return Ok(utils::response::error_html(
+                ctx.state(),
+                None,
+                http::StatusCode::BAD_REQUEST,
+                "could not deseriailize form data",
+            ));
+        }
+    };
 
     let state = ctx.state().clone();
     let repo = &state.repo;
@@ -94,9 +104,15 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             return Ok(utils::response::redirect("/account/register"));
         }
 
-        // TODO: remove this `unwrap` ASAP!
         //? Decode hex-encoded password hash.
-        let decoded_password = hex::decode(form.password.as_bytes()).unwrap();
+        let decoded_password = match hex::decode(form.password.as_bytes()) {
+            Ok(passwd) => passwd,
+            Err(_) => {
+                let error_msg = String::from("password/salt decoding issue.");
+                ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                return Ok(utils::response::redirect("/account/register"));
+            }
+        };
 
         //? Generate the user's authentication salt.
         let decoded_generated_salt = {

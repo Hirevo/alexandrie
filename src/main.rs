@@ -1,4 +1,4 @@
-#![feature(inner_deref)]
+#![feature(inner_deref, try_blocks)]
 #![allow(clippy::redundant_closure, clippy::needless_lifetimes)]
 #![warn(unused, missing_docs)]
 //!

@@ -53,8 +53,18 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         return Ok(utils::response::redirect("/"));
     }
 
-    // TODO: remove this `unwrap` ASAP!
-    let form: LoginForm = ctx.body_form().await.unwrap();
+    //? Deserialize form data.
+    let form: LoginForm = match ctx.body_form().await {
+        Ok(form) => form,
+        Err(_) => {
+            return Ok(utils::response::error_html(
+                ctx.state(),
+                None,
+                http::StatusCode::BAD_REQUEST,
+                "could not deseriailize form data",
+            ));
+        }
+    };
 
     let state = ctx.state().clone();
     let repo = &state.repo;
@@ -79,10 +89,21 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         };
 
         //? Decode hex-encoded hashes.
-        // TODO: remove these `unwrap` ASAP!
-        let decoded_salt = hex::decode(encoded_salt).unwrap();
-        let decoded_password = hex::decode(form.password.as_bytes()).unwrap();
-        let decoded_expected_hash = hex::decode(encoded_expected_hash).unwrap();
+        let decode_results: Result<_, hex::FromHexError> = try {
+            let decoded_salt = hex::decode(encoded_salt.as_str())?;
+            let decoded_password = hex::decode(form.password.as_str())?;
+            let decoded_expected_hash = hex::decode(encoded_expected_hash.as_str())?;
+            (decoded_salt, decoded_password, decoded_expected_hash)
+        };
+
+        let (decoded_salt, decoded_password, decoded_expected_hash) = match decode_results {
+            Ok(results) => results,
+            Err(_) => {
+                let error_msg = String::from("password/salt decoding issue.");
+                ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                return Ok(utils::response::redirect("/account/login"));
+            }
+        };
 
         //? Verify client password against the expected hash (through PBKDF2).
         let password_match = {

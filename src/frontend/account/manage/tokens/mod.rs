@@ -30,8 +30,18 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         }
     };
 
-    // TODO: remove this `unwrap` ASAP!
-    let form: CreateTokenForm = ctx.body_form().await.unwrap();
+    //? Deserialize form data.
+    let form: CreateTokenForm = match ctx.body_form().await {
+        Ok(form) => form,
+        Err(_) => {
+            return Ok(utils::response::error_html(
+                ctx.state(),
+                Some(author),
+                http::StatusCode::BAD_REQUEST,
+                "could not deseriailize form data",
+            ));
+        }
+    };
 
     let state = ctx.state().clone();
     let repo = &state.repo;
