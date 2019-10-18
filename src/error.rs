@@ -2,12 +2,12 @@ use std::convert::TryInto;
 use std::io;
 
 use diesel::result::Error as SQLError;
+use hex::FromHexError as HexError;
 use io::Error as IOError;
 use json::Error as JSONError;
 use semver::{SemVerError as SemverError, Version};
-use toml::de::Error as TOMLError;
-// use tide::Error as TideError;
 use thiserror::Error;
+use toml::de::Error as TOMLError;
 
 use tide::response::IntoResponse;
 use tide::Response;
@@ -35,9 +35,9 @@ pub enum Error {
     /// Version parsing errors (invalid version format parsed, etc...).
     #[error("Semver error: {0}")]
     SemverError(#[source] SemverError),
-    // /// Tide error (invalid query params, could not keep up with the rising tide, etc...).
-    // #[error("Tide error: {0}")]
-    // TideError(#[source] TideError),
+    /// Hexadecimal decoding errors (odd length, etc...).
+    #[error("Hex error: {0}")]
+    HexError(#[source] HexError),
     /// Alexandrie's custom errors (crate not found, invalid token, etc...).
     #[error("Alexandrie error: {0}")]
     AlexError(#[source] AlexError),
@@ -89,7 +89,7 @@ impl IntoResponse for Error {
             Error::TOMLError(_) => "internal server error".to_string(),
             Error::SQLError(_) => "internal server error".to_string(),
             Error::SemverError(_) => "internal server error".to_string(),
-            // Error::TideError(_) => "internal server error".to_string(),
+            Error::HexError(_) => "internal server error".to_string(),
             Error::AlexError(err) => err.to_string(),
         };
 
@@ -124,6 +124,12 @@ impl From<SQLError> for Error {
 impl From<SemverError> for Error {
     fn from(err: SemverError) -> Error {
         Error::SemverError(err)
+    }
+}
+
+impl From<HexError> for Error {
+    fn from(err: HexError) -> Error {
+        Error::HexError(err)
     }
 }
 
