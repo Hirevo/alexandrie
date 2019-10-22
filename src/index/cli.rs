@@ -7,8 +7,7 @@ use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 
 use crate::error::{AlexError, Error};
-use crate::index::Indexer;
-use crate::krate::Crate;
+use crate::index::{CrateVersion, Indexer};
 
 /// The CLI crate index management strategy type.
 ///
@@ -85,7 +84,7 @@ impl Indexer for CommandLineIndex {
         }
     }
 
-    fn match_crate(&self, name: &str, req: VersionReq) -> Result<Crate, Error> {
+    fn match_crate(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
         let path = self.index_crate(name);
         let file = fs::File::open(path).map_err(|err| match err.kind() {
             io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound {
@@ -96,7 +95,7 @@ impl Indexer for CommandLineIndex {
         let found = io::BufReader::new(file)
             .lines()
             .map(|line| Some(json::from_str(line.ok()?.as_str()).ok()?))
-            .flat_map(|ret: Option<Crate>| ret.into_iter())
+            .flat_map(|ret: Option<CrateVersion>| ret.into_iter())
             .filter(|krate| req.matches(&krate.vers))
             .max_by(|k1, k2| k1.vers.cmp(&k2.vers));
         Ok(found.ok_or_else(|| AlexError::CrateNotFound {
@@ -104,13 +103,13 @@ impl Indexer for CommandLineIndex {
         })?)
     }
 
-    fn latest_crate(&self, name: &str) -> Result<Crate, Error> {
+    fn latest_crate(&self, name: &str) -> Result<CrateVersion, Error> {
         let path = self.index_crate(name);
         let reader = io::BufReader::new(fs::File::open(path)?);
         Ok(reader
             .lines()
-            .map(|line| Ok(json::from_str::<Crate>(line?.as_str())?))
-            .collect::<Result<Vec<Crate>, Error>>()?
+            .map(|line| Ok(json::from_str::<CrateVersion>(line?.as_str())?))
+            .collect::<Result<Vec<CrateVersion>, Error>>()?
             .into_iter()
             .max_by(|k1, k2| k1.vers.cmp(&k2.vers))
             .expect("at least one version to exist"))
@@ -118,7 +117,7 @@ impl Indexer for CommandLineIndex {
 
     fn alter_crate<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
     where
-        F: FnOnce(&mut Crate),
+        F: FnOnce(&mut CrateVersion),
     {
         let path = self.index_crate(name);
         let file = fs::File::open(path.as_path()).map_err(|err| match err.kind() {
@@ -127,7 +126,7 @@ impl Indexer for CommandLineIndex {
             }),
             _ => Error::from(err),
         })?;
-        let mut krates: Vec<Crate> = {
+        let mut krates: Vec<CrateVersion> = {
             let mut out = Vec::new();
             for line in io::BufReader::new(file).lines() {
                 let krate = json::from_str(line?.as_str())?;

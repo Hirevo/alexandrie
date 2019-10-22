@@ -5,10 +5,12 @@ use serde::{Deserialize, Serialize};
 
 /// Index management through `git` shell command invocations.
 pub mod cli;
+mod models;
+
+pub use models::*;
 
 use crate::error::Error;
 use crate::index::cli::CommandLineIndex;
-use crate::krate::Crate;
 
 /// The crate indexing management strategy type.
 ///
@@ -30,17 +32,17 @@ pub trait Indexer {
     /// Refreshes the managed crate index (in case another instance made modification to it).
     fn refresh(&self) -> Result<(), Error>;
     /// Retrieves the latest version of a crate.
-    fn latest_crate(&self, name: &str) -> Result<Crate, Error>;
+    fn latest_crate(&self, name: &str) -> Result<CrateVersion, Error>;
     /// Retrieves the filepath to the saved crate metadata.
     fn index_crate(&self, name: &str) -> PathBuf;
     /// Retrieves the crate metadata for the given name and version.
-    fn match_crate(&self, name: &str, req: VersionReq) -> Result<Crate, Error>;
+    fn match_crate(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error>;
     /// Commits and pushes changes upstream.
     fn commit_and_push(&self, msg: &str) -> Result<(), Error>;
     /// Alters the index's crate record with the passed-in function.
     fn alter_crate<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
     where
-        F: FnOnce(&mut Crate);
+        F: FnOnce(&mut CrateVersion);
     /// Yanks a crate version.
     fn yank_crate(&self, name: &str, version: Version) -> Result<(), Error> {
         self.alter_crate(name, version, |krate| krate.yanked = Some(true))
@@ -64,7 +66,7 @@ impl Indexer for Index {
         }
     }
 
-    fn latest_crate(&self, name: &str) -> Result<Crate, Error> {
+    fn latest_crate(&self, name: &str) -> Result<CrateVersion, Error> {
         match self {
             Index::CommandLine(idx) => idx.latest_crate(name),
         }
@@ -76,7 +78,7 @@ impl Indexer for Index {
         }
     }
 
-    fn match_crate(&self, name: &str, req: VersionReq) -> Result<Crate, Error> {
+    fn match_crate(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
         match self {
             Index::CommandLine(idx) => idx.match_crate(name, req),
         }
@@ -90,7 +92,7 @@ impl Indexer for Index {
 
     fn alter_crate<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
     where
-        F: FnOnce(&mut Crate),
+        F: FnOnce(&mut CrateVersion),
     {
         match self {
             Index::CommandLine(idx) => idx.alter_crate(name, version, func),

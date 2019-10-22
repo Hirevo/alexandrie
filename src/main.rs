@@ -59,8 +59,6 @@ pub mod db;
 pub mod error;
 /// Crate index management strategies.
 pub mod index;
-/// Crate representations.
-pub mod krate;
 /// Logs initialisation.
 pub mod logs;
 /// Crate storage strategies.

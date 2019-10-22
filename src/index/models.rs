@@ -3,18 +3,18 @@ use std::collections::HashMap;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 
-/// Represents a crate.
+/// Represents a crate version record.
 ///
 /// This is what's stored in the crate index.  
 /// Note that this structs represents only a specific version of a crate.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Crate {
+pub struct CrateVersion {
     /// The name of the crate.
     pub name: String,
     /// The version of the crate.
     pub vers: Version,
     /// The dependencies of the crate.
-    pub deps: Vec<Dependency>,
+    pub deps: Vec<CrateDependency>,
     /// The SHA256 hash of the crate.
     pub cksum: String,
     /// The available features of the crates and what they enable.
@@ -27,7 +27,7 @@ pub struct Crate {
 
 /// Represents a crate dependency.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Dependency {
+pub struct CrateDependency {
     /// The name of the dependency.
     ///
     /// If the dependency is renamed, this is the new name.  
@@ -46,7 +46,7 @@ pub struct Dependency {
     /// A string such as "cfg(windows)"
     pub target: Option<String>,
     /// The kind of the dependency ("normal", "build" or "dev").
-    pub kind: Option<DependencyKind>,
+    pub kind: Option<CrateDependencyKind>,
     /// The URL of the index of the registry where this dependency is from.
     ///
     /// If not specified, it is assumed to come from the current registry.
@@ -60,7 +60,7 @@ pub struct Dependency {
 /// Represents the different kinds of dependencies.
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum DependencyKind {
+pub enum CrateDependencyKind {
     /// A normal dependency.
     Normal,
     /// A build dependency.

@@ -21,8 +21,7 @@ use crate::db::schema::*;
 use crate::db::Connection;
 use crate::db::DATETIME_FORMAT;
 use crate::error::{AlexError, Error};
-use crate::index::Indexer;
-use crate::krate;
+use crate::index::{CrateDependency, CrateDependencyKind, CrateVersion, Indexer};
 use crate::storage::Store;
 use crate::utils;
 use crate::State;
@@ -34,7 +33,7 @@ struct PublishResponse {}
 struct CrateMeta {
     pub name: String,
     pub vers: Version,
-    pub deps: Vec<CrateDependency>,
+    pub deps: Vec<CrateMetaDependency>,
     pub features: HashMap<String, Vec<String>>,
     pub authors: Vec<String>,
     pub description: Option<String>,
@@ -51,14 +50,14 @@ struct CrateMeta {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct CrateDependency {
+struct CrateMetaDependency {
     pub name: String,
     pub version_req: VersionReq,
     pub features: Vec<String>,
     pub optional: bool,
     pub default_features: bool,
     pub target: Option<String>,
-    pub kind: Option<krate::DependencyKind>,
+    pub kind: Option<CrateDependencyKind>,
     pub registry: Option<String>,
     #[serde(rename = "explicit_name_in_toml")]
     pub explicit_name: Option<String>,
@@ -184,7 +183,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
 
     let transaction = repo.transaction(|conn| {
         //? Construct a crate description.
-        let crate_desc = krate::Crate {
+        let crate_desc = CrateVersion {
             name: metadata.name,
             vers: metadata.vers,
             deps: metadata
@@ -196,7 +195,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
                     } else {
                         (dep.name, None)
                     };
-                    krate::Dependency {
+                    CrateDependency {
                         name,
                         req: dep.version_req,
                         features: dep.features,
@@ -263,7 +262,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
             }
 
             //? Is the version higher than the latest known one?
-            let krate::Crate { vers: latest, .. } =
+            let CrateVersion { vers: latest, .. } =
                 state.index.latest_crate(krate.name.as_str())?;
             if crate_desc.vers <= latest {
                 return Err(Error::from(AlexError::VersionTooLow {
