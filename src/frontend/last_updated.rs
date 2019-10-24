@@ -9,6 +9,7 @@ use tide::{Context, Response};
 
 use crate::db::models::CrateRegistration;
 use crate::db::schema::*;
+use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::frontend::helpers;
 use crate::index::Indexer;
@@ -86,13 +87,19 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             },
             "results": results.into_iter().map(|(krate, keywords)| {
                 let version = state.index.latest_crate(&krate.name)?.vers;
+                let created_at =
+                    chrono::NaiveDateTime::parse_from_str(krate.created_at.as_str(), DATETIME_FORMAT)
+                        .unwrap();
+                let updated_at =
+                    chrono::NaiveDateTime::parse_from_str(krate.updated_at.as_str(), DATETIME_FORMAT)
+                        .unwrap();
                 Ok(json!({
                     "id": krate.id,
                     "name": krate.name,
                     "version": version,
                     "description": krate.description,
-                    "created_at": helpers::humanize_datetime(krate.created_at),
-                    "updated_at": helpers::humanize_datetime(krate.updated_at),
+                    "created_at": helpers::humanize_datetime(created_at),
+                    "updated_at": helpers::humanize_datetime(updated_at),
                     "downloads": helpers::humanize_number(krate.downloads),
                     "documentation": krate.documentation,
                     "repository": krate.repository,
