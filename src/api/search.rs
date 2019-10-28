@@ -121,9 +121,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
 
         Ok(tide::response::json(SearchResponse {
             crates,
-            meta: SearchMeta {
-                total: total as i64,
-            },
+            meta: SearchMeta { total },
         }))
     });
 

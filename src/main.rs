@@ -177,6 +177,8 @@ async fn main() -> io::Result<()> {
     info!("mounting '/api/v1/crates/:name/:version/download'");
     app.at("/api/v1/crates/:name/:version/download")
         .get(api::download::get);
+    info!("mounting '/api/v1/categories'");
+    app.at("/api/v1/categories").get(api::categories::get);
 
     info!("listening on {0}", addr);
     app.serve(addr).await?;

@@ -1,3 +1,5 @@
+/// Category listing endpoint (eg. "/api/v1/categories").
+pub mod categories;
 /// Crate downloads endpoint (eg. "/api/v1/crates/\<name\>/\<version\>/download").
 pub mod download;
 /// Owners management endpoint (eg. "/api/v1/crates/\<name\>/owners").
