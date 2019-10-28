@@ -127,6 +127,11 @@ async fn main() -> io::Result<()> {
             app.at("/me").get(frontend::me::get);
             info!("mounting '/search'");
             app.at("/search").get(frontend::search::get);
+            info!("mounting '/most-downloaded'");
+            app.at("/most-downloaded")
+                .get(frontend::most_downloaded::get);
+            info!("mounting '/last-updated'");
+            app.at("/last-updated").get(frontend::last_updated::get);
             info!("mounting '/crates/:crate'");
             app.at("/crates/:crate").get(frontend::krate::get);
 

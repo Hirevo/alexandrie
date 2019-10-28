@@ -83,6 +83,7 @@ pub enum AlexError {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
+        error!("constructing error response: {0}", self);
         let message = match self {
             Error::IOError(_) => "internal server error".to_string(),
             Error::JSONError(_) => "internal server error".to_string(),
