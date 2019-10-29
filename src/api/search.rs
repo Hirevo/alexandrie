@@ -95,7 +95,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
         let crates = results
             .into_iter()
             .map(|krate| {
-                let latest = state.index.latest_crate(krate.name.as_str())?;
+                let latest = state.index.latest_record(krate.name.as_str())?;
                 let created_at = chrono::NaiveDateTime::parse_from_str(
                     krate.created_at.as_str(),
                     DATETIME_FORMAT,

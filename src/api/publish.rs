@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use std::fs;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::path::PathBuf;
 
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -262,12 +261,11 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
             }
 
             //? Is the version higher than the latest known one?
-            let CrateVersion { vers: latest, .. } =
-                state.index.latest_crate(krate.name.as_str())?;
-            if crate_desc.vers <= latest {
+            let latest = state.index.latest_record(krate.name.as_str())?;
+            if crate_desc.vers <= latest.vers {
                 return Err(Error::from(AlexError::VersionTooLow {
                     krate: krate.name,
-                    hosted: latest,
+                    hosted: latest.vers,
                     published: crate_desc.vers,
                 }));
             }
@@ -341,21 +339,14 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
         }
 
         //? Update the crate index.
-        let path = state.index.index_crate(&crate_desc.name);
-        let parent = path.parent().unwrap();
-        fs::create_dir_all(parent)?;
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .append(true)
-            .create(true)
-            .open(path)?;
-        json::to_writer(&mut file, &crate_desc)?;
-        writeln!(file)?;
-        file.flush()?;
-        state.index.commit_and_push(&format!(
+        let commit_msg = format!(
             "{0} crate `{1}#{2}`",
-            operation, &crate_desc.name, &crate_desc.vers
-        ))?;
+            operation,
+            crate_desc.name.as_str(),
+            &crate_desc.vers
+        );
+        state.index.add_record(crate_desc)?;
+        state.index.commit_and_push(commit_msg.as_str())?;
 
         Ok(tide::response::json(PublishResponse {}))
     });

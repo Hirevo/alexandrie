@@ -38,7 +38,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 return Ok(response);
             }
         };
-        let krate = state.index.latest_crate(&crate_desc.name)?;
+        let krate = state.index.latest_record(&crate_desc.name)?;
 
         //? Get the HTML-rendered README page of this crate.
         let rendered_readme = state

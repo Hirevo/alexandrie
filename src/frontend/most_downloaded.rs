@@ -86,7 +86,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 "prev": prev_page,
             },
             "results": results.into_iter().map(|(krate, keywords)| {
-                let version = state.index.latest_crate(&krate.name)?.vers;
+                let version = state.index.latest_record(&krate.name)?.vers;
                 let created_at =
                     chrono::NaiveDateTime::parse_from_str(krate.created_at.as_str(), DATETIME_FORMAT)
                         .unwrap();
