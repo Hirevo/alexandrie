@@ -42,8 +42,8 @@ jobs:
   #       command: test
   #       args: --all
 
-  check_fmt_and_docs:
-    name: Checking fmt and docs
+  check_fmt:
+    name: Checking fmt
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
@@ -60,6 +60,3 @@ jobs:
 
     - name: fmt
       run: cargo fmt --all -- --check
-
-    # - name: Docs
-    #   run: cargo doc
