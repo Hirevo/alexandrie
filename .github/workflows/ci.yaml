@@ -61,5 +61,5 @@ jobs:
     - name: fmt
       run: cargo fmt --all -- --check
 
-    - name: Docs
-      run: cargo doc
+    # - name: Docs
+    #   run: cargo doc
