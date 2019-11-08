@@ -35,8 +35,12 @@ impl<State: Send + Sync + 'static> Endpoint<State> for StaticFiles {
             let path = served.join(path).absolutize().client_err()?;
 
             if path.starts_with(&served) {
-                let metadata = Compat::new(tokio::fs::metadata(path.clone())).await.server_err()?;
-                let bytes = Compat::new(tokio::fs::read(path.clone())).await.server_err()?;
+                let metadata = Compat::new(tokio::fs::metadata(path.clone()))
+                    .await
+                    .server_err()?;
+                let bytes = Compat::new(tokio::fs::read(path.clone()))
+                    .await
+                    .server_err()?;
                 let mut builder = http::Response::builder();
                 builder.status(http::StatusCode::OK);
                 builder.header("content-length", metadata.len());

@@ -7,40 +7,40 @@ on:
       - master
 
 jobs:
-  build_and_test:
-    name: Build and test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust: [nightly-2019-09-03]
+  # build_and_test:
+  #   name: Build and test
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, windows-latest, macOS-latest]
+  #       rust: [nightly-2019-09-03]
 
-    steps:
-    - uses: actions/checkout@master
+  #   steps:
+  #   - uses: actions/checkout@master
 
-    - name: Install ${{ matrix.rust }}
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ matrix.rust }}
-        override: true
+  #   - name: Install ${{ matrix.rust }}
+  #     uses: actions-rs/toolchain@v1
+  #     with:
+  #       toolchain: ${{ matrix.rust }}
+  #       override: true
 
-    - name: check
-      uses: actions-rs/cargo@v1
-      with:
-        command: check
-        args: --all --bins --examples
+  #   - name: check
+  #     uses: actions-rs/cargo@v1
+  #     with:
+  #       command: check
+  #       args: --all --bins --examples
 
-    - name: check unstable
-      uses: actions-rs/cargo@v1
-      with:
-        command: check
-        args: --all --benches --bins --examples --tests
+  #   - name: check unstable
+  #     uses: actions-rs/cargo@v1
+  #     with:
+  #       command: check
+  #       args: --all --benches --bins --examples --tests
 
-    # - name: tests
-    #   uses: actions-rs/cargo@v1
-    #   with:
-    #     command: test
-    #     args: --all
+  #   - name: tests
+  #     uses: actions-rs/cargo@v1
+  #     with:
+  #       command: test
+  #       args: --all
 
   check_fmt_and_docs:
     name: Checking fmt and docs
