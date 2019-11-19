@@ -3,7 +3,6 @@ use std::io::{self, Read};
 use std::path::PathBuf;
 
 use semver::Version;
-use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 use crate::storage::Store;
@@ -13,9 +12,9 @@ use crate::storage::Store;
 /// It stores the crates as files in the given directory.  
 /// It names the crates as `"{name}-{version}.crate"`.  
 /// As there will not be any duplicated names, it doesn't create any subdirectories.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DiskStorage {
-    path: PathBuf,
+    pub(crate) path: PathBuf,
 }
 
 impl DiskStorage {

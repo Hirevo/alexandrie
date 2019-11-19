@@ -1,5 +1,4 @@
 use semver::{Version, VersionReq};
-use serde::{Deserialize, Serialize};
 
 /// Index management through `git` shell command invocations.
 pub mod cli;
@@ -13,11 +12,9 @@ use crate::index::cli::CommandLineIndex;
 /// The crate indexing management strategy type.
 ///
 /// It represents which index management strategy is currently used.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Index {
     /// Manages the crate index through the invocation of the "git" shell command.
-    #[serde(rename = "command-line")]
     CommandLine(CommandLineIndex),
     // TODO: Add an `Indexer` implementation using `git2`.
     // Git2(Git2Index),

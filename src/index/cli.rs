@@ -4,18 +4,17 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 use semver::{Version, VersionReq};
-use serde::{Deserialize, Serialize};
 
 use crate::error::{AlexError, Error};
 use crate::index::{CrateVersion, Indexer};
 
-/// The CLI crate index management strategy type.
+/// The 'command-line' crate index management strategy type.
 ///
 /// It manages the crate index through the invocation of "git" shell commands.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CommandLineIndex {
     /// The path of the crate index.
-    path: PathBuf,
+    pub(crate) path: PathBuf,
 }
 
 impl CommandLineIndex {
