@@ -215,6 +215,7 @@ impl TryInto<AlexError> for Error {
     }
 }
 
+#[cfg(feature = "git2")]
 impl TryInto<Git2Error> for Error {
     type Error = ();
 

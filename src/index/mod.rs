@@ -63,6 +63,7 @@ impl Indexer for Index {
     fn url(&self) -> Result<String, Error> {
         match self {
             Index::CommandLine(idx) => idx.url(),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.url(),
         }
     }
@@ -70,6 +71,7 @@ impl Indexer for Index {
     fn refresh(&self) -> Result<(), Error> {
         match self {
             Index::CommandLine(idx) => idx.refresh(),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.refresh(),
         }
     }
@@ -77,6 +79,7 @@ impl Indexer for Index {
     fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
         match self {
             Index::CommandLine(idx) => idx.commit_and_push(msg),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.commit_and_push(msg),
         }
     }
@@ -84,6 +87,7 @@ impl Indexer for Index {
     fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
         match self {
             Index::CommandLine(idx) => idx.all_records(name),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.all_records(name),
         }
     }
@@ -91,6 +95,7 @@ impl Indexer for Index {
     fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
         match self {
             Index::CommandLine(idx) => idx.latest_record(name),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.latest_record(name),
         }
     }
@@ -98,6 +103,7 @@ impl Indexer for Index {
     fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
         match self {
             Index::CommandLine(idx) => idx.match_record(name, req),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.match_record(name, req),
         }
     }
@@ -105,6 +111,7 @@ impl Indexer for Index {
     fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
         match self {
             Index::CommandLine(idx) => idx.add_record(record),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.add_record(record),
         }
     }
@@ -115,6 +122,7 @@ impl Indexer for Index {
     {
         match self {
             Index::CommandLine(idx) => idx.alter_record(name, version, func),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.alter_record(name, version, func),
         }
     }
@@ -122,6 +130,7 @@ impl Indexer for Index {
     fn yank_record(&self, name: &str, version: Version) -> Result<(), Error> {
         match self {
             Index::CommandLine(idx) => idx.yank_record(name, version),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.yank_record(name, version),
         }
     }
@@ -129,6 +138,7 @@ impl Indexer for Index {
     fn unyank_record(&self, name: &str, version: Version) -> Result<(), Error> {
         match self {
             Index::CommandLine(idx) => idx.unyank_record(name, version),
+            #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.unyank_record(name, version),
         }
     }
