@@ -67,7 +67,7 @@ impl Indexer for Git2Index {
 
         let mut opts = git2::MergeOptions::new();
         opts.fail_on_conflict(true);
-        
+
         let mut index = repo.merge_commits(&ours, &theirs, Some(&opts))?;
 
         index.write()?;
