@@ -9,6 +9,9 @@ use semver::{SemVerError as SemverError, Version};
 use thiserror::Error;
 use toml::de::Error as TOMLError;
 
+#[cfg(feature = "git2")]
+use git2::Error as Git2Error;
+
 use tide::response::IntoResponse;
 use tide::Response;
 
@@ -41,6 +44,10 @@ pub enum Error {
     /// Alexandrie's custom errors (crate not found, invalid token, etc...).
     #[error("Alexandrie error: {0}")]
     AlexError(#[source] AlexError),
+    /// Git2 error.
+    #[error("Git2 error: {0}")]
+    #[cfg(feature = "git2")]
+    Git2Error(#[source] Git2Error),
 }
 
 /// The Error type for Alexandrie's own errors.
@@ -85,13 +92,8 @@ impl IntoResponse for Error {
     fn into_response(self) -> Response {
         error!("constructing error response: {0}", self);
         let message = match self {
-            Error::IOError(_) => "internal server error".to_string(),
-            Error::JSONError(_) => "internal server error".to_string(),
-            Error::TOMLError(_) => "internal server error".to_string(),
-            Error::SQLError(_) => "internal server error".to_string(),
-            Error::SemverError(_) => "internal server error".to_string(),
-            Error::HexError(_) => "internal server error".to_string(),
             Error::AlexError(err) => err.to_string(),
+            _ => "internal server error".to_string(),
         };
 
         utils::response::error(http::StatusCode::INTERNAL_SERVER_ERROR, message)
@@ -137,6 +139,13 @@ impl From<HexError> for Error {
 impl From<AlexError> for Error {
     fn from(err: AlexError) -> Error {
         Error::AlexError(err)
+    }
+}
+
+#[cfg(feature = "git2")]
+impl From<Git2Error> for Error {
+    fn from(err: Git2Error) -> Error {
+        Error::Git2Error(err)
     }
 }
 
@@ -201,6 +210,17 @@ impl TryInto<AlexError> for Error {
     fn try_into(self) -> Result<AlexError, Self::Error> {
         match self {
             Error::AlexError(err) => Ok(err),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryInto<Git2Error> for Error {
+    type Error = ();
+
+    fn try_into(self) -> Result<Git2Error, Self::Error> {
+        match self {
+            Error::Git2Error(err) => Ok(err),
             _ => Err(()),
         }
     }
