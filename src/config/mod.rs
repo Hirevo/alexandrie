@@ -4,11 +4,16 @@ use diesel::prelude::*;
 use http::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 
+/// Database configuration (`[database]` section).
 pub mod database;
+/// Index management strategy configuration (`[index]` section).
 pub mod index;
+/// Crate storage configuration (`[storage]` section).
 pub mod storage;
+/// Syntax-highlighting configurations (`[syntect.syntaxes]` and `[syntect.themes]` sections).
 pub mod syntect;
 
+/// Frontend configuration (`[frontend]` section).
 #[cfg(feature = "frontend")]
 pub mod frontend;
 
