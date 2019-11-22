@@ -4,7 +4,7 @@
 About
 -----
 
-Alexandrie is an alternative crate registry to be used with Cargo. It is written in Rust.
+Alexandrie is an alternative crate registry suitable for use with Cargo.
 
 This repository implements the Cargo APIs and interacts with a crate index as specified in the [Cargo's Alternative Registries RFC].  
 This allows to have a private registry to host crates that are specific to what your doing and not suitable for publication on [crates.io] while maintaining the same build experience as with crates from [crates.io].  
