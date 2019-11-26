@@ -11,10 +11,9 @@ Alexandrie is built around two principal concepts:
 - **Crate index**: manages metadata about published crates.
 - **Crate store**: stores actual contents of the published crates (code, assets, etc...).
 
-A crate index is a git repository layed out as specified in [**Cargo's Alternative Crate Registries RFC**][Cargo's Alternative Crate Registries RFC].  
-It stores metadata about each stored crate and their versions, but not the crate's contents themselves.  
+A **crate index** is a git repository layed out as specified in [**Cargo's Alternative Crate Registries RFC**][Cargo's Alternative Crate Registries RFC].  
+It stores metadata about each stored crate and their versions, but not the contents of the crates themselves.  
 
-The crate store is, in Alexandrie, what takes care of storing the crate's contents themselves.  
-The crate's contents are stored as TAR archives and compressed with Gzip
+A **crate store** is what takes care of storing the crate contents themselves and then making them available for download.  
 
 [Cargo's Alternative Crate Registries RFC]: https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md
