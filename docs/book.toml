@@ -1,0 +1,6 @@
+[book]
+authors = ["Nicolas Polomack"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Alexandrie"

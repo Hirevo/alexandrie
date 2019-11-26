@@ -1,0 +1,43 @@
+name: Docs
+on:
+  # release:
+  #   types: [created]
+  push:
+    branches:
+      - master
+
+jobs:
+  build_book:
+    name: Build user docs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@master
+    - name: Install stable toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    - name: Install mdbook
+      run: |
+        cargo install --debug mdbook
+        mdbook --version
+    - name: Build book
+      run: |
+        cd docs
+        mdbook build
+    - name: Deploy to GitHub Pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        export COMMIT_HASH="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+        cd docs/book
+        git config --global user.email ''
+        git config --global user.name 'GitHub Actions'
+        git init
+        git remote add origin "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}"
+        git add --all
+        git commit -m "Generated docs for ${COMMIT_HASH}"
+        git branch gh-pages
+        git checkout gh-pages
+        git push -uf origin gh-pages
