@@ -1,5 +1,6 @@
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
 use futures::compat::Compat01As03 as Compat;
+use crate::config::DatabaseConfig;
 
 /// The database models (struct representations of tables).
 pub mod models;
@@ -48,9 +49,13 @@ impl<T> Repo<T>
 where
     T: diesel::Connection + 'static,
 {
-    /// Constructs a `Repo<T>` for the given database URL (creates a connection pool).
-    pub fn new(database_url: &str) -> Self {
-        Self::from_pool_builder(database_url, r2d2::Builder::default())
+    /// Constructs a `Repo<T>` for the given database config (creates a connection pool).
+    pub fn new(database_config: &DatabaseConfig) -> Self {
+        let mut builder = r2d2::Builder::default();
+        if let Some(max_size) = database_config.connection_pool_max_size {
+            builder = builder.max_size(max_size)
+        }
+        Self::from_pool_builder(&database_config.url, builder)
     }
 
     /// Creates a `Repo<T>` with a custom connection pool builder.

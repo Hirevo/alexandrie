@@ -4,3 +4,5 @@
 /crate-index
 /crate-storage
 .DS_Store
+.idea/
+alexandrie.db
