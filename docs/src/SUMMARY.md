@@ -9,5 +9,6 @@ Summary
 - [What's available ?](./whats-available/mod.md)
   - [Index management strategies](./whats-available/index-management-strategies.md)
   - [Crate stores](./whats-available/crate-stores.md)
+- [Database layout](./database-layout.md)
 <!-- - [How to extend](./how-to-extend.md) -->
 <!-- - [How to contribute](./how-to-contribute.md) -->

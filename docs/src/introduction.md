@@ -1,7 +1,12 @@
 Welcome to Alexandrie
 =====================
 
-![license-badge](https://img.shields.io/crates/l/alexandrie)
+[![github-badge][github-badge]][github-repo]
+![license-badge][license-badge]
+
+[github-badge]: https://img.shields.io/badge/GitHub-Hirevo%2Falexandrie-brightgreen
+[github-repo]: https://github.com/Hirevo/alexandrie
+[license-badge]: https://img.shields.io/crates/l/alexandrie
 
 **Alexandrie** is a modular alternative crate registry for Rust crates.  
 
