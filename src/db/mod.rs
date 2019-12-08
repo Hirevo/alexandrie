@@ -52,7 +52,7 @@ where
     /// Constructs a `Repo<T>` for the given database config (creates a connection pool).
     pub fn new(database_config: &DatabaseConfig) -> Self {
         let mut builder = r2d2::Builder::default();
-        if let Some(max_size) = database_config.connection_pool_max_size {
+        if let Some(max_size) = database_config.max_conns {
             builder = builder.max_size(max_size)
         }
         Self::from_pool_builder(&database_config.url, builder)
