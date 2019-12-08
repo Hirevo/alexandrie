@@ -55,7 +55,7 @@ pub struct DatabaseConfig {
     /// The database connection URL.
     pub url: String,
     /// Max connection pool size
-    pub connection_pool_max_size: Option<u32>,
+    pub max_conns: Option<u32>,
 }
 
 /// The syntax-highlighting themes configuration struct.
