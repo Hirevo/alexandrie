@@ -68,7 +68,7 @@ url = ":memory:" # ephemeral in-memory database, doesn't persists between restar
 Optionally, specify the maximum number of threads for the database connection pool. 
 
 ```toml
-connection_pool_max_size = 1
+max_conns = 1
 ```
 If not specified, the `diesel-rs` default [value](https://docs.diesel.rs/diesel/r2d2/struct.Builder.html#method.max_size) is used.
 
