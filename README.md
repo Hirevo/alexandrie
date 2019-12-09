@@ -65,6 +65,13 @@ url = "<path-to-sqlite-file>"
 url = ":memory:" # ephemeral in-memory database, doesn't persists between restarts
 ```
 
+Optionally, specify the maximum number of threads for the database connection pool. 
+
+```toml
+max_conns = 1
+```
+If not specified, the `diesel-rs` default [value](https://docs.diesel.rs/diesel/r2d2/struct.Builder.html#method.max_size) is used.
+
 Then, you can configure the crates' tarballs storage strategy and the crate index management strategy that you want to use.  
 Here is how to do it (these are also the defaults, you can leave them out if you want):
 

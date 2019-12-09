@@ -54,6 +54,8 @@ pub struct FrontendConfig {
 pub struct DatabaseConfig {
     /// The database connection URL.
     pub url: String,
+    /// Max connection pool size
+    pub max_conns: Option<u32>,
 }
 
 /// The syntax-highlighting themes configuration struct.
@@ -186,7 +188,7 @@ impl From<Config> for State {
         State {
             index: config.index,
             storage: config.storage,
-            repo: Repo::new(config.database.url.as_str()),
+            repo: Repo::new(&config.database),
             syntect: config.syntect.into(),
             #[cfg(feature = "frontend")]
             frontend: config.frontend.into(),
