@@ -36,16 +36,16 @@ pub enum Error {
     #[error("SQL error: {0}")]
     SQLError(#[source] SQLError),
     /// Version parsing errors (invalid version format parsed, etc...).
-    #[error("Semver error: {0}")]
+    #[error("semver error: {0}")]
     SemverError(#[source] SemverError),
     /// Hexadecimal decoding errors (odd length, etc...).
-    #[error("Hex error: {0}")]
+    #[error("hex error: {0}")]
     HexError(#[source] HexError),
     /// Alexandrie's custom errors (crate not found, invalid token, etc...).
-    #[error("Alexandrie error: {0}")]
+    #[error("alexandrie error: {0}")]
     AlexError(#[source] AlexError),
     /// Git2 error.
-    #[error("Git2 error: {0}")]
+    #[error("libgit2 error: {0}")]
     #[cfg(feature = "git2")]
     Git2Error(#[source] Git2Error),
 }
