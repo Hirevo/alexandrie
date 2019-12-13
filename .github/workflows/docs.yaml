@@ -38,6 +38,4 @@ jobs:
         git remote add origin "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}"
         git add --all
         git commit -m "Generated docs for ${COMMIT_HASH}"
-        git branch gh-pages
-        git checkout gh-pages
-        git push -uf origin gh-pages
+        git push -uf origin master:gh-pages
