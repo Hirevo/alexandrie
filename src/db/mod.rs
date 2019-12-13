@@ -1,6 +1,7 @@
-use crate::config::DatabaseConfig;
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
 use futures::compat::Compat01As03 as Compat;
+
+use crate::config::database::DatabaseConfig;
 
 /// The database models (struct representations of tables).
 pub mod models;
