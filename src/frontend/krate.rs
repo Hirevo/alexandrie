@@ -85,6 +85,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 "updated_at": helpers::humanize_datetime(updated_at),
                 "documentation": crate_desc.documentation,
                 "repository": crate_desc.repository,
+                "yanked": krate.yanked,
             },
             "authors": authors,
             "rendered_readme": rendered_readme,

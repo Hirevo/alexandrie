@@ -24,6 +24,16 @@
             text-align: center;
         }
 
+        .hero-yank {
+            display: inline;
+            font-size: 13px;
+            vertical-align: 30%;
+            border: 3px solid #F52;
+            padding: 1px 6px;
+            border-radius: 7px;
+            color: #F52;
+        }
+
         .hero-subtitle {
             font-size: 24px;
             text-align: center;
@@ -185,7 +195,12 @@
     <div class="hero">
         <div style="height: 50px"></div>
         <div class="hero-content-container">
-            <div class="hero-title">{{ crate.name }} #{{ crate.version }}</div>
+            <div class="hero-title">
+                {{ crate.name }} #{{ crate.version }}
+                {{#if crate.yanked}}
+                <div class="hero-yank">YANKED</div>
+                {{/if}}
+            </div>
             <div class="hero-subtitle">{{ crate.description }}</div>
         </div>
     </div>
