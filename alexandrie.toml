@@ -9,6 +9,7 @@ description = "An alternative crate registry for Cargo, the Rust package manager
 # favicon = ""
 links = [
     { name = "Github repository", href = "https://github.com/Hirevo/alexandrie" },
+    { name = "User documentation", href = "https://hirevo.github.io/alexandrie" },
 ]
 
 [database]
