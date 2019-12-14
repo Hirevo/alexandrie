@@ -20,7 +20,7 @@ path = "crate-index"  # required: path of the index's local clone.
 The local clone must be present and up-to-date before launching Alexandrie.  
 Today, Alexandrie won't pull or clone on its own on startup.
 
-<!-- 'git2': using the `libgit2` library
+'git2': using the `libgit2` library
 -----------------------------------
 
 This index management strategy uses `libgit2` to manage a local clone of the index's repository.
@@ -38,4 +38,4 @@ path = "crate-index"  # required: path of the index's local clone.
 
 **NOTE:**  
 The local clone must be present and up-to-date before launching Alexandrie.  
-Today, Alexandrie won't pull or clone on its own on startup. -->
+Today, Alexandrie won't pull or clone on its own on startup.
