@@ -1,7 +1,6 @@
 use std::io::{self, Read};
 
 use semver::Version;
-use serde::{Deserialize, Serialize};
 
 /// Local on-disk crate storage mechanism.
 pub mod disk;
@@ -12,11 +11,9 @@ use crate::storage::disk::DiskStorage;
 /// The crate storage strategy enum type.  
 ///
 /// It represents which storage strategy is currently used.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Storage {
     /// Local on-disk crate storage.
-    #[serde(rename = "disk")]
     Disk(DiskStorage),
     // TODO: Add a `Store` implementation using S3.
     // S3(S3Storage),

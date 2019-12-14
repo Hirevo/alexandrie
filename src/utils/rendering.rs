@@ -4,7 +4,7 @@ use syntect::html::{
     start_highlighted_html_snippet, styled_line_to_highlighted_html, IncludeBackground,
 };
 
-use crate::config::SyntectState;
+use crate::config::syntect::SyntectState;
 
 /// Stores the location and level of an header tag inside a Markdown document.
 #[derive(Debug, Clone, PartialEq)]

@@ -39,7 +39,6 @@ extern crate log;
 extern crate slog;
 
 use std::fs;
-use std::io;
 
 use std::sync::Arc;
 
@@ -71,6 +70,7 @@ pub mod utils;
 pub mod frontend;
 
 use crate::config::Config;
+use crate::error::Error;
 
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
@@ -90,12 +90,12 @@ embed_migrations!("migrations/sqlite");
 #[cfg(feature = "postgres")]
 embed_migrations!("migrations/postgres");
 
-#[runtime::main(runtime_tokio::Tokio)]
-async fn main() -> io::Result<()> {
+#[allow(clippy::cognitive_complexity)]
+async fn run() -> Result<(), Error> {
     let _guard = logs::init();
 
     let contents = fs::read("alexandrie.toml")?;
-    let config: Config = toml::from_slice(contents.as_slice()).expect("invalid configuration");
+    let config: Config = toml::from_slice(contents.as_slice())?;
     let addr = format!("{0}:{1}", config.general.addr, config.general.port);
 
     #[cfg(feature = "frontend")]
@@ -189,4 +189,11 @@ async fn main() -> io::Result<()> {
     app.serve(addr).await?;
 
     Ok(())
+}
+
+#[runtime::main(runtime_tokio::Tokio)]
+async fn main() {
+    if let Err(err) = run().await {
+        eprintln!("{}", err);
+    }
 }
