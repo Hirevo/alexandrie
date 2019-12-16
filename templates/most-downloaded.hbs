@@ -117,6 +117,16 @@
             font-weight: bold;
         }
 
+        .search-result-yank {
+            display: inline;
+            font-size: 11px;
+            vertical-align: 30%;
+            border: 3px solid #F52;
+            padding: 1px 6px;
+            border-radius: 7px;
+            color: #F52;
+        }
+
         .search-result-desc {
             font-size: 18px;
         }
@@ -262,7 +272,12 @@
             {{#each results}}
             <a class="search-result" href="/crates/{{ this.name }}">
                 <div class="search-result-infos">
-                    <div class="search-result-title">{{ this.name }} #{{ this.version }}</div>
+                    <div class="search-result-title">
+                        {{ this.name }} #{{ this.version }}
+                        {{#if this.yanked}}
+                        <div class="search-result-yank">YANKED</div>
+                        {{/if}}
+                    </div>
                     <div class="search-result-desc">{{ this.description }}</div>
                     {{#if this.keywords}}
                     <div class="search-result-keywords">

@@ -86,7 +86,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 "prev": prev_page,
             },
             "results": results.into_iter().map(|(krate, keywords)| {
-                let version = state.index.latest_record(&krate.name)?.vers;
+                let record = state.index.latest_record(&krate.name)?;
                 let created_at =
                     chrono::NaiveDateTime::parse_from_str(krate.created_at.as_str(), DATETIME_FORMAT)
                         .unwrap();
@@ -96,7 +96,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                 Ok(json!({
                     "id": krate.id,
                     "name": krate.name,
-                    "version": version,
+                    "version": record.vers,
                     "description": krate.description,
                     "created_at": helpers::humanize_datetime(created_at),
                     "updated_at": helpers::humanize_datetime(updated_at),
@@ -104,6 +104,7 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
                     "documentation": krate.documentation,
                     "repository": krate.repository,
                     "keywords": keywords,
+                    "yanked": record.yanked,
                 }))
             }).collect::<Result<Vec<_>, Error>>()?,
         });
