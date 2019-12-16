@@ -28,7 +28,7 @@ jobs:
         mdbook build
     - name: Deploy to GitHub Pages
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
         export COMMIT_HASH="$(echo "${GITHUB_SHA}" | cut -c1-7)"
         cd docs/book
