@@ -17,7 +17,7 @@ jobs:
       env:
         VERSION: v0.3.5
       run: |
-        wget 'https://github.com/rust-lang/mdBook/releases/download/${VERSION}/mdbook-${VERSION}-x86_64-unknown-linux-gnu.tar.gz' -O 'mdbook.tar.gz'
+        wget "https://github.com/rust-lang/mdBook/releases/download/${VERSION}/mdbook-${VERSION}-x86_64-unknown-linux-gnu.tar.gz" -O 'mdbook.tar.gz'
         tar xvzf mdbook.tar.gz
         rm mdbook.tar.gz
         ./mdbook --version
