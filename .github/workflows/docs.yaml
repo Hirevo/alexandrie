@@ -13,19 +13,18 @@ jobs:
     steps:
     - name: Checkout master branch
       uses: actions/checkout@master
-    - name: Install stable toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
     - name: Install mdbook
+      env:
+        VERSION: v0.3.5
       run: |
-        cargo install --debug mdbook
-        mdbook --version
+        wget 'https://github.com/rust-lang/mdBook/releases/download/${VERSION}/mdbook-${VERSION}-x86_64-unknown-linux-gnu.tar.gz' -O 'mdbook.tar.gz'
+        tar xvzf mdbook.tar.gz
+        rm mdbook.tar.gz
+        ./mdbook --version
     - name: Build book
       run: |
         cd docs
-        mdbook build
+        ../mdbook build
     - name: Deploy to GitHub Pages
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
