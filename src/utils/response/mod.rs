@@ -1,7 +1,7 @@
-use bytes::Bytes;
 use http::status::StatusCode;
 use json::json;
-use tide::{Body, Response};
+use serde::Serialize;
+use tide::Response;
 
 /// Various utilities to construct common response pages.
 #[cfg(feature = "frontend")]
@@ -13,31 +13,34 @@ use crate::config::State;
 use crate::db::models::Author;
 
 /// Constructs a HTML response with the provided body.
-pub fn html(body: impl Send + Into<Bytes>) -> Response {
-    http::Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "text/html")
-        .body(Body::from(body))
-        .unwrap()
+pub fn html(body: String) -> Response {
+    self::html_with_status(StatusCode::OK, body)
 }
 
 /// Constructs a HTML response with the provided body and status code.
-pub fn html_with_status(status: StatusCode, body: impl Send + Into<Bytes>) -> Response {
-    http::Response::builder()
-        .status(status)
-        .header("content-type", "text/html")
-        .body(Body::from(body))
-        .unwrap()
+pub fn html_with_status(status: StatusCode, body: String) -> Response {
+    Response::new(status.as_u16())
+        .body_string(body)
+        .set_header("content-type", "text/html")
+}
+
+/// Constructs a JSON response with the provided body.
+pub fn json(body: &impl Serialize) -> Response {
+    self::json_with_status(StatusCode::OK, body)
+}
+
+/// Constructs a JSON response with the provided body and status code.
+pub fn json_with_status(status: StatusCode, body: &impl Serialize) -> Response {
+    Response::new(status.as_u16()).body_json(body).unwrap()
 }
 
 /// Constructs an API error (JSON) response with the specified status code and error message.
 pub fn error(status: StatusCode, error_msg: impl AsRef<str>) -> Response {
     let error_msg = error_msg.as_ref();
-    let mut response = tide::response::json(json!({
+    let data = json!({
         "errors": [{ "details": error_msg }]
-    }));
-    *response.status_mut() = status;
-    response
+    });
+    self::json_with_status(status, &data)
 }
 
 /// Construct an HTML error response (used for the frontend).
@@ -59,9 +62,5 @@ pub fn error_html(
 
 /// Constructs a redirection response (302 Found) to the specified URL.
 pub fn redirect(url: &str) -> Response {
-    http::Response::builder()
-        .status(StatusCode::FOUND)
-        .header("location", url)
-        .body(Body::empty())
-        .unwrap()
+    Response::new(StatusCode::FOUND.as_u16()).set_header("location", url)
 }

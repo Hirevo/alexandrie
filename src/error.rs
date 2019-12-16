@@ -12,8 +12,7 @@ use toml::de::Error as TOMLError;
 #[cfg(feature = "git2")]
 use git2::Error as Git2Error;
 
-use tide::response::IntoResponse;
-use tide::Response;
+use tide::{IntoResponse, Response};
 
 use crate::db::models::Author;
 use crate::utils;

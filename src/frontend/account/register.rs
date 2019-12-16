@@ -8,9 +8,7 @@ use ring::digest as hasher;
 use ring::pbkdf2;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
-use tide::cookies::ContextExt as CookieExt;
-use tide::forms::ContextExt as FormExt;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::models::{NewAuthor, NewSalt, NewSession};
 use crate::db::schema::*;
@@ -18,6 +16,7 @@ use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
+use crate::utils::cookies::CookiesExt;
 use crate::utils::flash::{FlashExt, FlashMessage};
 use crate::utils::response::common;
 use crate::State;
@@ -32,17 +31,17 @@ struct RegisterForm {
     pub remember: Option<String>,
 }
 
-pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
-    if let Some(author) = ctx.get_author() {
-        let state = ctx.state().as_ref();
+pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
+    if let Some(author) = req.get_author() {
+        let state = req.state().as_ref();
         let response = common::already_logged_in(state, author);
         return Ok(response);
     }
 
-    let error_msg = ctx
+    let error_msg = req
         .get_flash_message()
         .and_then(|msg| msg.parse_json::<String>().ok());
-    let state = ctx.state();
+    let state = req.state();
     let engine = &state.frontend.handlebars;
     let context = json!({
         "instance": &state.frontend.config,
@@ -53,17 +52,17 @@ pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
     ))
 }
 
-pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
-    if ctx.is_authenticated() {
+pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
+    if req.is_authenticated() {
         return Ok(utils::response::redirect("/account/register"));
     }
 
     //? Deserialize form data.
-    let form: RegisterForm = match ctx.body_form().await {
+    let form: RegisterForm = match req.body_form().await {
         Ok(form) => form,
         Err(_) => {
             return Ok(utils::response::error_html(
-                ctx.state(),
+                req.state(),
                 None,
                 http::StatusCode::BAD_REQUEST,
                 "could not deseriailize form data",
@@ -71,10 +70,10 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         }
     };
 
-    let state = ctx.state().clone();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
         //? Are all fields filled-in?
         if form.email.is_empty()
             || form.name.is_empty()
@@ -82,14 +81,14 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             || form.confirm_password.is_empty()
         {
             let error_msg = String::from("some fields were left empty.");
-            ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/register"));
         }
 
         //? Does the two passwords match (consistency check)?
         if form.password != form.confirm_password {
             let error_msg = String::from("the two passwords did not match.");
-            ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/register"));
         }
 
@@ -100,7 +99,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         .get_result(conn)?;
         if already_exists {
             let error_msg = String::from("an author already exists for this email.");
-            ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/register"));
         }
 
@@ -109,7 +108,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             Ok(passwd) => passwd,
             Err(_) => {
                 let error_msg = String::from("password/salt decoding issue.");
-                ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
                 return Ok(utils::response::redirect("/account/register"));
             }
         };
@@ -164,7 +163,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         let session_token = utils::auth::generate_token();
 
         //? Get the maximum duration of the session.
-        let (max_age, max_age_cookie) = match form.remember.as_deref() {
+        let (max_age, max_age_cookie) = match form.remember.as_ref().map(|x| x.as_str()) {
             Some("on") => (chrono::Duration::days(30), time::Duration::days(30)),
             _ => (chrono::Duration::days(1), time::Duration::days(1)),
         };
@@ -189,7 +188,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .finish();
 
         //? Set the user's cookie.
-        ctx.set_cookie(cookie).unwrap();
+        req.set_cookie(cookie).unwrap();
 
         Ok(utils::response::redirect("/"))
     });

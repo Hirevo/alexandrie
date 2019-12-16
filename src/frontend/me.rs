@@ -1,8 +1,9 @@
-use tide::{Context, Response};
+use tide::{Request, Response};
 
+use crate::error::Error;
 use crate::utils;
 use crate::State;
 
-pub(crate) async fn get(_: Context<State>) -> Response {
-    utils::response::redirect("/account/manage")
+pub(crate) async fn get(_: Request<State>) -> Result<Response, Error> {
+    Ok(utils::response::redirect("/account/manage"))
 }

@@ -1,6 +1,6 @@
 use std::env;
 
-use log::LogLevel;
+use log::Level;
 use slog::Drain;
 
 /// Initialises the logs mechanisms.
@@ -20,7 +20,7 @@ pub(crate) fn init() -> impl Drop {
     slog_stdlog::init_with_level(
         env::var("RUST_LOG")
             .map(|level| level.parse().expect("invalid log level in `${RUST_LOG}`"))
-            .unwrap_or(LogLevel::Info),
+            .unwrap_or(Level::Info),
     )
     .unwrap();
 

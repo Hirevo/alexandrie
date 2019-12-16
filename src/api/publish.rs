@@ -1,17 +1,18 @@
 use std::collections::HashMap;
-use std::io::{self, Read};
+use std::io::Read;
 use std::path::PathBuf;
+
+use async_std::io::prelude::*;
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
-use futures::stream::StreamExt;
 use ring::digest as hasher;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use tar::Archive;
-use tide::{Body, Context, Response};
+use tide::{Request, Response};
 
 use crate::db::models::{
     CrateRegistration, NewCrateAuthor, NewCrateCategory, NewCrateKeyword, NewCrateRegistration,
@@ -60,21 +61,6 @@ struct CrateMetaDependency {
     pub registry: Option<String>,
     #[serde(rename = "explicit_name_in_toml")]
     pub explicit_name: Option<String>,
-}
-
-async fn read_at_most(body: &mut Body, size: usize) -> Result<Vec<u8>, io::Error> {
-    let mut output = Vec::with_capacity(size);
-
-    while let Some(chunk) = body.next().await {
-        let chunk = chunk?;
-        output.extend_from_slice(&chunk);
-        if output.len() >= size {
-            break;
-        }
-    }
-
-    output.shrink_to_fit();
-    Ok(output)
 }
 
 fn link_keywords(
@@ -154,16 +140,18 @@ fn link_categories(
 }
 
 /// Route to publish a new crate (used by `cargo publish`).
-pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
-    let state = ctx.state();
-    let author = state
-        .get_author(ctx.headers())
+pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
+    let headers = req.headers().clone();
+    let state = req.state().clone();
+    let repo = &state.repo;
+    let author = repo
+        .run(move |conn| utils::checks::get_author(conn, &headers))
         .await
         .ok_or(AlexError::InvalidToken)?;
 
-    let mut body = ctx.take_body();
-    let bytes = read_at_most(&mut body, 10_000_000).await?;
-    let mut cursor = io::Cursor::new(&bytes);
+    let mut bytes = Vec::new();
+    (&mut req).take(10_000_000).read_to_end(&mut bytes).await?;
+    let mut cursor = std::io::Cursor::new(&bytes);
 
     let metadata_size = cursor.read_u32::<LittleEndian>()?;
     let mut metadata_bytes = vec![0u8; metadata_size as usize];
@@ -175,12 +163,13 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
     cursor.read_exact(&mut crate_bytes)?;
     let hash = hex::encode(hasher::digest(&hasher::SHA256, &crate_bytes).as_ref());
 
-    let state = ctx.state();
     let repo = &state.repo;
 
     // state.index.refresh()?;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
+        let state = req.state();
+
         //? Construct a crate description.
         let crate_desc = CrateVersion {
             name: metadata.name,
@@ -348,7 +337,7 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
         state.index.add_record(crate_desc)?;
         state.index.commit_and_push(commit_msg.as_str())?;
 
-        Ok(tide::response::json(PublishResponse {}))
+        Ok(utils::response::json(&PublishResponse {}))
     });
 
     transaction.await

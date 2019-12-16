@@ -4,8 +4,7 @@ use diesel::prelude::*;
 use ring::digest as hasher;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use tide::forms::ContextExt as FormExt;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::schema::*;
 use crate::error::Error;
@@ -24,8 +23,8 @@ struct ChangePasswordForm {
     pub confirm_password: String,
 }
 
-pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
-    let author = match ctx.get_author() {
+pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
+    let author = match req.get_author() {
         Some(author) => author,
         None => {
             return Ok(utils::response::redirect("/account/manage"));
@@ -33,11 +32,11 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
     };
 
     //? Deserialize form data.
-    let form: ChangePasswordForm = match ctx.body_form().await {
+    let form: ChangePasswordForm = match req.body_form().await {
         Ok(form) => form,
         Err(_) => {
             return Ok(utils::response::error_html(
-                ctx.state(),
+                req.state(),
                 Some(author),
                 http::StatusCode::BAD_REQUEST,
                 "could not deseriailize form data",
@@ -45,10 +44,10 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         }
     };
 
-    let state = ctx.state().clone();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
         //? Are all fields filled-in?
         if form.password.is_empty()
             || form.new_password.is_empty()
@@ -56,7 +55,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         {
             let error_msg = String::from("some fields were left empty.");
             let error_msg = ManageFlashError::PasswordChangeError(error_msg);
-            ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
 
@@ -64,7 +63,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         if form.new_password != form.confirm_password {
             let error_msg = String::from("the two passwords did not match.");
             let error_msg = ManageFlashError::PasswordChangeError(error_msg);
-            ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
 
@@ -76,13 +75,14 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .first::<String>(conn)?;
 
         //? Decode hex-encoded hashes.
-        let decode_results: Result<_, hex::FromHexError> = try {
-            let salt = hex::decode(encoded_salt.as_str())?;
-            let current_password = hex::decode(form.password.as_str())?;
-            let desired_password = hex::decode(form.new_password.as_str())?;
-            let expected_hash = hex::decode(author.passwd.as_str())?;
-            (salt, current_password, desired_password, expected_hash)
-        };
+        let decode_results: Result<_, hex::FromHexError> = hex::decode(encoded_salt.as_str())
+            .and_then(|fst| hex::decode(form.password.as_str()).map(move |snd| (fst, snd)))
+            .and_then(|(fst, snd)| {
+                hex::decode(form.new_password.as_str()).map(move |trd| (fst, snd, trd))
+            })
+            .and_then(|(fst, snd, trd)| {
+                hex::decode(author.passwd.as_str()).map(move |frth| (fst, snd, trd, frth))
+            });
 
         let (
             decoded_salt,
@@ -94,7 +94,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             Err(_) => {
                 let error_msg = String::from("password/salt decoding issue.");
                 let error_msg = ManageFlashError::PasswordChangeError(error_msg);
-                ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
                 return Ok(utils::response::redirect("/account/manage"));
             }
         };
@@ -115,7 +115,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         if !password_match {
             let error_msg =
                 ManageFlashError::PasswordChangeError(String::from("invalid current password."));
-            ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/manage"));
         }
 
@@ -140,7 +140,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         let success_msg = ManageFlashError::PasswordChangeSuccess(String::from(
             "the password was successfully changed.",
         ));
-        ctx.set_flash_message(FlashMessage::from_json(&success_msg)?);
+        req.set_flash_message(FlashMessage::from_json(&success_msg)?);
         Ok(utils::response::redirect("/account/manage"))
     });
 

@@ -5,9 +5,7 @@ use diesel::prelude::*;
 use json::json;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use tide::cookies::ContextExt as CookieExt;
-use tide::forms::ContextExt as FormExt;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::models::NewSession;
 use crate::db::schema::*;
@@ -15,6 +13,7 @@ use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
+use crate::utils::cookies::CookiesExt;
 use crate::utils::flash::{FlashExt, FlashMessage};
 use crate::utils::response::common;
 use crate::State;
@@ -27,17 +26,17 @@ struct LoginForm {
     pub remember: Option<String>,
 }
 
-pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
-    if let Some(author) = ctx.get_author() {
-        let state = ctx.state().as_ref();
+pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
+    if let Some(author) = req.get_author() {
+        let state = req.state().as_ref();
         let response = common::already_logged_in(state, author);
         return Ok(response);
     }
 
-    let error_msg = ctx
+    let error_msg = req
         .get_flash_message()
         .and_then(|msg| msg.parse_json::<String>().ok());
-    let state = ctx.state();
+    let state = req.state();
     let engine = &state.frontend.handlebars;
     let context = json!({
         "instance": &state.frontend.config,
@@ -48,17 +47,17 @@ pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
     ))
 }
 
-pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
-    if ctx.is_authenticated() {
+pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
+    if req.is_authenticated() {
         return Ok(utils::response::redirect("/"));
     }
 
     //? Deserialize form data.
-    let form: LoginForm = match ctx.body_form().await {
+    let form: LoginForm = match req.body_form().await {
         Ok(form) => form,
         Err(_) => {
             return Ok(utils::response::error_html(
-                ctx.state(),
+                req.state(),
                 None,
                 http::StatusCode::BAD_REQUEST,
                 "could not deseriailize form data",
@@ -66,10 +65,10 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         }
     };
 
-    let state = ctx.state().clone();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
         //? Get the users' salt and expected hash.
         let results = salts::table
             .inner_join(authors::table)
@@ -83,24 +82,23 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             Some(results) => results,
             None => {
                 let error_msg = String::from("invalid email/password combination.");
-                ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
                 return Ok(utils::response::redirect("/account/login"));
             }
         };
 
         //? Decode hex-encoded hashes.
-        let decode_results: Result<_, hex::FromHexError> = try {
-            let decoded_salt = hex::decode(encoded_salt.as_str())?;
-            let decoded_password = hex::decode(form.password.as_str())?;
-            let decoded_expected_hash = hex::decode(encoded_expected_hash.as_str())?;
-            (decoded_salt, decoded_password, decoded_expected_hash)
-        };
+        let decode_results = hex::decode(encoded_salt.as_str())
+            .and_then(|fst| hex::decode(form.password.as_str()).map(move |snd| (fst, snd)))
+            .and_then(|(fst, snd)| {
+                hex::decode(encoded_expected_hash.as_str()).map(move |trd| (fst, snd, trd))
+            });
 
         let (decoded_salt, decoded_password, decoded_expected_hash) = match decode_results {
             Ok(results) => results,
             Err(_) => {
                 let error_msg = String::from("password/salt decoding issue.");
-                ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
                 return Ok(utils::response::redirect("/account/login"));
             }
         };
@@ -120,7 +118,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
 
         if !password_match {
             let error_msg = String::from("invalid email/password combination.");
-            ctx.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/login"));
         }
 
@@ -128,7 +126,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
         let session_token = utils::auth::generate_token();
 
         //? Get the maximum duration of the session.
-        let (max_age, max_age_cookie) = match form.remember.as_deref() {
+        let (max_age, max_age_cookie) = match form.remember.as_ref().map(|x| x.as_str()) {
             Some("on") => (chrono::Duration::days(30), time::Duration::days(30)),
             _ => (chrono::Duration::days(1), time::Duration::days(1)),
         };
@@ -153,7 +151,7 @@ pub(crate) async fn post(mut ctx: Context<State>) -> Result<Response, Error> {
             .finish();
 
         //? Set the user's cookie.
-        ctx.set_cookie(cookie).unwrap();
+        req.set_cookie(cookie).unwrap();
 
         Ok(utils::response::redirect("/"))
     });
