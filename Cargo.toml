@@ -7,12 +7,14 @@ description = "An alternative crate registry, implemented in Rust."
 repository = "https://github.com/Hirevo/alexandrie"
 documentation = "https://crates.polomack.eu/docs/alexandrie"
 keywords = ["crates", "cargo", "web", "registry"]
+category = ["development-tools"]
+license = "MIT OR Apache-2.0"
 
 default-run = "alexandrie"
 
 [dependencies]
 # core
-tide = { version = "0.4.0" }
+tide = { version = "0.5.0" }
 http = { version = "0.1.21" }
 
 # data types
@@ -39,7 +41,7 @@ diesel = { version = "1.4.3", features = ["r2d2", "chrono", "numeric"] }
 diesel_migrations = { version = "1.4.0" }
 
 # async primitives
-async-std = { version = "1.3.0", features = ["unstable", "attributes"] }
+async-std = { version = "1.4.0", features = ["unstable", "attributes"] }
 futures = { version = "0.3.1" }
 
 # error handling

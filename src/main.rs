@@ -103,10 +103,10 @@ where
     }
 }
 
-impl<F, Fut2> Endpoint<State> for Handler<F>
+impl<F, Fut> Endpoint<State> for Handler<F>
 where
-    F: Fn(Request<State>) -> Fut2 + Send + Sync + 'static,
-    Fut2: Future<Output = Result<Response, Error>> + Send + 'static,
+    F: Fn(Request<State>) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<Response, Error>> + Send + 'static,
 {
     type Fut = BoxFuture<'static, Response>;
 

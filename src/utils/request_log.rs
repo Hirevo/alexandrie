@@ -12,7 +12,7 @@ impl RequestLogger {
     }
 
     /// Log a request.
-    async fn log_basic<'a, State: Send + Sync + 'static>(
+    async fn log_request<'a, State: Send + Sync + 'static>(
         self,
         req: Request<State>,
         next: Next<'a, State>,
@@ -35,7 +35,7 @@ impl RequestLogger {
 }
 
 impl<State: Send + Sync + 'static> Middleware<State> for RequestLogger {
-    fn handle<'a>(&'a self, ctx: Request<State>, next: Next<'a, State>) -> BoxFuture<'a, Response> {
-        Box::pin(async move { self.log_basic(ctx, next).await })
+    fn handle<'a>(&'a self, req: Request<State>, next: Next<'a, State>) -> BoxFuture<'a, Response> {
+        Box::pin(async move { self.log_request(req, next).await })
     }
 }
