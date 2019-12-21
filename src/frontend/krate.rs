@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use json::json;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::models::{CrateAuthor, CrateCategory, CrateKeyword, CrateRegistration, Keyword};
 use crate::db::schema::*;
@@ -13,14 +13,16 @@ use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::State;
 
-pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
-    let name = ctx.param::<String>("crate").unwrap();
+pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+    let name = req.param::<String>("crate").unwrap();
 
-    let user = ctx.get_author();
-    let state = ctx.state();
+    let user = req.get_author();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
+        let state = req.state();
+
         //? Get this crate's data.
         let crate_desc = crates::table
             .filter(crates::name.eq(&name))

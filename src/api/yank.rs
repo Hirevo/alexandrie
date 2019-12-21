@@ -1,25 +1,26 @@
 use http::status::StatusCode;
 use json::json;
 use semver::Version;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::error::{AlexError, Error};
 use crate::index::Indexer;
 use crate::utils;
 use crate::State;
 
-pub(crate) async fn delete(ctx: Context<State>) -> Result<Response, Error> {
-    let name = ctx.param::<String>("name").unwrap();
-    let version = ctx.param::<Version>("version").unwrap();
+pub(crate) async fn delete(req: Request<State>) -> Result<Response, Error> {
+    let name = req.param::<String>("name").unwrap();
+    let version = req.param::<Version>("version").unwrap();
 
-    let state = ctx.state();
+    let state = req.state().clone();
     let repo = &state.repo;
-    let author = state
-        .get_author(ctx.headers())
-        .await
-        .ok_or(AlexError::InvalidToken)?;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
+        let state = req.state();
+
+        let author =
+            utils::checks::get_author(conn, req.headers()).ok_or(AlexError::InvalidToken)?;
+
         //? Does this crate exists?
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {
@@ -43,9 +44,10 @@ pub(crate) async fn delete(ctx: Context<State>) -> Result<Response, Error> {
         let msg = format!("Yanking crate `{0}#{1}`", name.as_str(), version);
         state.index.commit_and_push(msg.as_str())?;
 
-        Ok(tide::response::json(json!({
+        let data = json!({
             "ok": true
-        })))
+        });
+        Ok(utils::response::json(&data))
     });
 
     transaction.await

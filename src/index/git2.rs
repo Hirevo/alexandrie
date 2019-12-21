@@ -139,7 +139,7 @@ impl Indexer for Git2Index {
         repo.commit(Some("HEAD"), &signature, &signature, msg, &tree, &[&parent])?;
 
         let mut remote = repo.find_remote("origin")?;
-        remote.push(&[], None)?;
+        remote.push::<&'static str>(&[], None)?;
 
         Ok(())
     }

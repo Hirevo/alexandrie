@@ -4,8 +4,7 @@ use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::querystring::ContextExt;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::models::CrateRegistration;
 use crate::db::schema::*;
@@ -22,15 +21,17 @@ struct Params {
     pub page: Option<NonZeroU32>,
 }
 
-pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
-    let params = ctx.url_query::<Params>().unwrap_or(Params { page: None });
+pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+    let params = req.query::<Params>().unwrap_or(Params { page: None });
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
-    let user = ctx.get_author();
-    let state = ctx.state();
+    let user = req.get_author();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
+        let state = req.state();
+
         //? Get the total count of search results.
         let total_results = crates::table
             .select(sql::count(crates::id))

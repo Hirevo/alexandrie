@@ -1,6 +1,8 @@
+use async_std::io;
+
 use diesel::prelude::*;
 use semver::Version;
-use tide::{Body, Context, Response};
+use tide::{Request, Response};
 
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
@@ -10,16 +12,18 @@ use crate::State;
 /// Route to download a crate's tarball (used by `cargo build`).
 ///
 /// The response is streamed, for performance and memory footprint reasons.
-pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
-    let name = ctx.param::<String>("name").unwrap();
-    let version = ctx.param::<Version>("version").unwrap();
+pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+    let name = req.param::<String>("name").unwrap();
+    let version = req.param::<Version>("version").unwrap();
 
-    let state = ctx.state();
+    let state = req.state().clone();
     let repo = &state.repo;
 
     // state.index.refresh()?;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
+        let state = req.state();
+
         //? Fetch the download count for this crate.
         let downloads = crates::table
             .select(crates::downloads)
@@ -35,10 +39,9 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             let mut krate = state.storage.read_crate(&name, version)?;
             let mut buf = Vec::new();
             krate.read_to_end(&mut buf)?;
-            Ok(http::Response::builder()
-                .header("content-type", "application/octet-stream")
-                .body(Body::from(buf))
-                .unwrap())
+            Ok(Response::new(200)
+                .set_header("content-type", "application/octet-stream")
+                .body(io::Cursor::new(buf)))
         } else {
             Err(Error::from(AlexError::CrateNotFound { name }))
         }

@@ -2,7 +2,7 @@ use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 /// Password management routes (eg. "/account/manage/password").
 pub mod passwd;
@@ -35,20 +35,20 @@ pub enum ManageFlashError {
     TokenRevocationError(String),
 }
 
-pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
-    let author = match ctx.get_author() {
+pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
+    let author = match req.get_author() {
         Some(author) => author,
         None => {
-            let state = ctx.state().as_ref();
+            let state = req.state().as_ref();
             let response = common::need_to_login(state);
             return Ok(response);
         }
     };
 
-    let state = ctx.state().clone();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
         //? Get the number of crates owned by this author.
         let owned_crates_count = crate_authors::table
             .select(sql::count(crate_authors::id))
@@ -66,7 +66,7 @@ pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
             .filter(author_tokens::author_id.eq(author.id))
             .load::<AuthorToken>(conn)?;
 
-        let error_msg = ctx
+        let error_msg = req
             .get_flash_message()
             .and_then(|msg| msg.parse_json::<ManageFlashError>().ok());
 
@@ -86,6 +86,7 @@ pub(crate) async fn get(mut ctx: Context<State>) -> Result<Response, Error> {
             None => (None, None, None, None, None),
         };
 
+        let state = req.state();
         let engine = &state.frontend.handlebars;
         let context = json!({
             "user": author,

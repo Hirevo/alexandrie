@@ -13,7 +13,7 @@ jobs:
   #   strategy:
   #     matrix:
   #       os: [ubuntu-latest, windows-latest, macOS-latest]
-  #       rust: [nightly-2019-09-03]
+  #       rust: [stable]
   #   steps:
   #   - name: Checkout master
   #     uses: actions/checkout@master

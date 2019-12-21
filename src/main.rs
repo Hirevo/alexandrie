@@ -1,4 +1,3 @@
-#![feature(inner_deref, try_blocks)]
 #![allow(clippy::redundant_closure, clippy::needless_lifetimes)]
 #![warn(unused, missing_docs)]
 //!
@@ -38,15 +37,9 @@ extern crate log;
 #[macro_use(slog_o)]
 extern crate slog;
 
-use std::fs;
-
 use std::sync::Arc;
 
-use tide::middleware::RequestLogger;
-use tide::App;
-
-#[cfg(feature = "frontend")]
-use tide::cookies::CookiesMiddleware;
+use async_std::fs;
 
 /// API endpoints definitions.
 pub mod api;
@@ -71,9 +64,12 @@ pub mod frontend;
 
 use crate::config::Config;
 use crate::error::Error;
+use crate::utils::request_log::RequestLogger;
 
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
+#[cfg(feature = "frontend")]
+use crate::utils::cookies::CookiesMiddleware;
 #[cfg(feature = "frontend")]
 use crate::utils::static_files::StaticFiles;
 
@@ -90,11 +86,44 @@ embed_migrations!("migrations/sqlite");
 #[cfg(feature = "postgres")]
 embed_migrations!("migrations/postgres");
 
+use futures::future::{BoxFuture, FutureExt};
+use std::future::Future;
+use tide::{Endpoint, IntoResponse, Request, Response};
+struct Handler<F> {
+    handler: F,
+}
+
+impl<F, Fut> Handler<F>
+where
+    F: Fn(Request<State>) -> Fut + Send + 'static,
+    Fut: Future<Output = Result<Response, Error>> + Send + 'static,
+{
+    pub fn new(handler: F) -> Handler<F> {
+        Handler { handler }
+    }
+}
+
+impl<F, Fut> Endpoint<State> for Handler<F>
+where
+    F: Fn(Request<State>) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<Response, Error>> + Send + 'static,
+{
+    type Fut = BoxFuture<'static, Response>;
+
+    fn call(&self, req: Request<State>) -> Self::Fut {
+        let handler = &self.handler;
+        futures::FutureExt::boxed(handler(req).map(|ret| match ret {
+            Ok(value) => value.into_response(),
+            Err(err) => err.into_response(),
+        }))
+    }
+}
+
 #[allow(clippy::cognitive_complexity)]
 async fn run() -> Result<(), Error> {
     let _guard = logs::init();
 
-    let contents = fs::read("alexandrie.toml")?;
+    let contents = fs::read("alexandrie.toml").await?;
     let config: Config = toml::from_slice(contents.as_slice())?;
     let addr = format!("{0}:{1}", config.general.addr, config.general.port);
 
@@ -108,7 +137,7 @@ async fn run() -> Result<(), Error> {
     state.repo.run(|conn| embedded_migrations::run(conn)).await
         .expect("migration execution error");
 
-    let mut app = App::with_state(Arc::new(state));
+    let mut app = tide::with_state(Arc::new(state));
 
     info!("setting up request logger middleware");
     app.middleware(RequestLogger::new());
@@ -122,76 +151,81 @@ async fn run() -> Result<(), Error> {
             app.middleware(AuthMiddleware::new());
 
             info!("mounting '/'");
-            app.at("/").get(frontend::index::get);
+            app.at("/").get(Handler::new(frontend::index::get));
             info!("mounting '/me'");
-            app.at("/me").get(frontend::me::get);
+            app.at("/me").get(Handler::new(frontend::me::get));
             info!("mounting '/search'");
-            app.at("/search").get(frontend::search::get);
+            app.at("/search").get(Handler::new(frontend::search::get));
             info!("mounting '/most-downloaded'");
             app.at("/most-downloaded")
-                .get(frontend::most_downloaded::get);
+                .get(Handler::new(frontend::most_downloaded::get));
             info!("mounting '/last-updated'");
-            app.at("/last-updated").get(frontend::last_updated::get);
+            app.at("/last-updated")
+                .get(Handler::new(frontend::last_updated::get));
             info!("mounting '/crates/:crate'");
-            app.at("/crates/:crate").get(frontend::krate::get);
+            app.at("/crates/:crate")
+                .get(Handler::new(frontend::krate::get));
 
             info!("mounting '/account/login'");
             app.at("/account/login")
-                .get(frontend::account::login::get)
-                .post(frontend::account::login::post);
+                .get(Handler::new(frontend::account::login::get))
+                .post(Handler::new(frontend::account::login::post));
             info!("mounting '/account/logout'");
             app.at("/account/logout")
-                .get(frontend::account::logout::get);
+                .get(Handler::new(frontend::account::logout::get));
             info!("mounting '/account/register'");
             app.at("/account/register")
-                .get(frontend::account::register::get)
-                .post(frontend::account::register::post);
+                .get(Handler::new(frontend::account::register::get))
+                .post(Handler::new(frontend::account::register::post));
             info!("mounting '/account/manage'");
             app.at("/account/manage")
-                .get(frontend::account::manage::get);
+                .get(Handler::new(frontend::account::manage::get));
             info!("mounting '/account/manage/password'");
             app.at("/account/manage/password")
-                .post(frontend::account::manage::passwd::post);
+                .post(Handler::new(frontend::account::manage::passwd::post));
             info!("mounting '/account/manage/tokens'");
             app.at("/account/manage/tokens")
-                .post(frontend::account::manage::tokens::post);
+                .post(Handler::new(frontend::account::manage::tokens::post));
             info!("mounting '/account/manage/tokens/:token-id/revoke'");
             app.at("/account/manage/tokens/:token-id/revoke")
-                .get(frontend::account::manage::tokens::revoke::get);
+                .get(Handler::new(frontend::account::manage::tokens::revoke::get));
 
             info!("mounting '/assets/*path'");
-            app.at("/assets/*path").get(StaticFiles::new("assets")?);
+            app.at("/assets/*path")
+                .get(StaticFiles::new("assets").await?);
         }
     }
 
     info!("mounting '/api/v1/crates'");
-    app.at("/api/v1/crates").get(api::search::get);
+    app.at("/api/v1/crates").get(Handler::new(api::search::get));
     info!("mounting '/api/v1/crates/new'");
-    app.at("/api/v1/crates/new").put(api::publish::put);
+    app.at("/api/v1/crates/new")
+        .put(Handler::new(api::publish::put));
     info!("mounting '/api/v1/crates/:name/owners'");
     app.at("/api/v1/crates/:name/owners")
-        .get(api::owners::get)
-        .put(api::owners::put)
-        .delete(api::owners::delete);
+        .get(Handler::new(api::owners::get))
+        .put(Handler::new(api::owners::put))
+        .delete(Handler::new(api::owners::delete));
     info!("mounting '/api/v1/crates/:name/:version/yank'");
     app.at("/api/v1/crates/:name/:version/yank")
-        .delete(api::yank::delete);
+        .delete(Handler::new(api::yank::delete));
     info!("mounting '/api/v1/crates/:name/:version/unyank'");
     app.at("/api/v1/crates/:name/:version/unyank")
-        .put(api::unyank::put);
+        .put(Handler::new(api::unyank::put));
     info!("mounting '/api/v1/crates/:name/:version/download'");
     app.at("/api/v1/crates/:name/:version/download")
-        .get(api::download::get);
+        .get(Handler::new(api::download::get));
     info!("mounting '/api/v1/categories'");
-    app.at("/api/v1/categories").get(api::categories::get);
+    app.at("/api/v1/categories")
+        .get(Handler::new(api::categories::get));
 
     info!("listening on {0}", addr);
-    app.serve(addr).await?;
+    app.listen(addr).await?;
 
     Ok(())
 }
 
-#[runtime::main(runtime_tokio::Tokio)]
+#[async_std::main]
 async fn main() {
     if let Err(err) = run().await {
         eprintln!("{}", err);

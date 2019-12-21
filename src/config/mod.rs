@@ -1,7 +1,5 @@
 use std::net;
 
-use diesel::prelude::*;
-use http::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 
 /// Database configuration (`[database]` section).
@@ -17,8 +15,6 @@ pub mod syntect;
 #[cfg(feature = "frontend")]
 pub mod frontend;
 
-use crate::db::models::Author;
-use crate::db::schema::*;
 use crate::index::Index;
 use crate::storage::Storage;
 use crate::Repo;
@@ -71,25 +67,6 @@ pub struct State {
     /// The frontend configured state.
     #[cfg(feature = "frontend")]
     pub frontend: FrontendState,
-}
-
-impl State {
-    /// Determines the author from the request's headers.
-    pub async fn get_author(&self, headers: &HeaderMap<HeaderValue>) -> Option<Author> {
-        let token = headers.get("authorization").and_then(|x| x.to_str().ok())?;
-
-        let query = self.repo.run(|conn| {
-            //? Get the author associated to this token.
-            author_tokens::table
-                .inner_join(authors::table)
-                .select(authors::all_columns)
-                .filter(author_tokens::token.eq(token))
-                .first::<Author>(conn)
-                .ok()
-        });
-
-        query.await
-    }
 }
 
 impl From<Config> for State {

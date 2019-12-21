@@ -45,6 +45,8 @@ How to build
 Alexandrie is built using [**Tide**][Tide] and offers multiple options to be used as its database.  
 To build, you can run `cargo build [--release]`.  
 
+[Tide]: https://github.com/http-rs/tide
+
 Before running it, you need to configure your instance in the `alexandrie.toml` file.
 
 The database is configured through the `[database]` table:

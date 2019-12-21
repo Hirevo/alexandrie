@@ -1,6 +1,8 @@
 use diesel::dsl as sql;
 use diesel::prelude::*;
+use http::HeaderMap;
 
+use crate::db::models::Author;
 use crate::db::schema::*;
 use crate::db::Connection;
 use crate::error::Error;
@@ -25,4 +27,20 @@ pub fn is_crate_author(conn: &Connection, crate_name: &str, author_id: i64) -> R
     .get_result(conn)?;
 
     Ok(exists)
+}
+
+/// Determines the author from the request's headers.
+pub fn get_author(conn: &Connection, headers: &HeaderMap) -> Option<Author> {
+    let token = headers
+        .get("authorization")
+        .and_then(|x| x.to_str().ok())?
+        .to_owned();
+
+    //? Get the author associated to this token.
+    author_tokens::table
+        .inner_join(authors::table)
+        .select(authors::all_columns)
+        .filter(author_tokens::token.eq(token))
+        .first::<Author>(conn)
+        .ok()
 }

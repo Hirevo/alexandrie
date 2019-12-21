@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use http::status::StatusCode;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::models::{Author, NewCrateAuthor};
 use crate::db::schema::*;
@@ -34,13 +34,13 @@ struct OwnerDeleteBody {
     pub users: Vec<String>,
 }
 
-pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
-    let name = ctx.param::<String>("name").unwrap();
+pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+    let name = req.param::<String>("name").unwrap();
 
-    let state = ctx.state();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
         //? Does this crate exists?
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {
@@ -71,25 +71,24 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             })
             .collect();
 
-        Ok(tide::response::json(OwnerListResponse { users }))
+        let data = OwnerListResponse { users };
+        Ok(utils::response::json(&data))
     });
 
     transaction.await
 }
 
-pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
-    let name = ctx.param::<String>("name").unwrap();
-    let OwnerAddBody { users: new_authors } = ctx.body_json().await?;
+pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
+    let name = req.param::<String>("name").unwrap();
+    let OwnerAddBody { users: new_authors } = req.body_json().await?;
 
-    let state = ctx.state();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let author = state
-        .get_author(ctx.headers())
-        .await
-        .ok_or(AlexError::InvalidToken)?;
+    let transaction = repo.transaction(move |conn| {
+        let author =
+            utils::checks::get_author(conn, req.headers()).ok_or(AlexError::InvalidToken)?;
 
-    let transaction = repo.transaction(|conn| {
         //? Get this crate's ID.
         let crate_id = crates::table
             .select(crates::id)
@@ -165,28 +164,28 @@ pub(crate) async fn put(mut ctx: Context<State>) -> Result<Response, Error> {
                 [fsts, last].join(" and ")
             }
         };
-        Ok(tide::response::json(json!({
+
+        let data = json!({
             "ok": "true",
             "msg": format!("{0} has been added as authors of {1}", authors_list, name),
-        })))
+        });
+        Ok(utils::response::json(&data))
     });
 
     transaction.await
 }
 
-pub(crate) async fn delete(mut ctx: Context<State>) -> Result<Response, Error> {
-    let name = ctx.param::<String>("name").unwrap();
-    let OwnerDeleteBody { users: old_authors } = ctx.body_json().await?;
+pub(crate) async fn delete(mut req: Request<State>) -> Result<Response, Error> {
+    let name = req.param::<String>("name").unwrap();
+    let OwnerDeleteBody { users: old_authors } = req.body_json().await?;
 
-    let state = ctx.state();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let author = state
-        .get_author(ctx.headers())
-        .await
-        .ok_or(AlexError::InvalidToken)?;
+    let transaction = repo.transaction(move |conn| {
+        let author =
+            utils::checks::get_author(conn, req.headers()).ok_or(AlexError::InvalidToken)?;
 
-    let transaction = repo.transaction(|conn| {
         //? Get this crate's ID.
         let crate_id = crates::table
             .select(crates::id)
@@ -265,10 +264,12 @@ pub(crate) async fn delete(mut ctx: Context<State>) -> Result<Response, Error> {
                 [fsts, last].join(" and ")
             }
         };
-        Ok(tide::response::json(json!({
+
+        let data = json!({
             "ok": "true",
             "msg": format!("{0} has been removed from authors of {1}", authors_list, name),
-        })))
+        });
+        Ok(utils::response::json(&data))
     });
 
     transaction.await

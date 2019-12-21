@@ -1,16 +1,12 @@
-use std::io;
-use std::path::{Path, PathBuf};
+use async_std::fs;
+use async_std::io;
+use async_std::path::{Path, PathBuf};
 
-use futures::compat::Compat01As03 as Compat;
 use futures::future::BoxFuture;
-use path_absolutize::Absolutize;
-use serde::{Deserialize, Serialize};
-use tide::error::ResultExt;
-use tide::response::IntoResponse;
-use tide::{Context, Endpoint, Response};
+use tide::{Endpoint, IntoResponse, Request, Response, ResultExt};
 
 /// The handler for serving static files.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StaticFiles {
     /// The path to the directory to serve from.
     path: PathBuf,
@@ -18,41 +14,48 @@ pub struct StaticFiles {
 
 impl StaticFiles {
     /// Constructs a `StaticFiles` for the given path.
-    pub fn new(path: impl AsRef<Path>) -> io::Result<StaticFiles> {
-        Ok(StaticFiles {
-            path: path.as_ref().absolutize()?,
-        })
+    pub async fn new(path: impl AsRef<Path>) -> io::Result<StaticFiles> {
+        let path = path.as_ref();
+        let path = if path.is_relative() {
+            PathBuf::from(std::env::current_dir()?)
+                .join(path)
+                .canonicalize()
+                .await
+        } else {
+            path.canonicalize().await
+        }?;
+        Ok(StaticFiles { path })
     }
 }
 
 impl<State: Send + Sync + 'static> Endpoint<State> for StaticFiles {
     type Fut = BoxFuture<'static, Response>;
 
-    fn call(&self, ctx: Context<State>) -> Self::Fut {
+    fn call(&self, ctx: Request<State>) -> Self::Fut {
         let served = self.path.clone();
         let path = ctx.param::<PathBuf>("path").unwrap();
         let future = async move {
-            let path = served.join(path).absolutize().client_err()?;
+            let path = served.join(path).canonicalize().await.client_err()?;
 
             if path.starts_with(&served) {
-                let metadata = Compat::new(tokio::fs::metadata(path.clone()))
-                    .await
-                    .server_err()?;
-                let bytes = Compat::new(tokio::fs::read(path.clone()))
-                    .await
-                    .server_err()?;
-                let mut builder = http::Response::builder();
-                builder.status(http::StatusCode::OK);
-                builder.header("content-length", metadata.len());
+                let metadata = fs::metadata(path.clone()).await.server_err()?;
+                let file = fs::File::open(path.clone()).await.server_err()?;
+                let mut response = Response::with_reader(200, io::BufReader::new(file))
+                    .set_header("content-length", metadata.len().to_string());
                 if let Some(guess) = mime_guess::from_path(&path).first() {
-                    builder.header("content-type", guess.as_ref());
+                    response = response.set_header("content-type", guess.as_ref());
                 }
-                Ok(builder.body(tide::Body::from(bytes)).unwrap())
+                Ok(response)
             } else {
-                Err(tide::error::Error::from(http::StatusCode::NOT_FOUND))
+                Err(tide::Error::from(http::StatusCode::NOT_FOUND))
             }
         };
 
-        futures::FutureExt::boxed(async move { future.await.into_response() })
+        futures::FutureExt::boxed(async move {
+            match future.await {
+                Ok(response) => response,
+                Err(err) => err.into_response(),
+            }
+        })
     }
 }

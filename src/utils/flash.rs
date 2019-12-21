@@ -2,8 +2,9 @@ use std::ops::{Deref, DerefMut};
 
 use cookie::Cookie;
 use serde::{Deserialize, Serialize};
-use tide::cookies::ContextExt as CookieExt;
-use tide::Context;
+use tide::Request;
+
+use crate::utils::cookies::CookiesExt;
 
 /// Flash cookie's name.
 pub const COOKIE_NAME: &str = "flash";
@@ -62,13 +63,14 @@ pub trait FlashExt {
     /// Get the received flash message for this request, if any.
     /// This consumes the flash message (calling in twice for the same request will yield `None`).
     fn get_flash_message(&mut self) -> Option<FlashMessage>;
+
     /// Serializes the message and sets it as a flash cookie for the next request.
-    fn set_flash_message(&mut self, message: FlashMessage);
+    fn set_flash_message(&mut self, message: FlashMessage) -> Option<()>;
 }
 
-impl<State> FlashExt for Context<State> {
+impl<State> FlashExt for Request<State> {
     fn get_flash_message(&mut self) -> Option<FlashMessage> {
-        let cookie = self.get_cookie(COOKIE_NAME).unwrap()?;
+        let cookie = self.get_cookie(COOKIE_NAME)?;
         let percent_decoded: Vec<u8> =
             percent_encoding::percent_decode_str(cookie.value()).collect();
         let payload = base64::decode(percent_decoded.as_slice()).ok()?;
@@ -78,17 +80,18 @@ impl<State> FlashExt for Context<State> {
             .http_only(true)
             .expires(time::at_utc(time::Timespec::new(0, 0)))
             .finish();
-        self.set_cookie(cookie).unwrap();
+        self.set_cookie(cookie)?;
         Some(FlashMessage(payload))
     }
 
-    fn set_flash_message(&mut self, message: FlashMessage) {
+    fn set_flash_message(&mut self, message: FlashMessage) -> Option<()> {
         let message = base64::encode(message.as_slice());
         let cookie = Cookie::build(COOKIE_NAME, message)
             .path("/")
             .http_only(true)
             .finish();
 
-        self.set_cookie(cookie).unwrap();
+        self.set_cookie(cookie)?;
+        Some(())
     }
 }

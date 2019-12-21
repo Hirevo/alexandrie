@@ -2,7 +2,7 @@ use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
@@ -12,12 +12,14 @@ use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::State;
 
-pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
-    let user = ctx.get_author();
-    let state = ctx.state();
+pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+    let user = req.get_author();
+    let state = req.state().clone();
     let repo = &state.repo;
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
+        let state = req.state();
+
         //? Get total number of crates.
         let crate_count = crates::table
             .select(sql::count(crates::id))

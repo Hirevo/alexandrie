@@ -1,5 +1,4 @@
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
-use futures::compat::Compat01As03 as Compat;
 
 use crate::config::database::DatabaseConfig;
 
@@ -75,26 +74,17 @@ where
     /// The closure will be passed a `Connection` from the pool to use.
     pub async fn run<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(&PooledConnection<ConnectionManager<T>>) -> R + Send + std::marker::Unpin,
+        F: FnOnce(&PooledConnection<ConnectionManager<T>>) -> R + Send + 'static,
+        R: Send + 'static,
         T: Send,
     {
         let pool = self.connection_pool.clone();
-        // `tokio_threadpool::blocking` returns a `Poll` compatible with "old style" futures.
-        // `poll_fn` converts this into a future, then
-        // `tokio::await` is used to convert the old style future to a `std::futures::Future`.
-        // `f.take()` allows the borrow checker to be sure `f` is not moved into the inner closure
-        // multiple times if `poll_fn` is called multple times.
-        let mut f = Some(f);
-        let future = Compat::new(futures_01::future::poll_fn(|| {
-            tokio_threadpool::blocking(|| {
-                let f = f.take().unwrap();
-                let conn = pool.get().unwrap();
-                f(&conn)
-            })
-            .map_err(|_| panic!("the threadpool shut down"))
-        }));
+        let future = async_std::task::spawn_blocking(move || {
+            let conn = pool.get().unwrap();
+            f(&conn)
+        });
 
-        future.await.expect("Error running async database task.")
+        future.await
     }
 
     /// Runs the given closure in a way that is safe for blocking IO to the database.
@@ -103,23 +93,17 @@ where
     /// If an error occurs, the database changes made in this closure will get rolled back to their original state.
     pub async fn transaction<F, R, E>(&self, f: F) -> Result<R, E>
     where
-        F: FnOnce(&PooledConnection<ConnectionManager<T>>) -> Result<R, E>
-            + Send
-            + std::marker::Unpin,
+        F: FnOnce(&PooledConnection<ConnectionManager<T>>) -> Result<R, E> + Send + 'static,
         T: Send,
-        E: From<diesel::result::Error>,
+        R: Send + 'static,
+        E: From<diesel::result::Error> + Send + 'static,
     {
         let pool = self.connection_pool.clone();
-        let mut f = Some(f);
-        let future = Compat::new(futures_01::future::poll_fn(|| {
-            tokio_threadpool::blocking(|| {
-                let f = f.take().unwrap();
-                let conn = pool.get().unwrap();
-                conn.transaction(|| f(&conn))
-            })
-            .map_err(|_| panic!("the threadpool shut down"))
-        }));
+        let future = async_std::task::spawn_blocking(move || {
+            let conn = pool.get().unwrap();
+            conn.transaction(|| f(&conn))
+        });
 
-        future.await.expect("Error running async database task.")
+        future.await
     }
 }

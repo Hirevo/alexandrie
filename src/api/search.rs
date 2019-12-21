@@ -4,14 +4,14 @@ use diesel::dsl as sql;
 use diesel::prelude::*;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use tide::querystring::ContextExt;
-use tide::{Context, Response};
+use tide::{Request, Response};
 
 use crate::db::models::CrateRegistration;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
 use crate::error::{AlexError, Error};
 use crate::index::Indexer;
+use crate::utils;
 use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -45,13 +45,13 @@ struct SearchParams {
 }
 
 /// Route to search through crates (used by `cargo search`).
-pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
-    let params = ctx
-        .url_query::<SearchParams>()
+pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+    let params = req
+        .query::<SearchParams>()
         .map_err(|_| AlexError::MissingQueryParams {
             missing_params: &["q"],
         })?;
-    let state = ctx.state();
+    let state = req.state().clone();
     let repo = &state.repo;
 
     //? Fetch the latest index changes.
@@ -60,7 +60,9 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
     //? Build the search pattern.
     let name_pattern = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
 
-    let transaction = repo.transaction(|conn| {
+    let transaction = repo.transaction(move |conn| {
+        let state = req.state();
+
         //? Limit the result count depending on parameters.
         let results = match (params.per_page, params.page) {
             (Some(per_page), Some(page)) => {
@@ -119,10 +121,11 @@ pub(crate) async fn get(ctx: Context<State>) -> Result<Response, Error> {
             })
             .collect::<Result<Vec<SearchResult>, Error>>()?;
 
-        Ok(tide::response::json(SearchResponse {
+        let data = SearchResponse {
             crates,
             meta: SearchMeta { total },
-        }))
+        };
+        Ok(utils::response::json(&data))
     });
 
     transaction.await

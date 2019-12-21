@@ -10,7 +10,7 @@ use crate::config::syntect::SyntectState;
 #[derive(Debug, Clone, PartialEq)]
 pub struct HeaderRef {
     /// The header tag's level (1 to 6).
-    pub level: i32,
+    pub level: u32,
     /// The header tag's start index in the event list.
     pub start: usize,
     /// The header tag's end index in the event list.
@@ -59,7 +59,7 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
         .collect::<Vec<_>>();
 
     let header_count = events.iter().fold(0usize, |acc, event| match event {
-        Event::Start(Tag::Header(_)) => acc + 1,
+        Event::Start(Tag::Heading(_)) => acc + 1,
         _ => acc,
     });
     let mut header_refs = Vec::with_capacity(header_count);
@@ -68,14 +68,14 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
         .iter()
         .enumerate()
         .for_each(|(idx, event)| match event {
-            Event::Start(Tag::Header(level)) => {
+            Event::Start(Tag::Heading(level)) => {
                 header_refs.push(HeaderRef {
                     level: *level,
                     start: idx,
                     end: 0,
                 });
             }
-            Event::End(Tag::Header(_)) => {
+            Event::End(Tag::Heading(_)) => {
                 header_refs.last_mut().unwrap().end = idx;
             }
             _ => {}
