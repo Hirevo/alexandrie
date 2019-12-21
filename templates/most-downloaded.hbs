@@ -205,7 +205,7 @@
             color: inherit;
             background-color: inherit;
             padding: 5px 10px;
-            border: solid 2px var(--darker-bg-color);
+            border: 2px solid var(--darker-fg-color);
             transition: background-color 0.15s, border-color 0.15s;
             display: flex;
             align-items: center;
@@ -222,6 +222,7 @@
 
         .pagination-prev.pagination-disabled,
         .pagination-next.pagination-disabled {
+            color: var(--dark-fg-color);
             background-color: var(--dark-bg-color);
             cursor: default;
             pointer-events: none;
@@ -232,8 +233,8 @@
         }
 
         .pagination-current {
-            border-top: 2px solid var(--darker-bg-color);
-            border-bottom: 2px solid var(--darker-bg-color);
+            border-top: 2px solid var(--darker-fg-color);
+            border-bottom: 2px solid var(--darker-fg-color);
             padding: 5px 10px;
         }
 
