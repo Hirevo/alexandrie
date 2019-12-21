@@ -7,7 +7,7 @@ description = "An alternative crate registry, implemented in Rust."
 repository = "https://github.com/Hirevo/alexandrie"
 documentation = "https://crates.polomack.eu/docs/alexandrie"
 keywords = ["crates", "cargo", "web", "registry"]
-category = ["development-tools"]
+categories = ["development-tools"]
 license = "MIT OR Apache-2.0"
 
 default-run = "alexandrie"
