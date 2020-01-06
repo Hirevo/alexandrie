@@ -15,7 +15,9 @@ use serde::{Deserialize, Serialize};
 use tar::Archive;
 use tide::{Request, Response};
 
-use crate::db::models::{Crate, NewCrate, NewCrateAuthor, NewCrateCategory, NewCrateKeyword};
+use crate::db::models::{
+    Crate, NewBadge, NewCrate, NewCrateAuthor, NewCrateCategory, NewCrateKeyword,
+};
 use crate::db::schema::*;
 use crate::db::Connection;
 use crate::db::DATETIME_FORMAT;
@@ -45,6 +47,7 @@ struct CrateMeta {
     pub license: Option<String>,
     pub license_file: Option<String>,
     pub repository: Option<String>,
+    pub badges: Option<HashMap<String, HashMap<String, String>>>,
     pub links: Option<String>,
 }
 
@@ -65,7 +68,7 @@ struct CrateMetaDependency {
 fn link_keywords(
     conn: &Connection,
     crate_id: i64,
-    keywords: Option<&[String]>,
+    keywords: Option<Vec<String>>,
 ) -> Result<(), Error> {
     diesel::delete(crate_keywords::table.filter(crate_keywords::crate_id.eq(crate_id)))
         .execute(conn)?;
@@ -101,7 +104,7 @@ fn link_keywords(
             .collect();
 
         diesel::insert_into(crate_keywords::table)
-            .values(entries.as_slice())
+            .values(entries)
             .execute(conn)?;
     }
 
@@ -111,7 +114,7 @@ fn link_keywords(
 fn link_categories(
     conn: &Connection,
     crate_id: i64,
-    categories: Option<&[String]>,
+    categories: Option<Vec<String>>,
 ) -> Result<(), Error> {
     diesel::delete(crate_categories::table.filter(crate_categories::crate_id.eq(crate_id)))
         .execute(conn)?;
@@ -131,7 +134,36 @@ fn link_categories(
             .collect();
 
         diesel::insert_into(crate_categories::table)
-            .values(&entries)
+            .values(entries)
+            .execute(conn)?;
+    }
+
+    Ok(())
+}
+
+fn link_badges(
+    conn: &Connection,
+    crate_id: i64,
+    badges: Option<HashMap<String, HashMap<String, String>>>,
+) -> Result<(), Error> {
+    diesel::delete(crate_badges::table.filter(crate_badges::crate_id.eq(crate_id)))
+        .execute(conn)?;
+
+    if let Some(badges) = badges {
+        let entries = badges
+            .into_iter()
+            .flat_map(|(badge_type, params)| {
+                let params = json::to_string(&params).ok()?;
+                Some(NewBadge {
+                    crate_id,
+                    badge_type,
+                    params,
+                })
+            })
+            .collect::<Vec<_>>();
+
+        diesel::insert_into(crate_badges::table)
+            .values(entries)
             .execute(conn)?;
     }
 
@@ -150,7 +182,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
 
     let mut bytes = Vec::new();
     (&mut req).take(10_000_000).read_to_end(&mut bytes).await?;
-    let mut cursor = std::io::Cursor::new(&bytes);
+    let mut cursor = std::io::Cursor::new(bytes);
 
     let metadata_size = cursor.read_u32::<LittleEndian>()?;
     let mut metadata_bytes = vec![0u8; metadata_size as usize];
@@ -285,12 +317,13 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
         };
 
         //? Update keywords.
-        let keywords = metadata.keywords.as_ref().map(|vec| vec.as_slice());
-        link_keywords(conn, krate.id, keywords)?;
+        link_keywords(conn, krate.id, metadata.keywords)?;
 
         //? Update categories.
-        let categories = metadata.categories.as_ref().map(|vec| vec.as_slice());
-        link_categories(conn, krate.id, categories)?;
+        link_categories(conn, krate.id, metadata.categories)?;
+
+        //? Update badges.
+        link_badges(conn, krate.id, metadata.badges)?;
 
         //? Store the crate's tarball.
         state.storage.store_crate(

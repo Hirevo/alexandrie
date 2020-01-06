@@ -109,6 +109,20 @@ table! {
 }
 
 table! {
+    /// The crate-to-badges (one-to-many) relationship table.
+    crate_badges (id) {
+        /// The relationship's ID.
+        id -> Bigint,
+        /// The crate's ID.
+        crate_id -> Bigint,
+        /// The badge's type.
+        badge_type -> Varchar,
+        /// The badge's parameters (as JSON).
+        params -> Varchar,
+    }
+}
+
+table! {
     /// The user sessions table.
     sessions (id) {
         /// The session's ID.
@@ -141,6 +155,7 @@ joinable!(crate_keywords -> crates (crate_id));
 joinable!(crate_keywords -> keywords (keyword_id));
 joinable!(crate_categories -> crates (crate_id));
 joinable!(crate_categories -> categories (category_id));
+joinable!(crate_badges -> crates (crate_id));
 joinable!(sessions -> authors (author_id));
 joinable!(salts -> authors (author_id));
 
@@ -153,6 +168,7 @@ allow_tables_to_appear_in_same_query!(
     crate_authors,
     crate_keywords,
     crate_categories,
+    crate_badges,
     sessions,
     salts,
 );

@@ -95,6 +95,12 @@
             font-weight: bold;
         }
 
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            margin-top: 2px;
+        }
+
         .crate-container {
             width: 100%;
             display: flex;
@@ -119,6 +125,10 @@
 
             .stats {
                 width: 90%;
+            }
+
+            .hero-title, .hero-subtitle {
+                max-width: 90%;
             }
         }
 
@@ -253,6 +263,17 @@
                     {{/each}}
                 </div>
                 {{/if}}
+                {{#each badges}}
+                <div class="stat stat-badge">
+                    {{#if this.href}}
+                    <a href="{{ this.href }}">
+                    {{/if}}
+                        <img src="{{ this.src }}" alt="{{ this.alt }}" title="{{ this.alt }}">
+                    {{#if this.href}}    
+                    </a>
+                    {{/if}}
+                </div>
+                {{/each}}
             </div>
         </div>
     </div>
