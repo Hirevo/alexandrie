@@ -1,0 +1,30 @@
+# docker compose version is 3.7 (may work for less, but only tested with 3.7)
+version: "3.7"
+services:
+  web:
+    # docker build context is the current directory
+    build: .
+    # tag the image after it's built
+    #        app / app version : docker image version (per app version)
+    image: alexandrie/0.1.0:0.1
+    deploy:
+      replicas: 1
+    # grab these from the .env file
+    environment:
+      CRATE_INDEX: $CRATE_INDEX
+      GIT_NAME: $GIT_NAME
+      GIT_EMAIL: $GIT_EMAIL
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${APPDATA}:/home/alex/appdata
+      - ./alexandrie.toml:/home/alex/alexandrie.toml
+    secrets:
+      - source: git_ssh_key
+        target: /home/alex/.ssh/id_rsa
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+secrets:
+  git_ssh_key:
+    file: ./git_ssh_key
