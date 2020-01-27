@@ -203,6 +203,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
 
         //? Construct a crate description.
         let crate_desc = CrateVersion {
+            deps,
             name: metadata.name,
             vers: metadata.vers,
             deps: metadata
@@ -364,7 +365,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
             "{0} crate `{1}#{2}`",
             operation,
             crate_desc.name.as_str(),
-            &crate_desc.vers
+            &crate_desc.vers,
         );
         state.index.add_record(crate_desc)?;
         state.index.commit_and_push(commit_msg.as_str())?;

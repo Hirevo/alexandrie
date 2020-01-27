@@ -46,15 +46,17 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
     let repo = &state.repo;
 
     let transaction = repo.transaction(move |conn| {
+        //? Generate new registry token.
         let token = utils::auth::generate_token();
         let (token, _) = token.split_at(25);
 
+        let new_author_token = NewAuthorToken {
+            token,
+            name: form.token_name.as_str(),
+            author_id: author.id,
+        };
         diesel::insert_into(author_tokens::table)
-            .values(NewAuthorToken {
-                token,
-                name: form.token_name.as_str(),
-                author_id: author.id,
-            })
+            .values(new_author_token)
             .execute(conn)?;
 
         let error_msg = ManageFlashError::TokenGenerationSuccess(String::from(token));

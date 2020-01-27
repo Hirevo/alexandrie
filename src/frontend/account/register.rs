@@ -74,7 +74,7 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
     let repo = &state.repo;
 
     let transaction = repo.transaction(move |conn| {
-        //? Are all fields filled-in?
+        //? Are all fields filled-in ?
         if form.email.is_empty()
             || form.name.is_empty()
             || form.password.is_empty()
@@ -85,14 +85,14 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
             return Ok(utils::response::redirect("/account/register"));
         }
 
-        //? Does the two passwords match (consistency check)?
+        //? Does the two passwords match (consistency check) ?
         if form.password != form.confirm_password {
             let error_msg = String::from("the two passwords did not match.");
             req.set_flash_message(FlashMessage::from_json(&error_msg)?);
             return Ok(utils::response::redirect("/account/register"));
         }
 
-        //? Does the user already exist?
+        //? Does the user already exist ?
         let already_exists = sql::select(sql::exists(
             authors::table.filter(authors::email.eq(form.email.as_str())),
         ))
@@ -121,7 +121,7 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
             hasher::digest(&hasher::SHA512, data.as_ref())
         };
 
-        //? Derive the hashed password data with PBKDF2 (100'000 rounds).
+        //? Derive the hashed password data with PBKDF2 (100_000 rounds).
         let encoded_derived_hash = {
             let mut out = [0u8; hasher::SHA512_OUTPUT_LEN];
             let iteration_count = unsafe { NonZeroU32::new_unchecked(100_000) };
@@ -136,12 +136,13 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
         };
 
         //? Insert the new author data.
+        let new_author = NewAuthor {
+            email: form.email.as_str(),
+            name: form.name.as_str(),
+            passwd: encoded_derived_hash.as_str(),
+        };
         diesel::insert_into(authors::table)
-            .values(NewAuthor {
-                email: form.email.as_str(),
-                name: form.name.as_str(),
-                passwd: encoded_derived_hash.as_str(),
-            })
+            .values(new_author)
             .execute(conn)?;
 
         //? Fetch the newly-inserted author back.
@@ -152,11 +153,12 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
 
         //? Store the author's newly-generated authentication salt.
         let encoded_generated_salt = hex::encode(decoded_generated_salt.as_ref());
+        let new_salt = NewSalt {
+            author_id,
+            salt: encoded_generated_salt.as_str(),
+        };
         diesel::insert_into(salts::table)
-            .values(NewSalt {
-                author_id,
-                salt: encoded_generated_salt.as_str(),
-            })
+            .values(new_salt)
             .execute(conn)?;
 
         //? Generate a new session token.
@@ -169,15 +171,16 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
         };
 
         //? Insert the newly-created session.
+        let new_session = NewSession {
+            author_id,
+            token: session_token.as_str(),
+            expires: (chrono::Utc::now() + max_age)
+                .naive_utc()
+                .format(DATETIME_FORMAT)
+                .to_string(),
+        };
         diesel::insert_into(sessions::table)
-            .values(NewSession {
-                author_id,
-                token: session_token.as_str(),
-                expires: (chrono::Utc::now() + max_age)
-                    .naive_utc()
-                    .format(DATETIME_FORMAT)
-                    .to_string(),
-            })
+            .values(new_session)
             .execute(conn)?;
 
         //? Build the user's cookie.
