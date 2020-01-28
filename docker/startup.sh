@@ -12,12 +12,10 @@ ssh-add
 git config --global user.name "${GIT_NAME}" && git config --global user.email "${GIT_EMAIL}"
 
 # pull down the crate index, if it doesnt already exist
-if [ ! -d crate-index ]; then
+if [ ! -d appdata/crate-index ]; then
     # git clone $(cat crate-index.txt) crate-index
-    git clone ${CRATE_INDEX} crate-index
+    git clone ${CRATE_INDEX} appdata/crate-index
 fi
-
-ls -al
 
 # if the crate-storage directory doesn't exist, make it
 if [ ! -d appdata/crate-storage ]; then

@@ -1,0 +1,9 @@
+#
+# Example diesel config file which works with Docker
+#
+# Unless you modify the docker-compose.yml or Dockerfile, you shouldn't
+# need to change these values.
+#
+[print_schema]
+file = "src/db/schema.rs"
+with_docs = true

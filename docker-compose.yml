@@ -18,7 +18,8 @@ services:
       - "3000:3000"
     volumes:
       - ${APPDATA}:/home/alex/appdata
-      - ./alexandrie.toml:/home/alex/alexandrie.toml
+      - ${ALEXANDRIE_CONFIG}:/home/alex/alexandrie.toml
+      - ${DIESEL_CONFIG}:/home/alex/diesel.toml
     secrets:
       - source: git_ssh_key
         target: /home/alex/.ssh/id_rsa
@@ -27,4 +28,4 @@ services:
         mode: 0440
 secrets:
   git_ssh_key:
-    file: ./git_ssh_key
+    file: $GIT_SSH_KEY

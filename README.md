@@ -127,6 +127,22 @@ Then, if you want to use this index with Cargo, you can follow these steps:
   - Generating a token at `/account/manage`.
 - You can now use the registry using `cargo [search|publish] --registry <name-of-your-registry>`
 
+
+`docker-compose`
+-------
+
+You can host Alexandrie in a Docker container on your computer or a host machine of your choosing.
+
+To get started, you'll need to edit the `example.env` file. You should:
+
+* Set `APPDATA` to the path of a new directory where the container will store the crate index, crate files, & database file.
+* Set `CRATE_INDEX` to the SSH path of an existing repo with a valid index `config.json` file.
+* Set `GIT_NAME` and `GIT_EMAIL` to valid git values that will be used when Alexandrie commits & pushes those commits to the index.
+* Set `GIT_SSH_KEY` to a new or existing passwordless SSH key. The `.pub` key associated with this key should be added to github/gitlab/etc. to grant access to push to the crate index.
+
+These items will be mounted into the Docker container, and need to be accessible by a user with UID and GID `1000`. If Docker appears to complain that any of these are inaccessible, check your paths and your file/directory permissions.
+
+
 License
 -------
 
