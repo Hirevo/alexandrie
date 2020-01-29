@@ -6,22 +6,22 @@
 #
 
 ### First stage: build the application
-FROM rust as builder
+FROM rust:1.40-slim-buster as builder
 
 # for now, assume that we'll be using sqlite
 RUN apt update
-RUN apt install -y sqlite3 clang
+RUN apt install -y sqlite3 libsqlite3-dev clang
 
 WORKDIR /alexandrie
 
 # copy source data
-COPY assets assets
+# COPY assets assets
 COPY migrations migrations
 COPY src src
 # COPY syntect-dumps syntect-dumps
 COPY syntect-syntaxes syntect-syntaxes
 COPY syntect-themes syntect-themes
-COPY templates templates
+# COPY templates templates
 COPY wasm-pbkdf2 wasm-pbkdf2
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
