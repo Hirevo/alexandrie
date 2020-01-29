@@ -24,6 +24,7 @@ COPY syntect-themes syntect-themes
 COPY templates templates
 COPY wasm-pbkdf2 wasm-pbkdf2
 COPY Cargo.toml Cargo.toml
+COPY Cargo.lock Cargo.lock
 
 # build the app
 RUN cargo build --release
