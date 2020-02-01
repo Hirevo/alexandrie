@@ -89,7 +89,6 @@
             background-color: var(--lighter-bg-color);
             color: var(--fg-color);
             padding: 20px;
-            box-shadow: 0 0 10px #0006;
             border-radius: 10px;
             cursor: pointer;
             transition: transform 0.15s;
@@ -276,7 +275,7 @@
     </div>
     <div class="search-results-container">
         {{> partials/pagination pagination}}
-        <div class="search-results">
+        <div class="search-results elevated">
             {{#if results}}
             {{#each results}}
             <a class="search-result" href="/crates/{{ this.name }}">

@@ -13,8 +13,6 @@
         color: var(--fg-color);
         background-color: var(--lighter-bg-color);
         border-radius: 5px;
-        box-shadow: 0 0 15px #00000060;
-        overflow: hidden;
     }
 
     .navbar-tag {
@@ -68,6 +66,12 @@
         justify-content: flex-end;
     }
 
+    .navbar-search-overall {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+    }
+
     .navbar-search {
         appearance: none;
         -moz-appearance: none;
@@ -87,9 +91,59 @@
         outline: none;
     }
 
-    .navbar-search:focus {
+    .navbar-search-container:focus-within .navbar-search {
         width: 320px;
         border: 2px solid var(--darker-bg-color);
+    }
+
+    .navbar-search-container:focus-within .navbar-search-results {
+        display: inherit;
+    }
+
+    .navbar-search-results {
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        z-index: -1;
+        padding: 5px;
+        overflow: hidden;
+        display: none;
+        background-color: var(--lighter-bg-color);
+        border-radius: 5px;
+    }
+
+    .navbar-search-results-spacer {
+        width: 100%;
+        height: 33.5px;
+        margin-bottom: 5px;
+        background-color: var(--lighter-bg-color);
+    }
+
+    .navbar-search-results-entries {
+        width: 100%;
+        display: grid;
+        grid-gap: 5px;
+        grid-template-columns: 100%;
+    }
+
+    .navbar-search-results-entry {
+        padding: 5px 10px;
+        font-weight: bold;
+        border-radius: 5px;
+    }
+
+    .navbar-search-results-entry:hover,
+    .navbar-search-results-entry:focus {
+        background-color: var(--bg-color);
+    }
+
+    .navbar-search-results-empty {
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
     }
 
     .navbar-login-container {
@@ -146,7 +200,6 @@
         color: var(--fg-color);
         background-color: var(--lighter-bg-color);
         border-radius: 5px;
-        box-shadow: 0 0 15px #00000060;
         overflow: hidden;
         opacity: 0;
         transform: scale(0.7);
@@ -172,12 +225,18 @@
             display: flex;
         }
 
+        .navbar-tag:hover {
+            background-color: var(--darker-fg-color) !important;
+            color: var(--darker-bg-color) !important;
+        }
+
         .navbar-search-container form {
             justify-content: center;
         }
 
         .navbar-search,
-        .navbar-search:focus {
+        .navbar-search-overall,
+        .navbar-search-container:focus-within .navbar-search {
             width: 100%;
         }
 
@@ -219,13 +278,13 @@
     }
 
     @media (prefers-color-scheme: dark) {
-        .navbar-search:focus {
+        .navbar-search-container:focus-within .navbar-search {
             border: 2px solid var(--darker-fg-color);
         }
     }
 </style>
 <input class="navbar-burger-input" type="checkbox" id="burger-checkbox" hidden>
-<div class="navbar">
+<div class="navbar elevated">
     <div class="navbar-brand-container">
         <a class="navbar-brand navbar-tag" href="/">
             {{ instance.title }}
@@ -233,7 +292,15 @@
     </div>
     <div class="navbar-search-container">
         <form method="GET" action="/search">
-            <input type="text" class="navbar-search" name="q" placeholder="Search crate...">
+            <div class="navbar-search-overall">
+                <input type="text" class="navbar-search" name="q" placeholder="Search crate..." autocomplete="off">
+                <div class="navbar-search-results elevated">
+                    <div class="navbar-search-results-spacer"></div>
+                    <div class="navbar-search-results-entries">
+                        <div class="navbar-search-results-empty">No suggestions...</div>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
     <div class="navbar-login-container">
@@ -265,3 +332,57 @@
         {{/if}}
     </div>
 </div>
+<script>
+    function debounced(delay, fn) {
+        let timerID;
+        return function (...args) {
+            if (timerID) {
+                clearTimeout(timerID);
+            }
+            timerID = setTimeout(() => {
+                fn(...args);
+                timerID = null;
+            }, delay);
+        }
+    }
+
+    // template string tag to URL-encode every interpolated expressions.
+    const urlT = (strings, ...exprs) => {
+        const [head, ...tail] = strings;
+        return tail.reduce((acc, elem, idx) => [...acc, encodeURIComponent(exprs[idx]), elem], [head]).join("");
+    };
+
+    const handler = event => {
+        const query = event.target.value;
+        if (query.length == 0) {
+            const [entries] = document.getElementsByClassName("navbar-search-results-entries");
+            entries.innerHTML = "";
+            const empty = document.createElement("div");
+            empty.classList.add("navbar-search-results-empty");
+            empty.textContent = "No suggestions...";
+            entries.appendChild(empty);
+            return;
+        }
+        const url = urlT`/api/v1/crates/suggest?q=${query}`;
+        (async () => {
+            const response = await fetch(url, { mode: "same-origin", credentials: "same-origin" });
+            const data = await response.json();
+            const [entries] = document.getElementsByClassName("navbar-search-results-entries");
+            entries.innerHTML = "";
+            for ({ name, vers } of data.suggestions) {
+                const link = document.createElement("a");
+                link.setAttribute("href", urlT`/crates/${name}`);
+                const div = document.createElement("div");
+                div.classList.add("navbar-search-results-entry");
+                div.setAttribute("tabindex", "0");
+                div.textContent = `${name} v${vers}`;
+                link.appendChild(div);
+                entries.appendChild(link);
+            }
+        })();
+    };
+
+    const debouncedHandler = debounced(250, handler);
+    const input = document.querySelector('input[type="text"].navbar-search');
+    input.addEventListener("input", debouncedHandler);
+</script>

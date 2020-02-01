@@ -163,7 +163,6 @@
             color: var(--fg-color);
             background-color: var(--lighter-bg-color);
             padding: 10px 20px;
-            box-shadow: 0 0 10px #0006;
             border-radius: 10px;
             cursor: pointer;
             transition: transform 0.15s;
@@ -204,7 +203,6 @@
             font-weight: bold;
             font-size: 20px;
             display: block;
-            box-shadow: 0 0 10px #0006;
             border-radius: 30px;
             color: var(--fg-color);
             background-color: var(--light-bg-color);
@@ -273,7 +271,7 @@
                 <div class="most-downloaded-entries">
                     {{#if most_downloaded}}
                     {{#each most_downloaded}}
-                    <a class="most-downloaded-entry" href="/crates/{{ this.name }}">
+                    <a class="most-downloaded-entry elevated" href="/crates/{{ this.name }}">
                         <b>{{ this.name }}</b>: {{ this.downloads }} downloads
                     </a>
                     {{/each}}
@@ -282,7 +280,7 @@
                     {{/if}}
                 </div>
                 <div class="card-footer">
-                    <a class="card-footer-button" href="/most-downloaded">See more...</a>
+                    <a class="card-footer-button elevated" href="/most-downloaded">See more...</a>
                 </div>
             </div>
             <div class="last-updated">
@@ -290,7 +288,7 @@
                 <div class="last-updated-entries">
                     {{#if last_updated}}
                     {{#each last_updated}}
-                    <a class="last-updated-entry" href="/crates/{{ this.name }}">
+                    <a class="last-updated-entry elevated" href="/crates/{{ this.name }}">
                         <b>{{ this.name }}</b>: {{ this.updated_at }}
                     </a>
                     {{/each}}
@@ -299,7 +297,7 @@
                     {{/if}}
                 </div>
                 <div class="card-footer">
-                    <a class="card-footer-button" href="/last-updated">See more...</a>
+                    <a class="card-footer-button elevated" href="/last-updated">See more...</a>
                 </div>
             </div>
         </div>
