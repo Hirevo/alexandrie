@@ -3,9 +3,9 @@ use std::num::NonZeroU32;
 use diesel::prelude::*;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::Request;
 
-use crate::db::models::CrateRegistration;
+use crate::db::models::Crate;
 use crate::db::schema::*;
 
 use crate::error::{AlexError, Error};
@@ -31,7 +31,7 @@ struct QueryParams {
 }
 
 /// Route to search through crates (used by `cargo search`).
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let params = req
         .query::<QueryParams>()
         .map_err(|_| AlexError::MissingQueryParams {
@@ -55,7 +55,7 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
             crates::table
                 .filter(crates::name.like(name_pattern.as_str()))
                 .limit(limit)
-                .load::<CrateRegistration>(conn)
+                .load::<Crate>(conn)
         })
         .await?;
 
