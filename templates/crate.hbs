@@ -39,20 +39,40 @@
             text-align: center;
         }
 
-        .keywords-container {
+        .keywords-container,
+        .badges-container {
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: row;
         }
 
-        .keywords {
+        .keyword {
             font-weight: bold;
             margin-left: 10px;
         }
 
-        .keywords:first-child {
+        .keyword:first-child {
             margin-left: 0;
+        }
+
+        .badges-container {
+            margin-top: 5px;
+        }
+
+        .badge {
+            margin-left: 5px;
+        }
+
+        .badge:first-child {
+            margin-left: 0;
+        }
+
+        .badge-img {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .stats-container {
@@ -225,11 +245,30 @@
             <div class="hero-subtitle">{{ crate.description }}</div>
         </div>
     </div>
+    {{#if keywords}}
     <div class="keywords-container">
         {{#each keywords}}
-        <div class="keywords">#{{ this.name }}</div>
+        <div class="keyword">#{{ this.name }}</div>
         {{/each}}
     </div>
+    {{/if}}
+    {{#if badges}}
+    <div class="badges-container">
+        {{#each badges}}
+        <div class="badge">
+            {{#if this.href}}
+            <a href="{{ this.href }}">
+            {{/if}}
+                <div class="badge-img">
+                    <img src="{{ this.src }}" alt="{{ this.alt }}" title="{{ this.alt }}">
+                </div>
+            {{#if this.href}}
+            </a>
+            {{/if}}
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
     <div class="stats-container">
         <div class="stats">
             <div class="stats-block">
@@ -263,17 +302,6 @@
                     {{/each}}
                 </div>
                 {{/if}}
-                {{#each badges}}
-                <div class="stat stat-badge">
-                    {{#if this.href}}
-                    <a href="{{ this.href }}">
-                    {{/if}}
-                        <img src="{{ this.src }}" alt="{{ this.alt }}" title="{{ this.alt }}">
-                    {{#if this.href}}    
-                    </a>
-                    {{/if}}
-                </div>
-                {{/each}}
             </div>
         </div>
     </div>
