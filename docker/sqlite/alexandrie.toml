@@ -1,29 +1,29 @@
+#
+# Example app config file which works with Docker
+#
+# Unless you modify the docker-compose.yml or Dockerfile, you shouldn't
+# need to change these values.
+#
+
 [general]
-addr = "127.0.0.1"
+addr = "0.0.0.0"
 port = 3000
 
 [frontend]
 enabled = true
 title = "Alexandrie"
 description = "An alternative crate registry for Cargo, the Rust package manager."
-# favicon = ""
-links = [
-    { name = "Github repository", href = "https://github.com/Hirevo/alexandrie" },
-    { name = "User documentation", href = "https://hirevo.github.io/alexandrie" },
-]
 
 [database]
-url = "mysql://root:root@127.0.0.1:3306/alexandrie"
-# url = "postgresql://root:root@127.0.0.1:5432/alexandrie"
-# url = "alexandrie.db"
+url = "appdata/sqlite/alexandrie.db"
 
 [index]
 type = "command-line"
-path = "crate-index"
+path = "appdata/crate-index"
 
 [storage]
 type = "disk"
-path = "crate-storage"
+path = "appdata/crate-storage"
 
 [syntect.syntaxes]
 type = "dump"

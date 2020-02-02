@@ -3,23 +3,27 @@ version: "3.7"
 services:
   web:
     # docker build context is the current directory
-    build: .
+    build:
+      context: .
+      args:
+        - DATABASE=${DATABASE}
     # tag the image after it's built
     #        app / app version : docker image version (per app version)
     image: alexandrie/0.1.0:0.1
     deploy:
       replicas: 1
     # grab these from the .env file
+    restart: always
     environment:
       CRATE_INDEX: $CRATE_INDEX
+      DATABASE: $DATABASE
       GIT_NAME: $GIT_NAME
       GIT_EMAIL: $GIT_EMAIL
     ports:
       - "3000:3000"
     volumes:
       - ${APPDATA}:/home/alex/appdata
-      - ${ALEXANDRIE_CONFIG}:/home/alex/alexandrie.toml
-      - ${DIESEL_CONFIG}:/home/alex/diesel.toml
+      - ./docker/${DATABASE}/alexandrie.toml:/home/alex/alexandrie.toml
     secrets:
       - source: git_ssh_key
         target: /home/alex/.ssh/id_rsa
