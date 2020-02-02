@@ -1,4 +1,8 @@
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
+use url::Url;
 
 use crate::config::database::DatabaseConfig;
 
@@ -55,7 +59,38 @@ where
         if let Some(max_size) = database_config.max_conns {
             builder = builder.max_size(max_size)
         }
-        Self::from_pool_builder(&database_config.url, builder)
+
+        #[cfg(feature = "sqlite")]
+        let database_url = database_config.url.as_str();
+        #[cfg(any(feature = "mysql", feature = "postgres"))]
+        let database_url = {
+            let mut url = Url::parse(database_config.url.as_str()).expect("invalid connection URL");
+            if let Some(user) = database_config.user.as_ref() {
+                if url.username().is_empty() {
+                    url.set_username(user.as_str())
+                        .expect("could not append username to the connection URL");
+                } else {
+                    panic!("conflicting usernames in database configuration");
+                }
+            }
+            if let Some(file) = database_config.password_file.as_ref() {
+                if url.password().is_none() {
+                    let file = File::open(file).expect("could not open the database password file");
+                    let password = BufReader::new(file)
+                        .lines()
+                        .next()
+                        .expect("could not read password from the database password file")
+                        .expect("could not read password from the database password file");
+                    url.set_password(Some(password.trim()))
+                        .expect("could not append password to the connection URL");
+                } else {
+                    panic!("conflicting passwords in database configuration");
+                }
+            }
+            url.to_string()
+        };
+
+        Self::from_pool_builder(&database_url, builder)
     }
 
     /// Creates a `Repo<T>` with a custom connection pool builder.
