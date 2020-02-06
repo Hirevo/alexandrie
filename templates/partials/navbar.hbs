@@ -376,10 +376,9 @@
             entries.innerHTML = "";
             for ({ name, vers } of data.suggestions) {
                 const link = document.createElement("a");
+                link.classList.add("navbar-search-results-entry");
                 link.setAttribute("href", urlT`/crates/${name}`);
                 const div = document.createElement("div");
-                div.classList.add("navbar-search-results-entry");
-                div.setAttribute("tabindex", "0");
                 div.textContent = `${name} `;
                 const span = document.createElement("span");
                 span.classList.add("navbar-search-results-entry-version");

@@ -275,10 +275,10 @@
     </div>
     <div class="search-results-container">
         {{> partials/pagination pagination}}
-        <div class="search-results elevated">
+        <div class="search-results">
             {{#if results}}
             {{#each results}}
-            <a class="search-result" href="/crates/{{ this.name }}">
+            <a class="search-result elevated" href="/crates/{{ this.name }}">
                 <div class="search-result-infos">
                     <div class="search-result-title">
                         {{ this.name }} #{{ this.version }}
