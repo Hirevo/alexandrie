@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use json::json;
 use tide::{Request, Response};
 
-use crate::db::models::{CrateAuthor, CrateCategory, CrateKeyword, CrateRegistration, Keyword};
+use crate::db::models::{Crate, CrateAuthor, CrateCategory, CrateKeyword, Keyword};
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
@@ -26,7 +26,7 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
         //? Get this crate's data.
         let crate_desc = crates::table
             .filter(crates::name.eq(&name))
-            .first::<CrateRegistration>(conn)
+            .first::<Crate>(conn)
             .optional()?;
         let crate_desc = match crate_desc {
             Some(crate_desc) => crate_desc,

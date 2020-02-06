@@ -16,7 +16,7 @@ use crate::db::schema::*;
 #[table_name = "crates"]
 #[primary_key(id)]
 /// Represents a complete crate entry, as stored in the database.
-pub struct CrateRegistration {
+pub struct Crate {
     /// The crate's ID.
     pub id: i64,
     /// The crate's name.
@@ -35,43 +35,19 @@ pub struct CrateRegistration {
     pub repository: Option<String>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    Queryable,
-    Insertable,
-    Identifiable,
-    AsChangeset,
-)]
-#[table_name = "crates"]
-#[primary_key(id)]
-/// Represents a partial crate entry from the database,
-/// suitable to edit an entry while letting the database maintain the updated date of the row.
-pub struct ModifyCrateRegistration<'a> {
-    /// The crate's ID.
-    pub id: i64,
-    /// The crate's name.
-    pub name: &'a str,
-    /// The crate's description.
-    pub description: Option<&'a str>,
-    /// The URL to the crate's documentation.
-    pub documentation: Option<&'a str>,
-    /// The URL to the crate's repository.
-    pub repository: Option<&'a str>,
-}
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "crates"]
 /// Represents a partial crate entry from the database,
-/// suitable to create an entry while letting the database assign an ID and set the creation date of the row.
-pub struct NewCrateRegistration<'a> {
+/// suitable to create an entry while letting the database assign it an ID.
+pub struct NewCrate<'a> {
     /// The crate's name.
     pub name: &'a str,
     /// The crate's description.
     pub description: Option<&'a str>,
+    /// The crate's creation date.
+    pub created_at: &'a str,
+    /// The crate's last updated date.
+    pub updated_at: &'a str,
     /// The URL to the crate's documentation.
     pub documentation: Option<&'a str>,
     /// The URL to the crate's repository.
@@ -130,7 +106,7 @@ pub struct NewAuthor<'a> {
 )]
 #[table_name = "crate_authors"]
 #[belongs_to(Author)]
-#[belongs_to(CrateRegistration, foreign_key = "crate_id")]
+#[belongs_to(Crate, foreign_key = "crate_id")]
 #[primary_key(id)]
 /// Represents a crate-to-author relationship in the database.
 pub struct CrateAuthor {
@@ -229,7 +205,7 @@ pub struct Keyword {
 )]
 #[table_name = "crate_keywords"]
 #[belongs_to(Keyword)]
-#[belongs_to(CrateRegistration, foreign_key = "crate_id")]
+#[belongs_to(Crate, foreign_key = "crate_id")]
 #[primary_key(id)]
 /// Represents a crate-to-keyword relationship in the database.
 pub struct CrateKeyword {
@@ -292,7 +268,7 @@ pub struct Category {
 )]
 #[table_name = "crate_categories"]
 #[belongs_to(Category)]
-#[belongs_to(CrateRegistration, foreign_key = "crate_id")]
+#[belongs_to(Crate, foreign_key = "crate_id")]
 #[primary_key(id)]
 /// Represents a crate-to-category relationship in the database.
 pub struct CrateCategory {
