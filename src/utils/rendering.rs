@@ -108,5 +108,5 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
     let mut html = String::new();
     cmark::html::push_html(&mut html, events.into_iter());
 
-    html
+    ammonia::clean(html.as_str())
 }
