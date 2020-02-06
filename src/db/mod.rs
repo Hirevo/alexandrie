@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
 use url::Url;
 
@@ -77,7 +74,7 @@ where
                 if url.password().is_none() {
                     let password = std::fs::read_to_string(file)
                         .expect("could not read from the database password file");
-                    url.set_password(Some(password))
+                    url.set_password(Some(password.as_str()))
                         .expect("could not append password to the connection URL");
                 } else {
                     panic!("conflicting passwords in database configuration");
