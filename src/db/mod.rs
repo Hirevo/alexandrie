@@ -75,13 +75,9 @@ where
             }
             if let Some(file) = database_config.password_file.as_ref() {
                 if url.password().is_none() {
-                    let file = File::open(file).expect("could not open the database password file");
-                    let password = BufReader::new(file)
-                        .lines()
-                        .next()
-                        .expect("could not read password from the database password file")
-                        .expect("could not read password from the database password file");
-                    url.set_password(Some(password.trim()))
+                    let password = std::fs::read_to_string(file)
+                        .expect("could not read from the database password file");
+                    url.set_password(Some(password))
                         .expect("could not append password to the connection URL");
                 } else {
                     panic!("conflicting passwords in database configuration");
