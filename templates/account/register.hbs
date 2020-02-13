@@ -85,7 +85,15 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            padding: 10px 0;
+            padding: 5px 0;
+        }
+
+        .register-field:first-child {
+            padding-top: 0;
+        }
+
+        .register-checkbox-field {
+            padding: 0;
         }
 
         .register-label {
@@ -93,23 +101,28 @@
             padding-bottom: 5px;
         }
 
+        .register-checkbox-label {
+            padding: 5px 0;
+        }
+
         .register-input {
+            outline: none;
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            border: none;
-            border-radius: 0;
-            border-bottom: 2px solid var(--darker-bg-color);
+            padding: 7px 10px;
+            color: var(--fg-color);
             background: transparent;
-            font: inherit;
-            color: inherit;
-            background-color: inherit;
-            padding: 5px 0;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: "Fira Sans", sans-serif;
+            border-radius: 5px;
+            border: solid 2px var(--darker-bg-color);
             transition: border-color 0.15s;
         }
 
         .register-input:focus {
-            border-bottom: 2px solid var(--fg-color);
+            border-color: var(--fg-color);
         }
 
         .register-input:invalid {
@@ -129,6 +142,7 @@
             grid-template-columns: 1fr;
             grid-gap: 10px;
             width: 100%;
+            padding-top: 5px;
         }
 
         .register-button {
@@ -168,21 +182,21 @@
             background-color: var(--danger-bg-color);
             color: var(--danger-fg-color);
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin: 5px 0;
             font-weight: bold;
         }
 
         @media (prefers-color-scheme: dark) {
             .register-input {
-                border-bottom: 2px solid var(--darker-fg-color);
+                border-color: var(--darker-fg-color);
             }
 
             .register-button {
-                border: 2px solid var(--darker-fg-color);
+                border-color: var(--darker-fg-color);
             }
 
             .register-button:disabled {
-                border: 2px solid var(--darker-fg-color);
+                border-color: var(--darker-fg-color);
                 background-color: var(--dark-fg-color);
                 color: var(--bg-color);
             }
@@ -208,22 +222,22 @@
         <form class="register-content" method="POST" action="/account/register">
             <div class="register-field">
                 <label class="register-label" for="email">Email:</label>
-                <input class="register-input" type="email" name="email" id="email" placeholder="Email..." autocomplete="email" required>
+                <input class="register-input" type="email" name="email" id="email" placeholder="Enter email..." autocomplete="email" required>
             </div>
             <div class="register-field">
                 <label class="register-label" for="name">Full name:</label>
-                <input class="register-input" type="text" name="name" id="name" placeholder="Full name..." autocomplete="name" required>
+                <input class="register-input" type="text" name="name" id="name" placeholder="Enter full name..." autocomplete="name" required>
             </div>
             <div class="register-field">
                 <label class="register-label" for="password">Password:</label>
-                <input class="register-input" type="password" name="password" id="password" placeholder="Password..." autocomplete="new-password" required>
+                <input class="register-input" type="password" name="password" id="password" placeholder="Enter password..." autocomplete="new-password" required>
             </div>
             <div class="register-field">
                 <label class="register-label" for="confirm-password">Confirm password:</label>
                 <input class="register-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." required>
             </div>
-            <div class="register-field">
-                <label class="register-label">
+            <div class="register-field register-checkbox-field">
+                <label class="register-label register-checkbox-label">
                     <input class="register-checkbox" type="checkbox" name="remember">
                     Remember me for 30 days
                 </label>

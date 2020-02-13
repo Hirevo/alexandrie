@@ -247,6 +247,14 @@
                 display: none;
             }
         }
+
+        @media (prefers-color-scheme: dark) {
+            .pagination-prev.pagination-disabled,
+            .pagination-next.pagination-disabled {
+                color: var(--fg-color);
+                background-color: var(--lighter-bg-color);
+            }
+        }
     </style>
 </head>
 

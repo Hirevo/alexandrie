@@ -94,7 +94,7 @@
             width: 100%;
             height: 100%;
             display: grid;
-            grid-template-rows: repeat(3, min-content);
+            grid-template-rows: min-content 1fr min-content;
             grid-template-columns: 1fr;
             padding: 10px 20px;
         }
@@ -130,7 +130,12 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            padding: 10px 0;
+            padding: 5px 0;
+        }
+
+        .manage-passwd-field:first-child,
+        .manage-tokens-field:first-child {
+            padding-top: 0;
         }
 
         .manage-passwd-label,
@@ -141,23 +146,24 @@
 
         .manage-passwd-input,
         .manage-tokens-input {
+            outline: none;
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            border: none;
-            border-radius: 0;
-            border-bottom: 2px solid var(--darker-bg-color);
+            padding: 7px 10px;
+            color: var(--fg-color);
             background: transparent;
-            font: inherit;
-            color: inherit;
-            background-color: inherit;
-            padding: 5px 0;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: "Fira Sans", sans-serif;
+            border-radius: 5px;
+            border: solid 2px var(--darker-bg-color);
             transition: border-color 0.15s;
         }
 
         .manage-passwd-input:focus,
         .manage-tokens-input:focus {
-            border-bottom: 2px solid var(--fg-color);
+            border-color: var(--fg-color);
         }
 
         .manage-passwd-input:invalid,
@@ -186,6 +192,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-top: 5px;
         }
 
         .manage-passwd-button:hover,
@@ -208,7 +215,7 @@
             background-color: var(--success-bg-color);
             color: var(--success-fg-color);
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin: 5px 0;
             font-weight: bold;
         }
 
@@ -217,7 +224,7 @@
             background-color: var(--danger-bg-color);
             color: var(--danger-fg-color);
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin: 5px 0;
             font-weight: bold;
         }
 
@@ -226,24 +233,19 @@
             counter-reset: rank;
             display: flex;
             flex-direction: column;
-            padding: 10px;
-        }
-
-        .manage-tokens-entry-container {
-            margin-top: 10px;
-        }
-
-        .manage-tokens-entry-container:first-child {
-            margin-top: 0;
+            padding: 10px 0;
         }
 
         .manage-tokens-entry {
-            width: 100%;
             font-weight: bold;
             display: grid;
             grid-template-columns: min-content min-content;
-            grid-template-rows: 1fr;
-            grid-gap: 10px;
+            grid-template-rows: min-content;
+            margin-top: 5px;
+        }
+
+        .manage-tokens-entry:first-child {
+            margin-top: 0;
         }
 
         .manage-tokens-entry-name {
@@ -253,11 +255,14 @@
             align-items: center;
             justify-content: flex-start;
             white-space: nowrap;
+            padding: 5px 10px;
+            border-radius: 5px 0 0 5px;
+            border: 2px solid var(--darker-bg-color);
+            border-right: none;
+            background-color: var(--dark-bg-color);
         }
 
         .manage-tokens-entry-revoke {
-            border: 2px solid var(--darker-bg-color);
-            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
             text-align: center;
@@ -266,6 +271,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 0 5px 5px 0;
+            border: 2px solid var(--darker-bg-color);
         }
 
         .manage-tokens-entry-revoke:hover,
@@ -291,7 +298,7 @@
 
         .manage-tokens-entry-revoke::before {
             font-family: alexicons;
-            content: "\e901";
+            /* content: "\e901"; */
         }
 
         .manage-tokens-entry-revoke-dis:hover {
@@ -319,7 +326,7 @@
             background-color: var(--success-bg-color);
             color: var(--success-fg-color);
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin: 5px 0;
             font-weight: bold;
         }
 
@@ -328,7 +335,7 @@
             background-color: var(--danger-bg-color);
             color: var(--danger-fg-color);
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin: 5px 0;
             font-weight: bold;
         }
 
@@ -357,20 +364,25 @@
         @media (prefers-color-scheme: dark) {
             .manage-passwd-input,
             .manage-tokens-input {
-                border-bottom: solid 2px var(--darker-fg-color);
+                border-color: var(--darker-fg-color);
+            }
+
+            .manage-tokens-entry-name {
+                background-color: var(--lighter-bg-color);
             }
 
             .manage-passwd-button,
             .manage-tokens-button,
+            .manage-tokens-entry-name,
             .manage-tokens-entry-revoke {
-                border: solid 2px var(--darker-fg-color);
+                border-color: var(--darker-fg-color);
             }
 
 
             .manage-passwd-button:disabled,
             .manage-tokens-button:disabled,
             .manage-tokens-entry-revoke:disabled {
-                border: 2px solid var(--darker-fg-color);
+                border-color: var(--darker-fg-color);
                 background-color: var(--dark-fg-color);
                 color: var(--bg-color);
             }
@@ -405,15 +417,15 @@
                     <div class="manage-passwd-fields">
                         <div class="manage-passwd-field">
                             <label class="manage-passwd-label" for="current-password">Current password:</label>
-                            <input class="manage-passwd-input" type="password" name="password" id="current-password" placeholder="Current password..." autocomplete="current-password" required>
+                            <input class="manage-passwd-input" type="password" name="password" id="current-password" placeholder="Enter current password..." autocomplete="current-password" required>
                         </div>
                         <div class="manage-passwd-field">
                             <label class="manage-passwd-label" for="new-password">New password:</label>
-                            <input class="manage-passwd-input" type="password" name="new-password" id="new-password" placeholder="New password..." autocomplete="new-password" required>
+                            <input class="manage-passwd-input" type="password" name="new-password" id="new-password" placeholder="Enter new password..." autocomplete="new-password" required>
                         </div>
                         <div class="manage-passwd-field">
                             <label class="manage-passwd-label" for="confirm-password">Confirm new password:</label>
-                            <input class="manage-passwd-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." autocomplete="off" required>
+                            <input class="manage-passwd-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm new password..." autocomplete="off" required>
                         </div>
                         {{#if passwd_change_success_msg}}
                         <div class="manage-passwd-field manage-passwd-success-msg">
@@ -426,28 +438,28 @@
                         </div>
                         {{/if}}
                     </div>
-                    <input type="submit" value="Change password" class="manage-passwd-button">
+                    <input class="manage-passwd-button" type="submit" value="Change password">
                 </form>
                 <div class="manage-tokens">
                     <div class="manage-tokens-title">Tokens</div>
+                    <div>
                     <div class="manage-tokens-entries">
                         {{#if tokens}}
                         {{#each tokens}}
-                        <div class="manage-tokens-entry-container">
-                            <div class="manage-tokens-entry">
-                                <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}/revoke"></a>
-                                <div class="manage-tokens-entry-name">{{ this.name }}</div>
-                            </div>
+                        <div class="manage-tokens-entry">
+                            <div class="manage-tokens-entry-name">{{ this.name }}</div>
+                            <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}/revoke">Revoke</a>
                         </div>
                         {{/each}}
                         {{else}}
                         <div class="manage-tokens-empty">No tokens...</div>
                         {{/if}}
                     </div>
+                    </div>
                     <form class="manage-tokens-create" method="POST" action="/account/manage/tokens">
                         <div class="manage-tokens-field">
                             <label class="manage-tokens-label" for="token-name">New token name:</label>
-                            <input class="manage-tokens-input" type="text" name="token-name" id="token-name" placeholder="New token name..." required>
+                            <input class="manage-tokens-input" type="text" name="token-name" id="token-name" placeholder="Enter token name..." required>
                         </div>
                         {{#if token_generation_success_msg}}
                         <div class="manage-tokens-field manage-tokens-success-msg">

@@ -28,10 +28,13 @@
         font-weight: bold;
         padding: 0 10px;
         white-space: nowrap;
+        outline: none;
     }
 
-    .navbar-tag:hover {
-        background-color: var(--dark-bg-color) !important;
+    .navbar-tag:hover,
+    .navbar-tag:focus {
+        color: var(--bg-color);
+        background-color: var(--fg-color);
     }
 
     .navbar-brand-container {
@@ -81,6 +84,7 @@
         height: 100%;
         transition: width 0.15s;
         font-family: "Fira Sans", sans-serif;
+        outline: none;
     }
 
     .navbar-search:focus {
