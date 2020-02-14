@@ -126,11 +126,14 @@
             width: 100%;
         }
 
-        .readme pre {
+        .readme pre, .readme code {
             font-family: 'Fira Code', monospace;
-            font-weight: bold;
+            font-weight: 500;
             font-variant: contextual;
             font-size: 14px;
+        }
+
+        .readme pre {
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px #0006;
@@ -140,9 +143,17 @@
         .readme code {
             color: var(--bg-color);
             background-color: var(--fg-color);
-            font-weight: bold;
-            padding: 0.2em 0.5em;
-            border-radius: 5px;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+
+        .readme h1 code,
+        .readme h2 code,
+        .readme h3 code,
+        .readme h4 code,
+        .readme h5 code,
+        .readme h6 code {
+            font-size: inherit;
         }
 
         .readme a {
