@@ -13,9 +13,9 @@ links = [
 ]
 
 [database]
-url = "mysql://root:root@127.0.0.1:3306/alexandrie"
+# url = "mysql://root:root@127.0.0.1:3306/alexandrie"
 # url = "postgresql://root:root@127.0.0.1:5432/alexandrie"
-# url = "alexandrie.db"
+url = "alexandrie.db"
 
 [index]
 type = "command-line"

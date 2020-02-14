@@ -9,7 +9,7 @@ services:
         - DATABASE=${DATABASE}
     # tag the image after it's built
     #        app / app version : docker image version (per app version)
-    image: alexandrie/0.1.0:0.1
+    image: alexandrie-0.1.0-${DATABASE}:0.1
     deploy:
       replicas: 1
     # grab these from the .env file

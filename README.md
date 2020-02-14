@@ -131,9 +131,9 @@ Then, if you want to use this index with Cargo, you can follow these steps:
 `docker-compose`
 -------
 
-You can host Alexandrie in a Docker container on your computer or a host machine of your choosing.
+You can host Alexandrie in a Docker container on your computer or a host machine of your choosing. You will need both [docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/) installed.
 
-To get started, you'll need to edit the `example.env` file. You should:
+To get started, you'll need to copy the `example.env` file and save it as `.env` (filename is important). You should:
 
 * Set `APPDATA` to the path of a new directory where the container will store the crate index, crate files, & database file.
 * Set `CRATE_INDEX` to the SSH path of an existing repo with a valid index `config.json` file.
@@ -141,6 +141,24 @@ To get started, you'll need to edit the `example.env` file. You should:
 * Set `GIT_SSH_KEY` to a new or existing passwordless SSH key. The `.pub` key associated with this key should be added to github/gitlab/etc. to grant access to push to the crate index.
 
 These items will be mounted into the Docker container, and need to be accessible by a user with UID and GID `1000`. If Docker appears to complain that any of these are inaccessible, check your paths and your file/directory permissions.
+
+
+By default, Alexandrie will use SQLite for its database. If you want to use either MySQL or PostgreSQL instead, you'll need to create a `rootpass.txt` in `docker/<database>/`. The entire contents of this file will be copied and used as the password for the root user of the database; don't add an ending newline unless your password actually contains one!
+
+
+To run Alexandrie, call the `run_docker.sh` script, with arguments depending on the action and database you want. For example, to start Alexandrie in the background with the default SQLite database, do:
+
+```bash
+./run_docker.sh up
+```
+
+To stop Alexandrie, do:
+
+```bash
+./run_docker.sh down
+```
+
+The script assumes a Bash environment, and was only tested on Ubuntu 19.10. For more details and examples, see the docs.
 
 
 License

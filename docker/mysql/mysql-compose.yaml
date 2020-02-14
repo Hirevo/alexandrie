@@ -16,14 +16,15 @@ services:
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
     restart: always
-    # MYSQL_DATABASE creates the database on the first run of the container
     environment:
-      MYSQL_DATABASE: alexandrie
       MYSQL_ROOT_PASSWORD_FILE: /.rootpass
     # the database port is exposed to the web service (the link in the web section handles this),
     # but is not available on the host
     expose:
       - "3306"
+    # link the database directory
+    volumes:
+      - ${APPDATA}/mysql:/var/lib/mysql
     secrets:
       - source: mysql_root_pass
         target: /.rootpass

@@ -7,6 +7,10 @@ function print_help() {
     echo "options. Make sure you've followed the README to set up Docker config before "
     echo "running this"
     echo ""
+    echo "Commands:"
+    echo "    up           : Start Alexandrie in docker"
+    echo "    down         : Stop Alexandrie"
+    echo ""
     echo "(* == selected by default)"
     echo "Flags:"
     echo "    --build      : Rebuild the docker images. Usually used if .env variables,"
@@ -15,10 +19,10 @@ function print_help() {
     echo "    --cleanbuild : Does a docker-compose --build --nocache. Used if something"
     echo "                   didn't build right the first time, perhaps due to network"
     echo "                   issues"
-    echo "    -d           : Start docker in daemon (background) mode"
+    echo " *  -d           : Start docker in daemon (background) mode"
     echo "    -f           : Start docker in foreground mode (Ctrl+C to exit)"
     echo "Database Options:"
-    echo "    --sqlite *   : Start Alexandrie with the sqlite configuration files"
+    echo " *  --sqlite     : Start Alexandrie with the sqlite configuration files"
     echo "    --mysql      : Start Alexandrie with the mysql configuration files"
     echo "    --postgresql : Start Alexandrie with the postgresql configuration files"
 }
@@ -27,6 +31,7 @@ DATABASE=sqlite
 DO_BUILD=" "
 DO_CLEAN=" "
 DAEMON="-d"
+CMD=" "
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -35,8 +40,12 @@ while [ "$#" -gt 0 ]; do
         "--postgresql") DATABASE=postgresql; shift;;
         "--build") DO_BUILD="--build"; shift;;
         "--cleanbuild") DO_CLEAN="true"; shift;;
+        "-d") DAEMON="-d"; shift;;
+        "-f") DAEMON=" "; shift;;
+        "up") CMD="up"; shift;;
+        "down") CMD="down"; shift;;
         "--help"|"-h"|"help") print_help; exit 0;;
-        *) print_help; exit 1;;
+        *) echo "Invalid option '$1'"; print_help; exit 1;;
     esac
 done
 
@@ -52,11 +61,19 @@ else
     exit 1
 fi
 
-# run docker-compose, building if specified
-if [ "$DO_CLEAN" = "true" ]; then
-    DATABASE=$DATABASE docker-compose ${FILES} build --no-cache
-    DATABASE=$DATABASE docker-compose ${FILES} up
+# run docker-compose
+if [ "$CMD" = "up" ]; then
+    if [ "$DO_CLEAN" = "true" ]; then
+        DATABASE=$DATABASE docker-compose ${FILES} build --no-cache
+        DATABASE=$DATABASE docker-compose ${FILES} up ${DAEMON}
+    else
+        DATABASE=$DATABASE docker-compose ${FILES} up ${DO_BUILD}
+    fi
+elif [ "$CMD" = "down" ]; then
+    DATABASE=$DATABASE docker-compose ${FILES} down
 else
-    DATABASE=$DATABASE docker-compose ${FILES} up ${DO_BUILD}
+    echo "Please specify either 'up' or 'down'"
+    print_help
+    exit 1
 fi
 

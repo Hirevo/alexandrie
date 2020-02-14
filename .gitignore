@@ -8,4 +8,4 @@
 alexandrie.db
 crate-index.txt
 .env
-docker/mysql/rootpass.txt
+docker/*/rootpass.txt
