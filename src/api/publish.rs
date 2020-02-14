@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use async_std::io::prelude::*;
 
 use byteorder::{LittleEndian, ReadBytesExt};
+use chrono::Utc;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
@@ -14,9 +15,7 @@ use serde::{Deserialize, Serialize};
 use tar::Archive;
 use tide::{Request, Response};
 
-use crate::db::models::{
-    CrateRegistration, NewCrateAuthor, NewCrateCategory, NewCrateKeyword, NewCrateRegistration,
-};
+use crate::db::models::{Crate, NewCrate, NewCrateAuthor, NewCrateCategory, NewCrateKeyword};
 use crate::db::schema::*;
 use crate::db::Connection;
 use crate::db::DATETIME_FORMAT;
@@ -203,11 +202,14 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
         };
 
         //? Attempt to insert the new crate.
-        let new_crate = NewCrateRegistration {
+        let now = Utc::now().naive_utc().format(DATETIME_FORMAT).to_string();
+        let new_crate = NewCrate {
             name: crate_desc.name.as_str(),
             description: metadata.description.as_ref().map(|s| s.as_str()),
             documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
             repository: metadata.repository.as_ref().map(|s| s.as_str()),
+            created_at: now.as_str(),
+            updated_at: now.as_str(),
         };
 
         //? Does the crate already exists?
@@ -221,11 +223,12 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
             diesel::insert_into(crates::table)
                 .values(new_crate)
                 .execute(conn)?;
+
             "Adding"
         };
 
         //? Fetch the newly inserted (or already existant) crate.
-        let krate: CrateRegistration = crates::table
+        let krate: Crate = crates::table
             .filter(crates::name.eq(crate_desc.name.as_str()))
             .first(conn)?;
 
@@ -268,11 +271,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
                     crates::description.eq(description),
                     crates::documentation.eq(documentation),
                     crates::repository.eq(repository),
-                    crates::updated_at.eq(chrono::Utc::now()
-                        .naive_utc()
-                        .format(DATETIME_FORMAT)
-                        .to_string()
-                        .as_str()),
+                    crates::updated_at.eq(now.as_str()),
                 ))
                 .execute(conn)?;
         } else {
@@ -337,7 +336,8 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
         state.index.add_record(crate_desc)?;
         state.index.commit_and_push(commit_msg.as_str())?;
 
-        Ok(utils::response::json(&PublishResponse {}))
+        let body = PublishResponse {};
+        Ok(utils::response::json(&body))
     });
 
     transaction.await

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Represents a crate version record.
 ///
 /// This is what's stored in the crate index.  
-/// Note that this structs represents only a specific version of a crate.
+/// Note that this struct represents only a specific version of a crate.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CrateVersion {
     /// The name of the crate.

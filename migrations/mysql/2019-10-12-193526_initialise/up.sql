@@ -8,8 +8,8 @@ create table crates (
     id bigint not null auto_increment unique primary key,
     name varchar(255) not null unique,
     description varchar(4096),
-    created_at varchar(25) not null default concat(utc_date(), " ", utc_time()),
-    updated_at varchar(25) not null default concat(utc_date(), " ", utc_time()),
+    created_at varchar(25) not null,
+    updated_at varchar(25) not null,
     downloads bigint not null default 0,
     documentation varchar(1024),
     repository varchar(1024)

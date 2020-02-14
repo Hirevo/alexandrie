@@ -6,7 +6,7 @@ use json::json;
 use serde::{Deserialize, Serialize};
 use tide::{Request, Response};
 
-use crate::db::models::CrateRegistration;
+use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
@@ -42,7 +42,7 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
             .first::<i64>(conn)?;
 
         //? Get the search results for the given page number.
-        let results: Vec<CrateRegistration> = crates::table
+        let results: Vec<Crate> = crates::table
             .filter(crates::name.like(q.as_str()))
             .limit(15)
             .offset(15 * i64::from(page_number - 1))
@@ -58,7 +58,7 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
                     .load::<String>(conn)?;
                 Ok((result, keywords))
             })
-            .collect::<Result<Vec<(CrateRegistration, Vec<String>)>, Error>>()?;
+            .collect::<Result<Vec<(Crate, Vec<String>)>, Error>>()?;
 
         //? Make page number starts counting from 1 (instead of 0).
         let page_count = (total_results / 15
