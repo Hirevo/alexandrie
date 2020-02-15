@@ -6,7 +6,7 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use tide::{Request, Response};
 
-use crate::db::models::CrateRegistration;
+use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
 use crate::error::{AlexError, Error};
@@ -71,20 +71,20 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
                     .filter(crates::name.like(name_pattern.as_str()))
                     .limit(i64::from(per_page.get()))
                     .offset(i64::from((page.get() - 1) * per_page.get()))
-                    .load::<CrateRegistration>(conn)?
+                    .load::<Crate>(conn)?
             }
             (Some(per_page), None) => {
                 //? Get the first page of search results with the given entries per page.
                 crates::table
                     .filter(crates::name.like(name_pattern.as_str()))
                     .limit(i64::from(per_page.get()))
-                    .load::<CrateRegistration>(conn)?
+                    .load::<Crate>(conn)?
             }
             _ => {
                 //? Get ALL the crates (might be too much, tbh).
                 crates::table
                     .filter(crates::name.like(name_pattern.as_str()))
-                    .load::<CrateRegistration>(conn)?
+                    .load::<Crate>(conn)?
             }
         };
 
