@@ -19,7 +19,7 @@ RUN \
     if [ "${DATABASE}" = "sqlite" ]; then \
         apt install -y sqlite3 libsqlite3-dev; \
         mkdir -p /usr/local/cargo/bin/; \
-        touch /usr/local/cargo/bin; \
+        touch /usr/local/cargo/bin/diesel; \
     fi && \
     if [ "${DATABASE}" = "postgresql" ]; then \
         apt install -y  libpq-dev; \

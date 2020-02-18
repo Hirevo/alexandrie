@@ -67,7 +67,7 @@ if [ "$CMD" = "up" ]; then
         DATABASE=$DATABASE docker-compose ${FILES} build --no-cache
         DATABASE=$DATABASE docker-compose ${FILES} up ${DAEMON}
     else
-        DATABASE=$DATABASE docker-compose ${FILES} up ${DO_BUILD}
+        DATABASE=$DATABASE docker-compose ${FILES} up ${DO_BUILD} ${DAEMON}
     fi
 elif [ "$CMD" = "down" ]; then
     DATABASE=$DATABASE docker-compose ${FILES} down
