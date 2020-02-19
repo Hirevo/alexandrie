@@ -1,0 +1,35 @@
+#
+# Example app config file which works with Docker
+#
+# Unless you modify the docker-compose.yml or Dockerfile, you shouldn't
+# need to change these values.
+#
+
+[general]
+addr = "0.0.0.0"
+port = 3000
+
+[frontend]
+enabled = true
+title = "Alexandrie"
+description = "An alternative crate registry for Cargo, the Rust package manager."
+
+[database]
+url = "appdata/sqlite/alexandrie.db"
+
+[index]
+type = "command-line"
+path = "appdata/crate-index"
+
+[storage]
+type = "disk"
+path = "appdata/crate-storage"
+
+[syntect.syntaxes]
+type = "dump"
+path = "syntect-dumps/syntaxes.dump"
+
+[syntect.themes]
+type = "dump"
+path = "syntect-dumps/themes.dump"
+theme_name = "frontier-contrast"

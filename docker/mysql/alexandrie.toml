@@ -1,0 +1,37 @@
+#
+# Example app config file which works with Docker
+#
+# Unless you modify the docker-compose.yml or Dockerfile, you shouldn't
+# need to change these values.
+#
+
+[general]
+addr = "0.0.0.0"
+port = 3000
+
+[frontend]
+enabled = true
+title = "Alexandrie"
+description = "An alternative crate registry for Cargo, the Rust package manager."
+
+[database]
+# note that 'mysqldb' is the name of the container in the mysql-compose file, and
+# is automatically populated in the hosts file by docker
+url = "mysql://root:root@mysqldb:3306/alexandrie"
+
+[index]
+type = "command-line"
+path = "appdata/crate-index"
+
+[storage]
+type = "disk"
+path = "appdata/crate-storage"
+
+[syntect.syntaxes]
+type = "dump"
+path = "syntect-dumps/syntaxes.dump"
+
+[syntect.themes]
+type = "dump"
+path = "syntect-dumps/themes.dump"
+theme_name = "frontier-contrast"

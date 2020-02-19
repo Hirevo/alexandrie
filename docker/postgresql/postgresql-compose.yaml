@@ -1,0 +1,38 @@
+#
+# This is an expansion upon the docker-compose.yaml file in the root of this repo
+# It applies additional configuration to use a postgres database
+# 
+# Apply it like `docker-compose -f docker-compose.yaml -f docker/postgresql/postgres-compose.yaml up`
+# (Note file options should be applied before the `up` command)
+#
+version: "3.7"
+services:
+  # add to the existing `web` definition to link the database container
+  web:
+    links:
+      - postgresqldb
+  # add database container
+  postgresqldb:
+    image: postgres
+    restart: always
+    # MYSQL_DATABASE creates the database on the first run of the container
+    environment:
+      POSTGRES_PASSWORD_FILE: /.rootpass
+      POSTGRES_USER: root
+    # the database port is exposed to the web service (the link in the web section handles this),
+    # but is not available on the host
+    expose:
+      - "5432"
+    # link the database directory
+    volumes:
+      - ${APPDATA}/postgresql:/var/lib/postgresql/data
+    secrets:
+      - source: postgres_root_pass
+        target: /.rootpass
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+secrets:
+  postgres_root_pass:
+    # this path is relative to the repo's root docker-compose file
+    file: ./docker/postgresql/rootpass.txt
