@@ -303,6 +303,46 @@ pub struct NewCrateCategory {
     Associations,
     AsChangeset,
 )]
+#[table_name = "crate_badges"]
+#[belongs_to(Crate, foreign_key = "crate_id")]
+#[primary_key(id)]
+/// Represents a crate's badge in the database.
+pub struct Badge {
+    /// The badge's ID.
+    pub id: i64,
+    /// The crate's ID.
+    pub crate_id: i64,
+    /// The badge's type.
+    pub badge_type: String,
+    /// The badge's parameters.
+    pub params: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "crate_badges"]
+/// Represents a crate's badge in the database.
+/// suitable to create an entry while letting the database assign it an ID.
+pub struct NewBadge {
+    /// The crate's ID.
+    pub crate_id: i64,
+    /// The badge's type.
+    pub badge_type: String,
+    /// The badge's parameters.
+    pub params: String,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    Identifiable,
+    Associations,
+    AsChangeset,
+)]
 #[table_name = "sessions"]
 #[belongs_to(Author)]
 #[primary_key(id)]

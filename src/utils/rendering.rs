@@ -37,7 +37,7 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
             Event::Start(Tag::CodeBlock(info)) => {
                 let theme = &config.themes.themes[&config.theme_name];
 
-                highlighter = Some(match info.split(' ').next() {
+                highlighter = Some(match info.trim().split(',').next() {
                     Some(lang) => {
                         let syntax = config
                             .syntaxes
