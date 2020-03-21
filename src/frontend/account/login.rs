@@ -126,7 +126,7 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
         let session_token = utils::auth::generate_token();
 
         //? Get the maximum duration of the session.
-        let (max_age, max_age_cookie) = match form.remember.as_ref().map(|x| x.as_str()) {
+        let (max_age, max_age_cookie) = match form.remember.as_deref() {
             Some("on") => (chrono::Duration::days(30), time::Duration::days(30)),
             _ => (chrono::Duration::days(1), time::Duration::days(1)),
         };

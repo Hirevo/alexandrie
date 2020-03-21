@@ -237,9 +237,9 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
         let now = Utc::now().naive_utc().format(DATETIME_FORMAT).to_string();
         let new_crate = NewCrate {
             name: crate_desc.name.as_str(),
-            description: metadata.description.as_ref().map(|s| s.as_str()),
-            documentation: metadata.documentation.as_ref().map(|s| s.as_str()),
-            repository: metadata.repository.as_ref().map(|s| s.as_str()),
+            description: metadata.description.as_deref(),
+            documentation: metadata.documentation.as_deref(),
+            repository: metadata.repository.as_deref(),
             created_at: now.as_str(),
             updated_at: now.as_str(),
         };
@@ -295,9 +295,9 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
             }
 
             //? Update the crate's metadata.
-            let description = metadata.description.as_ref().map(|s| s.as_str());
-            let documentation = metadata.documentation.as_ref().map(|s| s.as_str());
-            let repository = metadata.repository.as_ref().map(|s| s.as_str());
+            let description = metadata.description.as_deref();
+            let documentation = metadata.documentation.as_deref();
+            let repository = metadata.repository.as_deref();
             diesel::update(crates::table.filter(crates::id.eq(krate.id)))
                 .set((
                     crates::description.eq(description),
