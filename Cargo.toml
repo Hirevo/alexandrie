@@ -10,10 +10,10 @@ keywords = ["crates", "cargo", "web", "registry"]
 categories = ["development-tools"]
 license = "MIT OR Apache-2.0"
 
+default-run = "alexandrie"
+
 [badges]
 codecov = { repository = "Hirevo/alexandrie"}
-
-default-run = "alexandrie"
 
 [dependencies]
 # core
