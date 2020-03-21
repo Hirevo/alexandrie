@@ -221,7 +221,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
                         optional: dep.optional,
                         default_features: dep.default_features,
                         target: dep.target,
-                        kind: dep.kind,
+                        kind: dep.kind.unwrap_or(CrateDependencyKind::Normal),
                         registry: dep.registry,
                         package,
                     }
