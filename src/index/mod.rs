@@ -9,7 +9,7 @@ mod models;
 #[cfg(feature = "git2")]
 pub mod git2;
 
-pub use models::*;
+pub use models::{CrateDependency, CrateDependencyKind, CrateVersion};
 
 use crate::error::Error;
 use crate::index::cli::CommandLineIndex;
