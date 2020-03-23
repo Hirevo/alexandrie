@@ -19,6 +19,6 @@ pub struct CommandLineIndexConfig {
 
 impl From<CommandLineIndexConfig> for CommandLineIndex {
     fn from(config: CommandLineIndexConfig) -> CommandLineIndex {
-        CommandLineIndex { path: config.path }
+        CommandLineIndex::new(config.path)
     }
 }

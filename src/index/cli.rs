@@ -13,17 +13,63 @@ use crate::index::{CrateVersion, Indexer};
 /// It manages the crate index through the invocation of "git" shell commands.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CommandLineIndex {
-    /// The path of the crate index.
-    pub(crate) path: PathBuf,
+    repo: Repository,
+    tree: Tree,
 }
 
 impl CommandLineIndex {
     /// Create a CommandLineIndex instance with the given path.
-    pub fn new<P: Into<PathBuf>>(path: P) -> Result<CommandLineIndex, Error> {
+    pub fn new<P: Into<PathBuf>>(path: P) -> CommandLineIndex {
         let path = path.into();
-        Ok(CommandLineIndex { path })
+        let repo = Repository { path: path.clone() };
+        let tree = Tree { path };
+        CommandLineIndex { repo, tree }
+    }
+}
+
+impl Indexer for CommandLineIndex {
+    fn url(&self) -> Result<String, Error> {
+        self.repo.url()
     }
 
+    fn refresh(&self) -> Result<(), Error> {
+        self.repo.refresh()
+    }
+
+    fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
+        self.repo.commit_and_push(msg)
+    }
+
+    fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
+        self.tree.match_record(name, req)
+    }
+
+    fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
+        self.tree.all_records(name)
+    }
+
+    fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
+        self.tree.latest_record(name)
+    }
+
+    fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
+        self.tree.add_record(record)
+    }
+
+    fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
+    where
+        F: FnOnce(&mut CrateVersion),
+    {
+        self.tree.alter_record(name, version, func)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Tree {
+    path: PathBuf,
+}
+
+impl Tree {
     fn compute_record_path(&self, name: &str) -> PathBuf {
         match name.len() {
             1 => self.path.join("1").join(&name),
@@ -31,56 +77,6 @@ impl CommandLineIndex {
             3 => self.path.join("3").join(&name[..1]).join(&name),
             _ => self.path.join(&name[0..2]).join(&name[2..4]).join(&name),
         }
-    }
-}
-
-impl Indexer for CommandLineIndex {
-    fn url(&self) -> Result<String, Error> {
-        let output = Command::new("git")
-            .arg("remote")
-            .arg("get-url")
-            .arg("origin")
-            .stdout(Stdio::piped())
-            .current_dir(self.path.canonicalize()?)
-            .output()?;
-
-        Ok(String::from_utf8_lossy(output.stdout.as_slice()).into())
-    }
-
-    fn refresh(&self) -> Result<(), Error> {
-        Command::new("git")
-            .arg("pull")
-            .arg("--ff-only")
-            .current_dir(self.path.canonicalize()?)
-            .spawn()?
-            .wait()?;
-
-        Ok(())
-    }
-
-    fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
-        Command::new("git")
-            .arg("add")
-            .arg("--all")
-            .current_dir(&self.path)
-            .spawn()?
-            .wait()?;
-        Command::new("git")
-            .arg("commit")
-            .arg("-m")
-            .arg(msg)
-            .current_dir(&self.path)
-            .spawn()?
-            .wait()?;
-        Command::new("git")
-            .arg("push")
-            .arg("origin")
-            .arg("master")
-            .current_dir(&self.path)
-            .spawn()?
-            .wait()?;
-
-        Ok(())
     }
 
     fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
@@ -191,6 +187,61 @@ impl Indexer for CommandLineIndex {
             .map(|krate| json::to_string(&krate))
             .collect::<Result<Vec<String>, _>>()?;
         fs::write(path.as_path(), lines.join("\n") + "\n")?;
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Repository {
+    path: PathBuf,
+}
+
+impl Repository {
+    fn url(&self) -> Result<String, Error> {
+        let output = Command::new("git")
+            .arg("remote")
+            .arg("get-url")
+            .arg("origin")
+            .stdout(Stdio::piped())
+            .current_dir(self.path.canonicalize()?)
+            .output()?;
+
+        Ok(String::from_utf8_lossy(output.stdout.as_slice()).into())
+    }
+
+    fn refresh(&self) -> Result<(), Error> {
+        Command::new("git")
+            .arg("pull")
+            .arg("--ff-only")
+            .current_dir(self.path.canonicalize()?)
+            .spawn()?
+            .wait()?;
+
+        Ok(())
+    }
+
+    fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
+        Command::new("git")
+            .arg("add")
+            .arg("--all")
+            .current_dir(&self.path)
+            .spawn()?
+            .wait()?;
+        Command::new("git")
+            .arg("commit")
+            .arg("-m")
+            .arg(msg)
+            .current_dir(&self.path)
+            .spawn()?
+            .wait()?;
+        Command::new("git")
+            .arg("push")
+            .arg("origin")
+            .arg("master")
+            .current_dir(&self.path)
+            .spawn()?
+            .wait()?;
 
         Ok(())
     }
