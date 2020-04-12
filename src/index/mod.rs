@@ -3,13 +3,14 @@ use semver::{Version, VersionReq};
 /// Index management through `git` shell command invocations.
 pub mod cli;
 mod models;
+mod tree;
 
 /// Index management using [**`libgit2`**][libgit2].
 /// [libgit2]: https://libgit2.org
 #[cfg(feature = "git2")]
 pub mod git2;
 
-pub use models::*;
+pub use models::{CrateDependency, CrateDependencyKind, CrateVersion};
 
 use crate::error::Error;
 use crate::index::cli::CommandLineIndex;
