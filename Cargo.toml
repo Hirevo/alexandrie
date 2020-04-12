@@ -12,6 +12,9 @@ license = "MIT OR Apache-2.0"
 
 default-run = "alexandrie"
 
+[badges]
+codecov = { repository = "Hirevo/alexandrie"}
+
 [dependencies]
 # core
 tide = { version = "0.5.0" }
