@@ -18,6 +18,7 @@ tide = { version = "0.5.0" }
 http = { version = "0.1.21" }
 
 # data types
+url = { version = "2.1.1" }
 semver = { version = "0.9.0", features = ["serde"] }
 chrono = { version = "0.4.10", features = ["serde"] }
 

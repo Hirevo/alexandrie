@@ -89,6 +89,7 @@ embed_migrations!("migrations/postgres");
 use futures::future::{BoxFuture, FutureExt};
 use std::future::Future;
 use tide::{Endpoint, IntoResponse, Request, Response};
+
 struct Handler<F> {
     handler: F,
 }
