@@ -1,5 +1,4 @@
 use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
-use url::Url;
 
 use crate::config::database::DatabaseConfig;
 
@@ -61,6 +60,8 @@ where
         let database_url = database_config.url.as_str();
         #[cfg(any(feature = "mysql", feature = "postgres"))]
         let database_url = {
+            use url::Url;
+
             let mut url = Url::parse(database_config.url.as_str()).expect("invalid connection URL");
             if let Some(user) = database_config.user.as_ref() {
                 if url.username().is_empty() {
@@ -70,6 +71,7 @@ where
                     panic!("conflicting usernames in database configuration");
                 }
             }
+
             if let Some(file) = database_config.password_file.as_ref() {
                 if url.password().is_none() {
                     let password = std::fs::read_to_string(file)
@@ -80,6 +82,7 @@ where
                     panic!("conflicting passwords in database configuration");
                 }
             }
+
             url.to_string()
         };
 
