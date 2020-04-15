@@ -1,9 +1,15 @@
 use semver::{Version, VersionReq};
+use std::convert::TryFrom;
+use std::path::PathBuf;
 
 /// Index management through `git` shell command invocations.
 pub mod cli;
 mod models;
 mod tree;
+use tree::Tree;
+mod repository;
+use repository::Repository;
+use serde::{Deserialize, Serialize};
 
 /// Index management using [**`libgit2`**][libgit2].
 /// [libgit2]: https://libgit2.org
@@ -13,21 +19,45 @@ pub mod git2;
 pub use models::{CrateDependency, CrateDependencyKind, CrateVersion};
 
 use crate::error::Error;
-use crate::index::cli::CommandLineIndex;
 
-#[cfg(feature = "git2")]
-use crate::index::git2::Git2Index;
+pub struct Index {
+    repo: Repository,
+    tree: Tree,
+}
 
-/// The crate indexing management strategy type.
+/// The configuration struct for the 'git2' index management strategy.
 ///
-/// It represents which index management strategy is currently used.
-pub enum Index {
-    /// Manages the crate index through the invocation of the "git" shell command.
-    CommandLine(CommandLineIndex),
-    /// Manages the crate index using [**`libgit2`**].
-    /// [libgit2]: https://libgit2.org
-    #[cfg(feature = "git2")]
-    Git2(Git2Index),
+/// ```toml
+/// [index]
+/// type = "git2" | "command-line"  # required
+/// path = "crate-index"            # required
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "kebab-case")]
+pub enum Config {
+    Git2 { path: PathBuf },
+    CommandLine { path: PathBuf },
+}
+
+impl TryFrom<Config> for Index {
+    type Error = Error;
+    fn try_from(config: Config) -> Result<Self, Self::Error> {
+        let (path, repo) = match config {
+            Config::CommandLine { path } => {
+                let repo = Repository::new_cli(path.clone());
+                (path, repo)
+            }
+            Config::Git2 { path } => {
+                let repo = Repository::new_git2(&path)?;
+                (path, repo)
+            }
+        };
+
+        let tree = Tree::new(path);
+
+        Ok(Self { repo, tree })
+    }
 }
 
 /// The required trait that any crate index management type must implement.
@@ -62,85 +92,61 @@ pub trait Indexer {
 
 impl Indexer for Index {
     fn url(&self) -> Result<String, Error> {
-        match self {
-            Index::CommandLine(idx) => idx.url(),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.url(),
-        }
+        self.repo.url()
     }
-
     fn refresh(&self) -> Result<(), Error> {
-        match self {
-            Index::CommandLine(idx) => idx.refresh(),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.refresh(),
-        }
+        self.repo.refresh()
     }
-
-    fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
-        match self {
-            Index::CommandLine(idx) => idx.commit_and_push(msg),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.commit_and_push(msg),
-        }
-    }
-
     fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
-        match self {
-            Index::CommandLine(idx) => idx.all_records(name),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.all_records(name),
-        }
+        self.tree.all_records(name)
     }
-
     fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
-        match self {
-            Index::CommandLine(idx) => idx.latest_record(name),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.latest_record(name),
-        }
+        self.tree.latest_record(name)
     }
-
     fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
-        match self {
-            Index::CommandLine(idx) => idx.match_record(name, req),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.match_record(name, req),
-        }
+        self.tree.match_record(name, req)
     }
-
+    fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
+        self.repo.commit_and_push(msg)
+    }
     fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
-        match self {
-            Index::CommandLine(idx) => idx.add_record(record),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.add_record(record),
-        }
+        self.tree.add_record(record)
     }
-
     fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
     where
         F: FnOnce(&mut CrateVersion),
     {
-        match self {
-            Index::CommandLine(idx) => idx.alter_record(name, version, func),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.alter_record(name, version, func),
-        }
+        self.tree.alter_record(name, version, func)
     }
+}
 
-    fn yank_record(&self, name: &str, version: Version) -> Result<(), Error> {
-        match self {
-            Index::CommandLine(idx) => idx.yank_record(name, version),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.yank_record(name, version),
+#[cfg(test)]
+mod tests {
+    use super::Config;
+    #[test]
+    fn from_config() {
+        match toml::from_str(
+            r#"
+        type = "git2"
+        path = "crate-index"
+        "#,
+        )
+        .unwrap()
+        {
+            Config::Git2 { .. } => (),
+            Config::CommandLine { .. } => panic!("deserialization failed!"),
         }
-    }
 
-    fn unyank_record(&self, name: &str, version: Version) -> Result<(), Error> {
-        match self {
-            Index::CommandLine(idx) => idx.unyank_record(name, version),
-            #[cfg(feature = "git2")]
-            Index::Git2(idx) => idx.unyank_record(name, version),
+        match toml::from_str(
+            r#"
+        type = "command-line"
+        path = "crate-index"
+        "#,
+        )
+        .unwrap()
+        {
+            Config::Git2 { .. } => panic!("deserialization failed!"),
+            Config::CommandLine { .. } => (),
         }
     }
 }

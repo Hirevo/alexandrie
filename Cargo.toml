@@ -83,7 +83,7 @@ mime_guess = { version = "2.0.1" }
 [features]
 # default = ["frontend", "sqlite"]
 # default = ["frontend", "mysql"]
-default = ["frontend", "postgres"]
+default = ["frontend", "postgres", "git2"]
 frontend = ["handlebars", "num-format", "bigdecimal", "cookie", "time"]
 mysql = ["diesel/mysql", "diesel_migrations/mysql"]
 sqlite = ["diesel/sqlite", "diesel_migrations/sqlite"]
