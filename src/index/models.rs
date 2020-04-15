@@ -27,7 +27,8 @@ pub struct CrateVersion {
     pub features: HashMap<String, Vec<String>>,
 
     /// Is the crate yanked.
-    pub yanked: Option<bool>,
+    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
+    pub yanked: bool,
 
     /// Is the crate yanked.
     #[serde(skip_serializing_if = "Option::is_none", default)]
