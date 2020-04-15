@@ -6,7 +6,10 @@ use std::fs;
 use std::io;
 use std::io::BufRead;
 use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
+
+mod file;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
