@@ -1,24 +1,24 @@
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use super::Repo;
+use super::Repository;
 use crate::error::Error;
 
 /// The 'command-line' crate index management strategy type.
 ///
 /// It manages the crate index through the invocation of "git" shell commands.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Repository {
+pub struct Repo {
     path: PathBuf,
 }
 
-impl Repository {
+impl Repo {
     pub fn new<P: Into<PathBuf>>(path: P) -> Self {
         Self { path: path.into() }
     }
 }
 
-impl Repo for Repository {
+impl Repository for Repo {
     fn url(&self) -> Result<String, Error> {
         let output = Command::new("git")
             .arg("remote")

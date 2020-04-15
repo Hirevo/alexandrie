@@ -14,8 +14,16 @@ pub use models::{CrateDependency, CrateDependencyKind, CrateVersion};
 use crate::error::Error;
 
 pub struct Index {
-    repo: Repository,
+    repo: Box<dyn Repository + Send + Sync>,
     tree: Tree,
+}
+
+impl Index {
+    pub fn with_repo(path: PathBuf, repo: impl Repository + Send + Sync + 'static) -> Self {
+        let repo = Box::new(repo);
+        let tree = Tree::new(path);
+        Self { repo, tree }
+    }
 }
 
 /// The configuration struct for the 'git2' index management strategy.
@@ -36,20 +44,16 @@ pub enum Config {
 impl TryFrom<Config> for Index {
     type Error = Error;
     fn try_from(config: Config) -> Result<Self, Self::Error> {
-        let (path, repo) = match config {
+        match config {
             Config::CommandLine { path } => {
-                let repo = Repository::new_cli(path.clone());
-                (path, repo)
+                let repo = repository::cli::Repo::new(path.clone());
+                Ok(Self::with_repo(path, repo))
             }
             Config::Git2 { path } => {
-                let repo = Repository::new_git2(&path)?;
-                (path, repo)
+                let repo = repository::git2::Repo::new(&path)?;
+                Ok(Self::with_repo(path, repo))
             }
-        };
-
-        let tree = Tree::new(path);
-
-        Ok(Self { repo, tree })
+        }
     }
 }
 

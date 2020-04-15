@@ -1,4 +1,4 @@
-use super::Repo;
+use super::Repository;
 use crate::error::Error;
 use git2;
 use std::path::Path;
@@ -9,16 +9,16 @@ use std::sync::Mutex;
 /// It manages the crate index using the [**`libgit2`**][libgit2] library.
 ///
 /// [libgit2]: https://libgit2.org
-pub struct Repository {
+pub struct Repo {
     /// The path of the crate index.
     repo: Mutex<git2::Repository>,
 }
 
-impl Repository {
+impl Repo {
     /// Create a Repository instance with the given path.
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Repository, Error> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let repo = Mutex::new(git2::Repository::open(path)?);
-        Ok(Repository { repo })
+        Ok(Self { repo })
     }
 }
 
@@ -62,7 +62,7 @@ where
     })
 }
 
-impl Repo for Repository {
+impl Repository for Repo {
     fn url(&self) -> Result<String, Error> {
         let repo = self.repo.lock().unwrap();
         let remote = repo.find_remote("origin")?;
