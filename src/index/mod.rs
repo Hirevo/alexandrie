@@ -2,19 +2,12 @@ use semver::{Version, VersionReq};
 use std::convert::TryFrom;
 use std::path::PathBuf;
 
-/// Index management through `git` shell command invocations.
-pub mod cli;
 mod models;
 mod tree;
 use tree::Tree;
 mod repository;
 use repository::Repository;
 use serde::{Deserialize, Serialize};
-
-/// Index management using [**`libgit2`**][libgit2].
-/// [libgit2]: https://libgit2.org
-#[cfg(feature = "git2")]
-pub mod git2;
 
 pub use models::{CrateDependency, CrateDependencyKind, CrateVersion};
 
