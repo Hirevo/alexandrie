@@ -34,6 +34,16 @@ pub struct CrateVersion {
     pub links: Option<String>,
 }
 
+impl CrateVersion {
+    pub fn yank(&mut self) {
+        self.yanked = Some(true)
+    }
+
+    pub fn unyank(&mut self) {
+        self.yanked = Some(false)
+    }
+}
+
 /// Represents a crate dependency.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CrateDependency {
