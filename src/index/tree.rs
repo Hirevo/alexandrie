@@ -3,21 +3,21 @@ use crate::index::models::CrateVersion;
 use crate::Error;
 use semver::{Version, VersionReq};
 <<<<<<< HEAD
+<<<<<<< HEAD
 use std::{
     fs, io,
     io::{BufRead, Write},
     path::PathBuf,
 };
 =======
+=======
+use std::collections::BTreeMap;
+>>>>>>> refactor index::Tree into a Tree + File
 use std::fs;
 use std::io;
-use std::io::BufRead;
-use std::io::Write;
-use std::path::Path;
+use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 >>>>>>> add File object
-
-mod file;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
@@ -36,6 +36,11 @@ impl Tree {
             3 => self.path.join("3").join(&name[..1]).join(&name),
             _ => self.path.join(&name[0..2]).join(&name[2..4]).join(&name),
         }
+    }
+
+    fn file(&self, name: &str) -> io::Result<File> {
+        let path = self.compute_record_path(name);
+        File::create(path)
     }
 
     pub fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
@@ -58,94 +63,126 @@ impl Tree {
     }
 
     pub fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
-        let path = self.compute_record_path(name);
-        let reader = io::BufReader::new(fs::File::open(path)?);
-        reader
-            .lines()
-            .map(|line| Ok(json::from_str::<CrateVersion>(line?.as_str())?))
-            .collect()
+        Ok(self.file(name)?.records().values().cloned().collect())
     }
 
     pub fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
-        let records = self.all_records(name)?;
-        Ok(records
-            .into_iter()
-            .max_by(|k1, k2| k1.vers.cmp(&k2.vers))
-            .expect("at least one version should exist"))
+        Ok(self.file(name)?.latest_record().unwrap().clone())
     }
 
     pub fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
-        let path = self.compute_record_path(record.name.as_str());
+        self.file(&record.name)?.add_record(record)
+    }
 
-        if let Ok(file) = fs::File::open(&path) {
-            let reader = io::BufReader::new(file);
-            let records = reader
-                .lines()
-                .map(|line| Ok(json::from_str::<CrateVersion>(line?.as_str())?))
-                .collect::<Result<Vec<CrateVersion>, Error>>()?;
-            let latest = records
-                .into_iter()
-                .max_by(|k1, k2| k1.vers.cmp(&k2.vers))
-                .expect("at least one record should exist");
-            if record.vers <= latest.vers {
-                return Err(Error::from(AlexError::VersionTooLow {
-                    krate: record.name,
-                    hosted: latest.vers,
-                    published: record.vers,
-                }));
-            }
-        } else {
-            let parent = path.parent().unwrap();
-            fs::create_dir_all(parent)?;
+    pub fn yank(&self, name: &str, version: &Version) -> Result<(), Error> {
+        self.file(name)?.yank(version)
+    }
+
+    pub fn unyank(&self, name: &str, version: &Version) -> Result<(), Error> {
+        self.file(name)?.unyank(version)
+    }
+}
+
+pub struct File {
+    path: PathBuf,
+    records: BTreeMap<Version, CrateVersion>,
+}
+
+impl File {
+    pub fn open(path: impl Into<PathBuf>) -> io::Result<Self> {
+        let path = path.into();
+        let file = fs::File::open(&path)?;
+        Self::from_file(path, file)
+    }
+
+    pub fn create(path: impl Into<PathBuf>) -> io::Result<Self> {
+        let path = path.into();
+        fs::create_dir_all(path.parent().unwrap())?;
+        let file = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(&path)?;
+        Self::from_file(path, file)
+    }
+
+    fn from_file(path: impl Into<PathBuf>, file: fs::File) -> io::Result<Self> {
+        let path = path.into();
+        let reader = BufReader::new(file);
+        let mut records = BTreeMap::new();
+        for line in reader.lines() {
+            let crate_version: CrateVersion = json::from_str(&line?).expect("malformed json!");
+            records.insert(crate_version.vers.clone(), crate_version);
         }
 
-        let mut file = fs::OpenOptions::new()
+        Ok(Self { path, records })
+    }
+
+    pub fn write(&mut self) -> io::Result<()> {
+        let lines: Vec<String> = self
+            .records
+            .values()
+            .map(json::to_string)
+            .collect::<Result<Vec<String>, json::Error>>()
+            .unwrap(); // we unwrap because any error here is a logic bug in the implementation
+
+        let text = lines.join("\n");
+
+        fs::OpenOptions::new()
             .write(true)
-            .append(true)
             .create(true)
-            .open(path)?;
-        json::to_writer(&mut file, &record)?;
-        writeln!(file)?;
-        file.flush()?;
+            .open(&self.path)?
+            .write_all(text.as_bytes())?;
 
         Ok(())
     }
 
-    pub fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
-    where
-        F: FnOnce(&mut CrateVersion),
-    {
-        let path = self.compute_record_path(name);
-        let file = fs::File::open(path.as_path()).map_err(|err| match err.kind() {
-            io::ErrorKind::NotFound => Error::from(AlexError::CrateNotFound {
-                name: String::from(name),
-            }),
-            _ => Error::from(err),
-        })?;
-        let mut krates: Vec<CrateVersion> = {
-            let mut out = Vec::new();
-            for line in io::BufReader::new(file).lines() {
-                let krate = json::from_str(line?.as_str())?;
-                out.push(krate);
+    fn crate_name(&self) -> &str {
+        self.path.file_name().unwrap().to_str().unwrap()
+    }
+
+    pub fn records(&self) -> &BTreeMap<Version, CrateVersion> {
+        &self.records
+    }
+
+    pub fn latest_record(&self) -> Option<&CrateVersion> {
+        self.records.iter().next_back().map(|x| x.1)
+    }
+
+    pub fn add_record(&mut self, record: CrateVersion) -> Result<(), Error> {
+        if let Some(latest_record) = self.latest_record() {
+            if record.vers <= latest_record.vers {
+                return Err(AlexError::VersionTooLow {
+                    hosted: latest_record.vers.clone(),
+                    krate: self.crate_name().to_string(),
+                    published: record.vers,
+                }
+                .into());
             }
-            out
-        };
-        let found = krates
-            .iter_mut()
-            .find(|krate| krate.vers == version)
-            .ok_or_else(|| {
-                Error::from(AlexError::CrateNotFound {
-                    name: String::from(name),
-                })
-            })?;
+        }
 
-        func(found);
+        self.records.insert(record.vers.clone(), record).unwrap();
+        self.write()?;
+        Ok(())
+    }
 
-        let lines = krates
-            .into_iter()
-            .map(|krate| json::to_string(&krate))
-            .collect::<Result<Vec<String>, _>>()?;
-        fs::write(path.as_path(), lines.join("\n") + "\n")?;
+    fn get_mut(&mut self, version: &Version) -> Result<&mut CrateVersion, AlexError> {
+        self.records
+            .get_mut(version)
+            .ok_or(AlexError::CrateNotFound {
+                name: "populate me properly".to_string(),
+            })
+    }
+
+    pub fn yank(&mut self, version: &Version) -> Result<(), Error> {
+        self.get_mut(version)?.yank();
+        self.write()?;
+
+        Ok(())
+    }
+
+    pub fn unyank(&mut self, version: &Version) -> Result<(), Error> {
+        self.get_mut(version)?.unyank();
+        self.write()?;
 
         Ok(())
     }

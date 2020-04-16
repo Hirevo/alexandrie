@@ -75,18 +75,10 @@ pub trait Indexer {
     fn commit_and_push(&self, msg: &str) -> Result<(), Error>;
     /// Adds a new crate record into the index.
     fn add_record(&self, record: CrateVersion) -> Result<(), Error>;
-    /// Alters an index's crate version record with the passed-in function.
-    fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
-    where
-        F: FnOnce(&mut CrateVersion);
     /// Yanks a crate version.
-    fn yank_record(&self, name: &str, version: Version) -> Result<(), Error> {
-        self.alter_record(name, version, |krate| krate.yanked = Some(true))
-    }
+    fn yank_record(&self, name: &str, version: &Version) -> Result<(), Error>;
     /// Un-yanks a crate version.
-    fn unyank_record(&self, name: &str, version: Version) -> Result<(), Error> {
-        self.alter_record(name, version, |krate| krate.yanked = Some(false))
-    }
+    fn unyank_record(&self, name: &str, version: &Version) -> Result<(), Error>;
 }
 
 impl Indexer for Index {
@@ -111,6 +103,7 @@ impl Indexer for Index {
     fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
         self.tree.add_record(record)
     }
+<<<<<<< HEAD
     fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
     where
         F: FnOnce(&mut CrateVersion),
@@ -135,8 +128,17 @@ mod tests {
         {
             Config::Git2 { .. } => (),
             Config::CommandLine { .. } => panic!("deserialization failed!"),
+=======
+
+    fn yank_record(&self, name: &str, version: &Version) -> Result<(), Error> {
+        match self {
+            Index::CommandLine(idx) => idx.yank_record(name, version),
+            #[cfg(feature = "git2")]
+            Index::Git2(idx) => idx.yank_record(name, version),
+>>>>>>> refactor index::Tree into a Tree + File
         }
 
+<<<<<<< HEAD
         match toml::from_str(
             r#"
         type = "command-line"
@@ -145,6 +147,11 @@ mod tests {
         )
         .unwrap()
         {
+=======
+    fn unyank_record(&self, name: &str, version: &Version) -> Result<(), Error> {
+        match self {
+            Index::CommandLine(idx) => idx.unyank_record(name, version),
+>>>>>>> refactor index::Tree into a Tree + File
             #[cfg(feature = "git2")]
             Config::Git2 { .. } => panic!("deserialization failed!"),
             Config::CommandLine { .. } => (),
