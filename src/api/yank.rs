@@ -39,7 +39,7 @@ pub(crate) async fn delete(req: Request<State>) -> Result<Response, Error> {
             ));
         }
 
-        state.index.yank_record(name.as_str(), version.clone())?;
+        state.index.yank_record(name.as_str(), &version)?;
 
         let msg = format!("Yanking crate `{0}#{1}`", name.as_str(), version);
         state.index.commit_and_push(msg.as_str())?;

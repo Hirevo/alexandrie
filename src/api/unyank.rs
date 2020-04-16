@@ -38,7 +38,7 @@ pub(crate) async fn put(req: Request<State>) -> Result<Response, Error> {
             ));
         }
 
-        state.index.unyank_record(name.as_str(), version.clone())?;
+        state.index.unyank_record(name.as_str(), &version)?;
 
         let msg = format!("Unyanking crate `{0}#{1}`", name.as_str(), version);
         state.index.commit_and_push(msg.as_str())?;
