@@ -127,29 +127,4 @@ impl Repo for Repository {
 
         Ok(())
     }
-<<<<<<< HEAD:src/index/repository/git2.rs
-=======
-
-    fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
-        self.tree.match_record(name, req)
-    }
-
-    fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
-        self.tree.all_records(name)
-    }
-
-    fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
-        self.tree.latest_record(name)
-    }
-
-    fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
-        self.tree.add_record(record)
-    }
-    fn yank_record(&self, name: &str, version: &Version) -> Result<(), Error> {
-        self.tree.yank(name, version)
-    }
-    fn unyank_record(&self, name: &str, version: &Version) -> Result<(), Error> {
-        self.tree.unyank(name, version)
-    }
->>>>>>> refactor index::Tree into a Tree + File:src/index/git2.rs
 }

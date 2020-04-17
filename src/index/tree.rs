@@ -2,22 +2,12 @@ use crate::error::AlexError;
 use crate::index::models::CrateVersion;
 use crate::Error;
 use semver::{Version, VersionReq};
-<<<<<<< HEAD
-<<<<<<< HEAD
+use std::collections::BTreeMap;
 use std::{
     fs, io,
-    io::{BufRead, Write},
+    io::{BufRead, BufReader, Write},
     path::PathBuf,
 };
-=======
-=======
-use std::collections::BTreeMap;
->>>>>>> refactor index::Tree into a Tree + File
-use std::fs;
-use std::io;
-use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
->>>>>>> add File object
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
