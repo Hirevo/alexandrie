@@ -1,5 +1,5 @@
-use crate::index::models::CrateVersion;
 use crate::error::AlexError;
+use crate::index::models::CrateVersion;
 use crate::Error;
 use semver::{Version, VersionReq};
 use std::{

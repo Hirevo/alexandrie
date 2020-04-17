@@ -2,7 +2,9 @@ mod cli;
 #[cfg(feature = "git2")]
 mod git2;
 use crate::error::Error;
-use std::path::{Path, PathBuf};
+#[cfg(feature = "git2")]
+use std::path::Path;
+use std::path::PathBuf;
 
 trait Repo {
     fn url(&self) -> Result<String, Error>;

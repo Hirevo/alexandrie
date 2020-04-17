@@ -29,8 +29,13 @@ pub struct Index {
 #[serde(tag = "type")]
 #[serde(rename_all = "kebab-case")]
 pub enum Config {
-    Git2 { path: PathBuf },
-    CommandLine { path: PathBuf },
+    #[cfg(feature = "git2")]
+    Git2 {
+        path: PathBuf,
+    },
+    CommandLine {
+        path: PathBuf,
+    },
 }
 
 impl TryFrom<Config> for Index {
@@ -41,6 +46,7 @@ impl TryFrom<Config> for Index {
                 let repo = Repository::new_cli(path.clone());
                 (path, repo)
             }
+            #[cfg(feature = "git2")]
             Config::Git2 { path } => {
                 let repo = Repository::new_git2(&path)?;
                 (path, repo)
@@ -118,6 +124,7 @@ mod tests {
     use super::Config;
     #[test]
     fn from_config() {
+        #[cfg(feature = "git2")]
         match toml::from_str(
             r#"
         type = "git2"
@@ -138,6 +145,7 @@ mod tests {
         )
         .unwrap()
         {
+            #[cfg(feature = "git2")]
             Config::Git2 { .. } => panic!("deserialization failed!"),
             Config::CommandLine { .. } => (),
         }
