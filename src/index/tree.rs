@@ -1,12 +1,12 @@
-use super::models::CrateVersion;
+use crate::index::models::CrateVersion;
 use crate::error::AlexError;
 use crate::Error;
 use semver::{Version, VersionReq};
-use std::fs;
-use std::io;
-use std::io::BufRead;
-use std::io::Write;
-use std::path::PathBuf;
+use std::{
+    fs, io,
+    io::{BufRead, Write},
+    path::PathBuf,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
