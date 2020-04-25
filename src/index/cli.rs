@@ -55,11 +55,11 @@ impl Indexer for CommandLineIndex {
         self.tree.add_record(record)
     }
 
-    fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
-    where
-        F: FnOnce(&mut CrateVersion),
-    {
-        self.tree.alter_record(name, version, func)
+    fn yank_record(&self, name: &str, version: &Version) -> Result<(), Error> {
+        self.tree.yank(name, version)
+    }
+    fn unyank_record(&self, name: &str, version: &Version) -> Result<(), Error> {
+        self.tree.unyank(name, version)
     }
 }
 

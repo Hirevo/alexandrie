@@ -1,31 +1,24 @@
-use std::path::PathBuf;
-use std::sync::Mutex;
-
-use semver::{Version, VersionReq};
-
+use super::Repo;
 use crate::error::Error;
-use crate::index::tree::Tree;
-use crate::index::{CrateVersion, Indexer};
+use git2;
+use std::path::Path;
+use std::sync::Mutex;
 
 /// The 'git2' crate index management strategy type.
 ///
 /// It manages the crate index using the [**`libgit2`**][libgit2] library.
 ///
 /// [libgit2]: https://libgit2.org
-pub struct Git2Index {
+pub struct Repository {
     /// The path of the crate index.
-    pub(crate) repo: Mutex<git2::Repository>,
-    tree: Tree,
+    repo: Mutex<git2::Repository>,
 }
 
-impl Git2Index {
-    /// Create a Git2Index instance with the given path.
-    pub fn new<P: Into<PathBuf>>(path: P) -> Result<Git2Index, Error> {
-        let path = path.into();
-        let repo = git2::Repository::open(&path)?;
-        let repo = Mutex::new(repo);
-        let tree = Tree::new(path);
-        Ok(Git2Index { repo, tree })
+impl Repository {
+    /// Create a Repository instance with the given path.
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Repository, Error> {
+        let repo = Mutex::new(git2::Repository::open(path)?);
+        Ok(Repository { repo })
     }
 }
 
@@ -69,7 +62,7 @@ where
     })
 }
 
-impl Indexer for Git2Index {
+impl Repo for Repository {
     fn url(&self) -> Result<String, Error> {
         let repo = self.repo.lock().unwrap();
         let remote = repo.find_remote("origin")?;
@@ -133,28 +126,5 @@ impl Indexer for Git2Index {
         remote.push::<&'static str>(&[], None)?;
 
         Ok(())
-    }
-
-    fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
-        self.tree.match_record(name, req)
-    }
-
-    fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
-        self.tree.all_records(name)
-    }
-
-    fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
-        self.tree.latest_record(name)
-    }
-
-    fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
-        self.tree.add_record(record)
-    }
-
-    fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
-    where
-        F: FnOnce(&mut CrateVersion),
-    {
-        self.tree.alter_record(name, version, func)
     }
 }
