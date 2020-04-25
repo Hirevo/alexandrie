@@ -229,7 +229,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
                 .collect(),
             cksum: hash,
             features: metadata.features,
-            yanked: Some(false),
+            yanked: false,
             links: metadata.links,
         };
 

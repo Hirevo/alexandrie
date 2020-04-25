@@ -52,11 +52,11 @@ pub trait Indexer {
         F: FnOnce(&mut CrateVersion);
     /// Yanks a crate version.
     fn yank_record(&self, name: &str, version: Version) -> Result<(), Error> {
-        self.alter_record(name, version, |krate| krate.yanked = Some(true))
+        self.alter_record(name, version, |krate| krate.yanked = true)
     }
     /// Un-yanks a crate version.
     fn unyank_record(&self, name: &str, version: Version) -> Result<(), Error> {
-        self.alter_record(name, version, |krate| krate.yanked = Some(false))
+        self.alter_record(name, version, |krate| krate.yanked = false)
     }
 }
 
