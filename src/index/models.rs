@@ -16,20 +16,20 @@ pub struct CrateVersion {
     pub vers: Version,
 
     /// The dependencies of the crate.
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    #[serde(default)]
     pub deps: Vec<CrateDependency>,
 
     /// The SHA256 hash of the crate.
     pub cksum: String,
 
     /// The available features of the crates and what they enable.
-    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
+    #[serde(default)]
     pub features: HashMap<String, Vec<String>>,
 
     /// Is the crate yanked.
     pub yanked: Option<bool>,
 
-    /// Is the crate yanked.
+    /// Related links about the crate.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub links: Option<String>,
 }
@@ -47,7 +47,7 @@ pub struct CrateDependency {
     pub req: VersionReq,
 
     /// The features requested for the dependency.
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    #[serde(default)]
     pub features: Vec<String>,
 
     /// Is the dependency optional.
