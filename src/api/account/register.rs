@@ -21,7 +21,7 @@ pub struct RequestBody {
     pub email: String,
     /// The account's displayable name.
     pub name: String,
-    /// The account's password (hashed and salted client-side).
+    /// The account's password.
     pub passwd: String,
 }
 
@@ -29,7 +29,7 @@ pub struct RequestBody {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ResponseBody {
     /// A registry token for the newly created account.
-    pub account_token: String,
+    pub token: String,
 }
 
 /// Route to register a new account.
@@ -65,15 +65,18 @@ pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
             ));
         }
 
-        //? Decode hex-encoded password hash.
-        let decoded_password = match hex::decode(body.passwd.as_bytes()) {
-            Ok(passwd) => passwd,
-            Err(_) => {
-                return Ok(utils::response::error(
-                    StatusCode::BAD_REQUEST,
-                    "could not decode hex-encoded password hash",
-                ));
-            }
+        //? First rounds of PBKDF2 (5_000 rounds, it corresponds to what the frontend does, cf. `wasm-pbkdf2` sub-crate).
+        let hashed_passwd = {
+            let mut out = [0u8; hasher::SHA512_OUTPUT_LEN];
+            let iteration_count = unsafe { NonZeroU32::new_unchecked(5_000) };
+            pbkdf2::derive(
+                pbkdf2::PBKDF2_HMAC_SHA512,
+                iteration_count,
+                body.email.as_bytes(),
+                body.passwd.as_bytes(),
+                &mut out,
+            );
+            out
         };
 
         //? Generate the user's authentication salt.
@@ -92,7 +95,7 @@ pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
                 pbkdf2::PBKDF2_HMAC_SHA512,
                 iteration_count,
                 decoded_generated_salt.as_ref(),
-                decoded_password.as_slice(),
+                hashed_passwd.as_ref(),
                 &mut out,
             );
             hex::encode(out.as_ref())
@@ -125,21 +128,22 @@ pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
             .execute(conn)?;
 
         //? Generate new registry token.
-        let account_token = utils::auth::generate_token();
-        let (token, _) = account_token.split_at(25);
+        let token = utils::auth::generate_token();
+        let (token, _) = token.split_at(25);
 
         //? Store the new registry token in the database.
-        let token_name = String::from("api-1");
         let new_author_token = NewAuthorToken {
+            name: "API",
             token,
             author_id,
-            name: token_name.as_str(),
         };
         diesel::insert_into(author_tokens::table)
             .values(new_author_token)
             .execute(conn)?;
 
-        let response = ResponseBody { account_token };
+        let response = ResponseBody {
+            token: String::from(token),
+        };
         Ok(utils::response::json(&response))
     });
 

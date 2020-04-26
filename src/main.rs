@@ -199,6 +199,9 @@ async fn run() -> Result<(), Error> {
     info!("mounting '/api/v1/account/register'");
     app.at("/api/v1/account/register")
         .post(Handler::new(api::account::register::post));
+    info!("mounting '/api/v1/account/login'");
+    app.at("/api/v1/account/login")
+        .post(Handler::new(api::account::login::post));
     info!("mounting '/api/v1/account/token'");
     app.at("/api/v1/account/token")
         .post(Handler::new(api::account::token::post))

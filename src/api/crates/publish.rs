@@ -203,7 +203,6 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
 
         //? Construct a crate description.
         let crate_desc = CrateVersion {
-            deps,
             name: metadata.name,
             vers: metadata.vers,
             deps: metadata

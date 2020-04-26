@@ -3,7 +3,7 @@ use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use tide::{Request, Response};
 
-use crate::db::models::CrateRegistration;
+use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::utils;
 use crate::{Error, State};
@@ -43,7 +43,7 @@ pub async fn get(req: Request<State>) -> Result<Response, Error> {
         .run(move |conn| {
             crates::table
                 .filter(crates::name.eq(name.as_str()))
-                .first::<CrateRegistration>(conn)
+                .first::<Crate>(conn)
                 .optional()
         })
         .await?;
