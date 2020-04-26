@@ -1,7 +1,7 @@
 #
 # This is an expansion upon the docker-compose.yaml file in the root of this repo
 # It applies additional configuration to use a postgres database
-# 
+#
 # Apply it like `docker-compose -f docker-compose.yaml -f docker/postgresql/postgres-compose.yaml up`
 # (Note file options should be applied before the `up` command)
 #
@@ -10,6 +10,8 @@ services:
   # add to the existing `web` definition to link the database container
   web:
     links:
+      - postgresqldb
+    depends_on:
       - postgresqldb
   # add database container
   postgresqldb:

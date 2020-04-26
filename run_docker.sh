@@ -24,7 +24,7 @@ function print_help() {
     echo "Database Options:"
     echo " *  --sqlite     : Start Alexandrie with the sqlite configuration files"
     echo "    --mysql      : Start Alexandrie with the mysql configuration files"
-    echo "    --postgresql : Start Alexandrie with the postgresql configuration files"
+    echo "    --postgres   : Start Alexandrie with the postgres configuration files"
 }
 
 DATABASE=sqlite
@@ -37,7 +37,7 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
         "--sqlite") DATABASE=sqlite; shift;;
         "--mysql") DATABASE=mysql; shift;;
-        "--postgresql") DATABASE=postgresql; shift;;
+        "--postgres") DATABASE=postgres; shift;;
         "--build") DO_BUILD="--build"; shift;;
         "--cleanbuild") DO_CLEAN="true"; shift;;
         "-d") DAEMON="-d"; shift;;
@@ -54,8 +54,8 @@ if [ "$DATABASE" = "sqlite" ]; then
     FILES="-f docker-compose.yaml"
 elif [ "$DATABASE" = "mysql" ]; then
     FILES="-f docker-compose.yaml -f docker/mysql/mysql-compose.yaml"
-elif [ "$DATABASE" = "postgresql" ]; then
-    FILES="-f docker-compose.yaml -f docker/postgresql/postgresql-compose.yaml"
+elif [ "$DATABASE" = "postgres" ]; then
+    FILES="-f docker-compose.yaml -f docker/postgres/postgres-compose.yaml"
 else
     echo "Invalid database specified. How did you get here?"
     exit 1

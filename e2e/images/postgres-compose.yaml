@@ -1,0 +1,18 @@
+#
+# This is an expansion upon the main `docker-compose.yaml` file.
+# It applies additional configuration to spawm a PostgreSQL database.
+#
+
+version: "3.7"
+services:
+  # append to existing `registry` service (defined in `docker-compose.yaml`).
+  registry:
+    depends_on:
+      - postgresqldb
+  postgresqldb:
+    image: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    expose:
+      - "5432"

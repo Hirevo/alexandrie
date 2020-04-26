@@ -9,7 +9,38 @@ eval $(ssh-agent)
 # add ssh keys
 ssh-add
 
+# this function isolates the hostname of a given URL.
+function get_hostname {
+    URL="$1"
+
+    # remove the protocol bits of the URL
+    URL="${URL#ssh://}"
+    URL="${URL#http://}"
+    URL="${URL#https://}"
+
+    # Remove the username and/or username:password part of the URL
+    URL="${URL#*:*@}"
+    URL="${URL#*@}"
+
+    ## Remove the rest of the URL (pathname, query params, hash fragments, etc...)
+    URL=${URL%%/*}
+    URL=${URL%%:}
+
+    # Show the hostname
+    echo "${URL}"
+}
+
+# store the hostname of the crate index URL
+HOSTNAME="$(get_hostname "${CRATE_INDEX}")"
+
+# add the keys from that host
+ssh-keyscan -t rsa "${HOSTNAME}" >> "${HOME}/.ssh/known_hosts"
+
+# configure git with user metadata
 git config --global user.name "${GIT_NAME}" && git config --global user.email "${GIT_EMAIL}"
+
+# create the appdata directory if it isn't mounted (this is typically done for end-to-end tests)
+mkdir -p appdata
 
 # pull down the crate index, if it doesnt already exist
 if [ ! -d appdata/crate-index ]; then
@@ -25,7 +56,7 @@ mkdir -p appdata/${DATABASE}
 
 # for postgres and mysql, on the first run wait for the database to come up,
 # then use diesel to set up the database
-if [ "${DATABASE}" = "mysql" ] || [ "${DATABASE}" = "postgresql" ]; then
+if [ "${DATABASE}" = "mysql" ] || [ "${DATABASE}" = "postgres" ]; then
     if [ ! -f appdata/${DATABASE}_init_done ]; then
         # wait for the database
         # TODO: fix the URL later with details from alexandrie.toml (could be user & password file),
@@ -40,21 +71,18 @@ if [ "${DATABASE}" = "mysql" ] || [ "${DATABASE}" = "postgresql" ]; then
         RESULT=1
         # give the database 2 mins to start
         TIMEOUT=120
-        CURTIME=0
+        ELAPSED=0
         while [ $RESULT -ne 0 ]; do
+            set +e
             TMP="$(diesel database setup)"
-            echo ${TMP}
             RESULT=$?
+            set -e
+            echo "${TMP}"
             if [ $RESULT -ne 0 ]; then
-                # if 'Connection Refused', wait a bit and try again
-                if [ "$( echo $TMP| grep 'Connection Refused')" != "" ]; then
-                    delay 2
-                    CURTIME=$(($CURTIME + 2))
-                    if [ $CURTIME -ge TIMEOUT ]; then
-                        exit $RESULT
-                    fi
-                # for any other error, we don't know what it is so quit trying to connect 
-                else
+                sleep 2
+                ELAPSED=$(($ELAPSED + 2))
+                # if time is up, exit with the last status code
+                if [ $ELAPSED -ge $TIMEOUT ]; then
                     exit $RESULT
                 fi
             fi

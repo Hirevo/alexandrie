@@ -5,6 +5,7 @@
 # (this is done to avoid accidentally including secrets in the build context)
 !assets
 !Cargo.lock
+!Cargo.toml
 !diesel.toml
 !docker/sqlite/alexandrie.toml
 !docker/sqlite/Cargo.toml

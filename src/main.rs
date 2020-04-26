@@ -15,17 +15,6 @@
 //! - Offer multiple backing database options (MySQL, PostgreSQL or SQLite).
 //! - An optional integrated (server-side rendered) front-end.
 //!
-//! Current state
-//! -------------
-//!
-//! - The core Cargo APIs are all functional.
-//! - The optional front-end is very usable, although still in active development.
-//!
-//! How is it built
-//! ---------------
-//!
-//! Alexandrie is built using Tide and requires a MySQL database.  
-//!
 
 #[macro_use]
 extern crate diesel;

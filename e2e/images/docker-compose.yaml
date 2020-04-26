@@ -1,0 +1,54 @@
+version: "3.7"
+services:
+  index:
+    image: jkarlos/git-server-docker:latest
+    volumes:
+      - ./index/repos:/git-server/repos
+    ports:
+      - "22:22"
+    secrets:
+      - source: git_ssh_pubkey
+        target: /git-server/keys/id_rsa.pub
+  registry:
+    build:
+      context: ../..
+      args:
+        - DATABASE=${DATABASE}
+    image: alexandrie-e2e-${DATABASE}:0.1
+    environment:
+      CRATE_INDEX: git@index:/git-server/repos/index.git
+      DATABASE: ${DATABASE}
+      GIT_NAME: EndToEndTester
+      GIT_EMAIL: nicolas@polomack.eu
+      APPDATA: /home/alex/appdata
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../docker/${DATABASE}/alexandrie.toml:/home/alex/alexandrie.toml
+    secrets:
+      - source: git_ssh_key
+        target: /home/alex/.ssh/id_rsa
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+    depends_on:
+      - index
+  runner:
+    build:
+      context: ./runner
+    image: alexandrie-e2e-runner:0.1
+    volumes:
+      - "../scenarios/${SCENARIO}:/home/runner/original"
+    secrets:
+      - source: git_ssh_key
+        target: /home/runner/.ssh/id_rsa
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+    depends_on:
+      - registry
+secrets:
+  git_ssh_key:
+    file: ./keys/id_rsa
+  git_ssh_pubkey:
+    file: ./keys/id_rsa.pub
