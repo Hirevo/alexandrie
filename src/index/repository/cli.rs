@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use super::Repo;
+use super::r#trait::Repository as RepositoryTrait;
 use crate::error::Error;
 
 /// The 'command-line' crate index management strategy type.
@@ -18,7 +18,7 @@ impl Repository {
     }
 }
 
-impl Repo for Repository {
+impl RepositoryTrait for Repository {
     fn url(&self) -> Result<String, Error> {
         let output = Command::new("git")
             .arg("remote")

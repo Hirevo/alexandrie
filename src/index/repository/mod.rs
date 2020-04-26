@@ -6,14 +6,14 @@ use crate::error::Error;
 use std::path::Path;
 use std::path::PathBuf;
 
-trait Repo {
-    fn url(&self) -> Result<String, Error>;
+mod r#trait;
+use r#trait::Repository as RepositoryTrait;
 
-    fn refresh(&self) -> Result<(), Error>;
-
-    fn commit_and_push(&self, msg: &str) -> Result<(), Error>;
-}
-
+/// [`LocalRepository`] implements the [`Repository`] trait.
+///
+/// This git strategy manages a repository on the local machine. It can use *either*
+/// a [git-rs](https://docs.rs/git2/0.13.5/git2/) backend, or shell out to
+/// the system git CLI (depending on how it is configured).
 pub enum Repository {
     #[cfg(feature = "git2")]
     Git2(git2::Repository),
@@ -30,7 +30,7 @@ impl Repository {
         Self::Cli(cli::Repository::new(path))
     }
 
-    fn inner(&self) -> &dyn Repo {
+    fn inner(&self) -> &dyn RepositoryTrait {
         match self {
             #[cfg(feature = "git2")]
             Self::Git2(repo) => repo,
@@ -39,6 +39,8 @@ impl Repository {
     }
 }
 
+// This is an opaque implementation of `trait::Repository`, since
+// that trait is private.
 impl Repository {
     pub fn url(&self) -> Result<String, Error> {
         self.inner().url()
