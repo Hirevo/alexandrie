@@ -125,26 +125,22 @@ mod tests {
     #[test]
     fn from_config() {
         #[cfg(feature = "git2")]
-        match toml::from_str(
-            r#"
-        type = "git2"
-        path = "crate-index"
-        "#,
-        )
-        .unwrap()
         {
-            Config::Git2 { .. } => (),
-            Config::CommandLine { .. } => panic!("deserialization failed!"),
+            let config = r#"
+            type = "git2"
+            path = "crate-index"
+            "#;
+            match toml::from_str(config).unwrap() {
+                Config::Git2 { .. } => (),
+                Config::CommandLine { .. } => panic!("deserialization failed!"),
+            }
         }
 
-        match toml::from_str(
-            r#"
+        let config = r#"
         type = "command-line"
         path = "crate-index"
-        "#,
-        )
-        .unwrap()
-        {
+        "#;
+        match toml::from_str(config).unwrap() {
             #[cfg(feature = "git2")]
             Config::Git2 { .. } => panic!("deserialization failed!"),
             Config::CommandLine { .. } => (),
