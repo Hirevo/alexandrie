@@ -4,8 +4,8 @@ services:
     image: jkarlos/git-server-docker:latest
     volumes:
       - ./index/repos:/git-server/repos
-    ports:
-      - "22:22"
+    expose:
+      - "22"
     secrets:
       - source: git_ssh_pubkey
         target: /git-server/keys/id_rsa.pub

@@ -28,7 +28,7 @@ jobs:
     steps:
     - name: Checkout master branch
       uses: actions/checkout@master
-    - name: Install stable toolchain
+    - name: Run scenario
       env:
         DATABASE: mysql
         SCENARIO: simple-library
@@ -43,7 +43,7 @@ jobs:
     steps:
     - name: Checkout master branch
       uses: actions/checkout@master
-    - name: Install stable toolchain
+    - name: Run scenario
       env:
         DATABASE: postgres
         SCENARIO: simple-library
