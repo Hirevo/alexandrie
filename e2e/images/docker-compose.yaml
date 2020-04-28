@@ -13,6 +13,8 @@ services:
     build:
       context: ../..
       args:
+        - USER_ID=${USER_ID}
+        - GROUP_ID=${GROUP_ID}
         - DATABASE=${DATABASE}
     image: alexandrie-e2e-${DATABASE}:0.1
     environment:
@@ -25,13 +27,16 @@ services:
       - "3000:3000"
     volumes:
       - ../../docker/${DATABASE}/alexandrie.toml:/home/alex/alexandrie.toml
-      - ./e2e/images/keys:/home/alex/.ssh
+      - ./keys:/home/alex/.ssh
     depends_on:
       - index
   runner:
     build:
       context: .
       dockerfile: ./runner/Dockerfile
+      args:
+        - USER_ID=${USER_ID}
+        - GROUP_ID=${GROUP_ID}
     image: alexandrie-e2e-runner:0.1
     volumes:
       - "../scenarios/${SCENARIO}:/home/runner/original"

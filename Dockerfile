@@ -69,17 +69,20 @@ COPY migrations /home/alex/migrations
 # copy diesel config
 COPY diesel.toml /home/alex/diesel.toml
 
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
 # combine run instructions to reduce docker layers & overall image size
 RUN \
     # make a non-root user
-    groupadd -g 1000 alex && \
-    useradd -u 1000 -g 1000 alex && \
+    groupadd -g ${GROUP_ID} alex && \
+    useradd -u ${USER_ID} -g ${GROUP_ID} alex && \
     # make the user directory & give them access to everything in it
     # mkdir -p /home/alex && \
     mkdir -p /home/alex/.ssh && \
-    chown -R alex:alex /home/alex && \
+    chown -R ${USER_ID}:${GROUP_ID} /home/alex && \
     # give alex ownership of diesel
-    chown alex:alex /usr/bin/diesel && \
+    chown ${USER_ID}:${GROUP_ID} /usr/bin/diesel && \
     # give alex ownership of the startup script & make it executable
     chmod +x /home/alex/startup.sh
 

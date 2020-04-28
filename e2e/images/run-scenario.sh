@@ -65,6 +65,12 @@ function cleanup {
 
 trap 'cleanup' ERR
 
+export USER_ID="${USER_ID:-$(id -u)}"
+export GROUP_ID="${GROUP_ID:-$(id -g)}"
+
+# UNCOMMENT THE NEXT LINE TO ADJUST UID AND GID OF THE GENERATED KEYS.
+# sudo chmod -R ${USER_ID}:${GROUP_ID} ./keys
+
 docker-compose ${FLAGS} build
 docker-compose ${FLAGS} run runner
 docker-compose ${FLAGS} down -t 2

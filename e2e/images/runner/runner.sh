@@ -35,8 +35,6 @@ function ssh_setup_error {
 
 trap 'ssh_setup_error' ERR
 
-ls -l "${HOME}/.ssh"
-
 # fetch public key from the crate index's host
 ssh-keyscan -t rsa index >> "${HOME}/.ssh/known_hosts"
 

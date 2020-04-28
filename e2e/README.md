@@ -51,6 +51,16 @@ To run a scenario, simply navigate to the **`images/`** directory and run:
 export DATABASE="<mysql|postgres|sqlite>"
 export SCENARIO="<name-of-the-scenario>"
 ./run-scenario
+
+# To allow the containers to read the different mounted volumes (like the SSH keys),
+# by default, the UID and GID of your current user are passed to the Dockerfiles.
+# So, you may encounter an issue like one of the following:
+#  - groupadd: GID '..' already exists
+#  - useradd: UID '..' already exists
+# If so, then you can specify another UID and GID by:
+#  - setting the USER_ID and GROUP_ID environment variables
+#  - uncommenting the line in `run-scenario.sh` about using `chmod`
+#  - re-running `run-scenario.sh`
 ```
 
 It will take care of everything needed (generating new SSH keys, creating a blank repository, building and running the images to completion).
@@ -70,46 +80,3 @@ What you do within this script is entirely up to you to define (based on what is
   - You can use `set -e` at the beginning of your script to automatically exit if any error is encountered.
   - You can also trap any error and execute a bash function of yours to deal with it by doing `trap 'name_of_my_function' ERR`.  
     In this case, do not forget to add something like `exit 1` at the end of that bash function to still signal the failure to the **`runner`**.
-
-Additional things to know
--------------------------
-
-You can actually use all this to rapidly get an interactive shell with the same setup as any scenario.  
-It gives you an environment in which Cargo is already preconfigured to use the temporary registry and you can play with it or make tests without any fear of breaking anything real.  
-The way to do that is rather simple, simply run the following (from the **`images/`** directory):
-
-```bash
-# un-select any scenario.
-unset SCENARIO
-
-# FOR SQLITE:
-export DATABASE="sqlite"
-export FLAGS="-f docker-compose.yaml"
-# -----
-
-# FOR MYSQL:
-export DATABASE="mysql"
-export FLAGS="-f docker-compose.yaml -f mysql-compose.yaml"
-# -----
-
-# FOR POSTGRES:
-export DATABASE="postgres"
-export FLAGS="-f docker-compose.yaml -f postgres-compose.yaml"
-# -----
-
-# make sure previous containers are brought down.
-docker-compose ${FLAGS} down -t 2
-# rebuild the containers with the new settings.
-docker-compose ${FLAGS} build
-# start the interactive shell inside the runner.
-docker-compose ${FLAGS} run runner bash
-
-# once within the runner, just run to configure your environment (like the SSH keys and Cargo):
-source ./runner.sh
-# you should see it fail with './runner.sh: No such file or directory'.
-# this is normal, because no scenario have been mounted, so you can just ignore that.
-# your environment and Cargo are now properly configured and you can start tinkering.
-
-# after the interactive session, don't forget to bring the other containers down (the index and the registry).
-docker-compose ${FLAGS} down -t 2
-```
