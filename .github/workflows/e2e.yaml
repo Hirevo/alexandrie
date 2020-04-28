@@ -13,7 +13,7 @@ jobs:
     steps:
     - name: Checkout master branch
       uses: actions/checkout@master
-    - name: Install stable toolchain
+    - name: Run Scenario
       env:
         DATABASE: sqlite
         SCENARIO: simple-library
