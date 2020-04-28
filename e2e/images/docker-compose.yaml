@@ -40,11 +40,7 @@ services:
     volumes:
       - "../scenarios/${SCENARIO}:/home/runner/original"
     secrets:
-      - source: git_ssh_key
-        target: /home/runner/.ssh/id_rsa
-        uid: '1000'
-        gid: '1000'
-        mode: 0440
+      - git_ssh_key
     depends_on:
       - registry
 secrets:
