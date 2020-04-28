@@ -25,22 +25,17 @@ services:
       - "3000:3000"
     volumes:
       - ../../docker/${DATABASE}/alexandrie.toml:/home/alex/alexandrie.toml
-    secrets:
-      - source: git_ssh_key
-        target: /home/alex/.ssh/id_rsa
-        uid: '1000'
-        gid: '1000'
-        mode: 0440
+      - ./e2e/images/keys:/home/alex/.ssh
     depends_on:
       - index
   runner:
     build:
-      context: ./runner
+      context: .
+      dockerfile: ./runner/Dockerfile
     image: alexandrie-e2e-runner:0.1
     volumes:
       - "../scenarios/${SCENARIO}:/home/runner/original"
-    secrets:
-      - git_ssh_key
+      - "./keys/id_rsa:/home/runner/.ssh/id_rsa"
     depends_on:
       - registry
 secrets:

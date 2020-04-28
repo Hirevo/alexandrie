@@ -24,12 +24,4 @@ services:
     volumes:
       - ${APPDATA}:/home/alex/appdata
       - ./docker/${DATABASE}/alexandrie.toml:/home/alex/alexandrie.toml
-    secrets:
-      - source: git_ssh_key
-        target: /home/alex/.ssh/id_rsa
-        uid: '1000'
-        gid: '1000'
-        mode: 0440
-secrets:
-  git_ssh_key:
-    file: $GIT_SSH_KEY
+      - ${GIT_SSH_KEY}:/home/alex/.ssh/id_rsa

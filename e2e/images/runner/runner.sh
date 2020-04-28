@@ -35,23 +35,15 @@ function ssh_setup_error {
 
 trap 'ssh_setup_error' ERR
 
-# create `${HOME}/.ssh/` directory
-mkdir -p "${HOME}/.ssh"
+ls -l "${HOME}/.ssh"
 
-# copy private key to that `${HOME}/.ssh/` folder
-cp "/run/secrets/git_ssh_key" "${HOME}/.ssh/id_rsa"
-
-# set the appropriate permissions to both the folder and the key
-chmod 700 "${HOME}/.ssh" # execute permission for folders is needed to access it
-chmod 600 "${HOME}/.ssh/id_rsa"
-
-# fetch public key of the crate index
+# fetch public key from the crate index's host
 ssh-keyscan -t rsa index >> "${HOME}/.ssh/known_hosts"
 
-# start the ssh agent
+# start the SSH agent
 eval $(ssh-agent)
 
-# add ssh keys
+# add SSH keys
 ssh-add
 
 ##### Scenario config #####

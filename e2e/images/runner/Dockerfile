@@ -4,8 +4,8 @@ FROM rust:1.40
 RUN apt update
 RUN apt install -y curl jq
 
-# copy the test runner script in the container
-COPY ./runner.sh /home/runner/runner.sh
+# copy the test runner script into the container
+COPY ./runner/runner.sh /home/runner/runner.sh
 
 # combine run instructions to reduce docker layers & overall image size
 RUN \
