@@ -18,7 +18,7 @@ services:
     environment:
       CRATE_INDEX: git@index:/git-server/repos/index.git
       DATABASE: ${DATABASE}
-      GIT_NAME: EndToEndTester
+      GIT_NAME: Alexandrie E2E Tester
       GIT_EMAIL: nicolas@polomack.eu
       APPDATA: /home/alex/appdata
     ports:

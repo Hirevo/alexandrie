@@ -19,6 +19,8 @@ jobs:
         SCENARIO: simple-library
       run: |
         cd e2e/images
+        git config --global user.name "Alexandrie E2E Tester"
+        git config --global user.email "nicolas@polomack.eu"
         ./run-scenario.sh
   simple_library_mysql:
     name: 'Scenario: Simple library (mysql)'
@@ -32,6 +34,8 @@ jobs:
         SCENARIO: simple-library
       run: |
         cd e2e/images
+        git config --global user.name "Alexandrie E2E Tester"
+        git config --global user.email "nicolas@polomack.eu"
         ./run-scenario.sh
   simple_library_postgres:
     name: 'Scenario: Simple library (postgres)'
@@ -45,4 +49,6 @@ jobs:
         SCENARIO: simple-library
       run: |
         cd e2e/images
+        git config --global user.name "Alexandrie E2E Tester"
+        git config --global user.email "nicolas@polomack.eu"
         ./run-scenario.sh
