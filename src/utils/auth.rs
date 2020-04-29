@@ -95,7 +95,7 @@ impl AuthExt for Request<State> {
     }
 }
 
-/// Generates a new random token (as a hex-encoded SHA-512 digest).
+/// Generates a new random registry token (as a hex-encoded SHA-512 digest).
 pub fn generate_token() -> String {
     let mut data = [0u8; 16];
     let rng = SystemRandom::new();

@@ -1,4 +1,3 @@
-#![allow(clippy::redundant_closure, clippy::needless_lifetimes)]
 #![warn(unused, missing_docs)]
 //!
 //! This is an alternative crate registry for use with Cargo, written in Rust.
@@ -197,28 +196,42 @@ async fn run() -> Result<(), Error> {
         }
     }
 
-    info!("mounting '/api/v1/crates'");
-    app.at("/api/v1/crates").get(Handler::new(api::search::get));
-    info!("mounting '/api/v1/crates/new'");
-    app.at("/api/v1/crates/new")
-        .put(Handler::new(api::publish::put));
-    info!("mounting '/api/v1/crates/:name/owners'");
-    app.at("/api/v1/crates/:name/owners")
-        .get(Handler::new(api::owners::get))
-        .put(Handler::new(api::owners::put))
-        .delete(Handler::new(api::owners::delete));
-    info!("mounting '/api/v1/crates/:name/:version/yank'");
-    app.at("/api/v1/crates/:name/:version/yank")
-        .delete(Handler::new(api::yank::delete));
-    info!("mounting '/api/v1/crates/:name/:version/unyank'");
-    app.at("/api/v1/crates/:name/:version/unyank")
-        .put(Handler::new(api::unyank::put));
-    info!("mounting '/api/v1/crates/:name/:version/download'");
-    app.at("/api/v1/crates/:name/:version/download")
-        .get(Handler::new(api::download::get));
+    info!("mounting '/api/v1/account/register'");
+    app.at("/api/v1/account/register")
+        .post(Handler::new(api::account::register::post));
+    info!("mounting '/api/v1/account/login'");
+    app.at("/api/v1/account/login")
+        .post(Handler::new(api::account::login::post));
+    info!("mounting '/api/v1/account/token'");
+    app.at("/api/v1/account/token")
+        .post(Handler::new(api::account::token::post))
+        .delete(Handler::new(api::account::token::delete));
     info!("mounting '/api/v1/categories'");
     app.at("/api/v1/categories")
         .get(Handler::new(api::categories::get));
+    info!("mounting '/api/v1/crates'");
+    app.at("/api/v1/crates")
+        .get(Handler::new(api::crates::search::get));
+    info!("mounting '/api/v1/crates/new'");
+    app.at("/api/v1/crates/new")
+        .put(Handler::new(api::crates::publish::put));
+    info!("mounting '/api/v1/crates/:name'");
+    app.at("/api/v1/crates/:name")
+        .get(Handler::new(api::crates::info::get));
+    info!("mounting '/api/v1/crates/:name/owners'");
+    app.at("/api/v1/crates/:name/owners")
+        .get(Handler::new(api::crates::owners::get))
+        .put(Handler::new(api::crates::owners::put))
+        .delete(Handler::new(api::crates::owners::delete));
+    info!("mounting '/api/v1/crates/:name/:version/yank'");
+    app.at("/api/v1/crates/:name/:version/yank")
+        .delete(Handler::new(api::crates::yank::delete));
+    info!("mounting '/api/v1/crates/:name/:version/unyank'");
+    app.at("/api/v1/crates/:name/:version/unyank")
+        .put(Handler::new(api::crates::unyank::put));
+    info!("mounting '/api/v1/crates/:name/:version/download'");
+    app.at("/api/v1/crates/:name/:version/download")
+        .get(Handler::new(api::crates::download::get));
 
     info!("listening on {0}", addr);
     app.listen(addr).await?;
