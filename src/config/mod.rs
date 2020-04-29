@@ -1,11 +1,10 @@
+use std::convert::TryInto;
 use std::net;
 
 use serde::{Deserialize, Serialize};
 
 /// Database configuration (`[database]` section).
 pub mod database;
-/// Index management strategy configuration (`[index]` section).
-pub mod index;
 /// Crate storage configuration (`[storage]` section).
 pub mod storage;
 /// Syntax-highlighting configurations (`[syntect.syntaxes]` and `[syntect.themes]` sections).
@@ -20,9 +19,9 @@ use crate::storage::Storage;
 use crate::Repo;
 
 use crate::config::database::DatabaseConfig;
-use crate::config::index::IndexConfig;
 use crate::config::storage::StorageConfig;
 use crate::config::syntect::{SyntectConfig, SyntectState};
+use crate::index::Config as IndexConfig;
 
 #[cfg(feature = "frontend")]
 pub use crate::config::frontend::*;
@@ -72,7 +71,7 @@ pub struct State {
 impl From<Config> for State {
     fn from(config: Config) -> State {
         State {
-            index: config.index.into(),
+            index: config.index.try_into().unwrap(),
             storage: config.storage.into(),
             repo: Repo::new(&config.database),
             syntect: config.syntect.into(),
