@@ -1,7 +1,7 @@
 #
 # This is an expansion upon the docker-compose.yaml file in the root of this repo
 # It applies additional configuration to use a mysql database
-# 
+#
 # Apply it like `docker-compose -f docker-compose.yaml -f docker/mysql/mysql-compose.yaml up`
 # (Note file options should be applied before the `up` command)
 #
@@ -10,6 +10,8 @@ services:
   # add to the existing `web` definition to link the database container
   web:
     links:
+      - mysqldb
+    depends_on:
       - mysqldb
   # add database container
   mysqldb:

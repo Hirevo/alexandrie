@@ -67,12 +67,13 @@ url = "<path-to-sqlite-file>"
 url = ":memory:" # ephemeral in-memory database, doesn't persists between restarts
 ```
 
-Optionally, specify the maximum number of threads for the database connection pool. 
+Optionally, you can specify the maximum number of simultaneous open connections for the database connection pool:
 
 ```toml
 max_conns = 1
 ```
-If not specified, the `diesel-rs` default [value](https://docs.diesel.rs/diesel/r2d2/struct.Builder.html#method.max_size) is used.
+
+If not specified, the `r2d2` [default value](https://docs.diesel.rs/diesel/r2d2/struct.Builder.html#method.max_size) is used.
 
 Then, you can configure the crates' tarballs storage strategy and the crate index management strategy that you want to use.  
 Here is how to do it (these are also the defaults, you can leave them out if you want):
@@ -135,16 +136,14 @@ You can host Alexandrie in a Docker container on your computer or a host machine
 
 To get started, you'll need to copy the `example.env` file and save it as `.env` (filename is important). You should:
 
-* Set `APPDATA` to the path of a new directory where the container will store the crate index, crate files, & database file.
-* Set `CRATE_INDEX` to the SSH path of an existing repo with a valid index `config.json` file.
-* Set `GIT_NAME` and `GIT_EMAIL` to valid git values that will be used when Alexandrie commits & pushes those commits to the index.
-* Set `GIT_SSH_KEY` to a new or existing passwordless SSH key. The `.pub` key associated with this key should be added to github/gitlab/etc. to grant access to push to the crate index.
+- Set `APPDATA` to the path of a new directory where the container will store the crate index, crate files, & database file.
+- Set `CRATE_INDEX` to the SSH path of an existing repo with a valid index `config.json` file.
+- Set `GIT_NAME` and `GIT_EMAIL` to valid git values that will be used when Alexandrie commits & pushes those commits to the index.
+- Set `GIT_SSH_KEY` to a new or existing passwordless SSH key. The `.pub` key associated with this key should be added to GitHub/GitLab/etc. to grant access to push to the crate index.
 
 These items will be mounted into the Docker container, and need to be accessible by a user with UID and GID `1000`. If Docker appears to complain that any of these are inaccessible, check your paths and your file/directory permissions.
 
-
 By default, Alexandrie will use SQLite for its database. If you want to use either MySQL or PostgreSQL instead, you'll need to create a `rootpass.txt` in `docker/<database>/`. The entire contents of this file will be copied and used as the password for the root user of the database; don't add an ending newline unless your password actually contains one!
-
 
 To run Alexandrie, call the `run_docker.sh` script, with arguments depending on the action and database you want. For example, to start Alexandrie in the background with the default SQLite database, do:
 
