@@ -191,10 +191,14 @@ async fn run() -> Result<(), Error> {
     info!("mounting '/api/v1/account/login'");
     app.at("/api/v1/account/login")
         .post(Handler::new(api::account::login::post));
-    info!("mounting '/api/v1/account/token'");
-    app.at("/api/v1/account/token")
-        .post(Handler::new(api::account::token::post))
-        .delete(Handler::new(api::account::token::delete));
+    info!("mounting '/api/v1/account/tokens'");
+    app.at("/api/v1/account/tokens")
+        .post(Handler::new(api::account::token::info::post))
+        .put(Handler::new(api::account::token::generate::put))
+        .delete(Handler::new(api::account::token::revoke::delete));
+    info!("mounting '/api/v1/account/tokens/:name'");
+    app.at("/api/v1/account/tokens/:name")
+        .get(Handler::new(api::account::token::info::get));
     info!("mounting '/api/v1/categories'");
     app.at("/api/v1/categories")
         .get(Handler::new(api::categories::get));
