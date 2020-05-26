@@ -1,7 +1,6 @@
-/// Token information endpoint (eg. "/api/v1/account/token/info").
+/// Token generation endpoint (eg. "PUT /api/v1/account/tokens").
+pub mod generate;
+/// Token information endpoint (eg. "GET /api/v1/account/tokens/\<name\>").
 pub mod info;
-/// Token revocation endpoint (eg. "/api/v1/account/token/revoke").
+/// Token revocation endpoint (eg. "DELETE /api/v1/account/tokens").
 pub mod revoke;
-
-pub use self::info::post;
-pub use self::revoke::delete;
