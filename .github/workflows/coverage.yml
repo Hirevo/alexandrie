@@ -1,26 +1,26 @@
-on: [push, pull_request]
+name: Coverage
 
-name: Code Coverage
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
   coverage:
-    name: Test Coverage
+    name: Measure test coverage
     runs-on: ubuntu-latest
     steps:
-
       - name: checkout source
         uses: actions/checkout@v2
-
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
           override: true
-
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
-
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1
         with:

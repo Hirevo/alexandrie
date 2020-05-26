@@ -1,0 +1,26 @@
+name: Formatting
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  check_fmt:
+    name: Check code formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v2
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Install rustfmt
+        run: |
+          rustup component add rustfmt
+          rustfmt --version
+      - name: Check formatting
+        run: cargo fmt --all -- --check
