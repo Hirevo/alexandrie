@@ -1,6 +1,10 @@
-on: [push, pull_request]
-
 name: Coverage
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
   coverage:

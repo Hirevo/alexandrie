@@ -1,6 +1,10 @@
-on: [push, pull_request]
-
 name: Formatting
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
   check_fmt:
