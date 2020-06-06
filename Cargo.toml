@@ -54,13 +54,14 @@ syntect = "4.2.0"
 cmark = { package = "pulldown-cmark", version = "0.7.1" }
 flate2 = "1.0.14"
 tar = "0.4.28"
+ammonia = "3.0.0"
 
 # frontend
 handlebars = { version = "3.1.0", features = ["dir_source"], optional = true }
 cookie = { version = "0.14.1", features = ["percent-encode"], optional = true }
 time = { version = "0.2.16", optional = true }
 num-format = { version = "0.4.0", optional = true }
-bigdecimal = { version = "0.0.15", features = ["serde"], optional = true }
+bigdecimal = { version = "0.1.0", features = ["serde"], optional = true }
 
 # git2
 git2 = { version = "0.13.6", optional = true }
