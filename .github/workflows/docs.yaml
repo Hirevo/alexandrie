@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Install mdbook
         env:
-          VERSION: v0.3.5
+          VERSION: v0.3.7
         run: |
           wget "https://github.com/rust-lang/mdBook/releases/download/${VERSION}/mdbook-${VERSION}-x86_64-unknown-linux-gnu.tar.gz" -O 'mdbook.tar.gz'
           tar xvzf mdbook.tar.gz
@@ -27,7 +27,7 @@ jobs:
           ../mdbook build
       - name: Deploy to GitHub Pages
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export COMMIT_HASH="$(echo "${GITHUB_SHA}" | cut -c1-7)"
           cd docs/book
