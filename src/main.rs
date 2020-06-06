@@ -166,6 +166,9 @@ async fn run() -> Result<(), Error> {
     app.at("/api/v1/crates").get(api::crates::search::get);
     info!("mounting '/api/v1/crates/new'");
     app.at("/api/v1/crates/new").put(api::crates::publish::put);
+    info!("mounting '/api/v1/crates/suggest'");
+    app.at("/api/v1/crates/suggest")
+        .get(api::crates::suggest::get);
     info!("mounting '/api/v1/crates/:name'");
     app.at("/api/v1/crates/:name").get(api::crates::info::get);
     info!("mounting '/api/v1/crates/:name/owners'");

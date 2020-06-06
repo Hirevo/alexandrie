@@ -89,7 +89,6 @@
             background-color: var(--lighter-bg-color);
             color: var(--fg-color);
             padding: 20px;
-            box-shadow: 0 0 10px #0006;
             border-radius: 10px;
             cursor: pointer;
             transition: transform 0.15s;
@@ -279,7 +278,7 @@
         <div class="search-results">
             {{#if results}}
             {{#each results}}
-            <a class="search-result" href="/crates/{{ this.name }}">
+            <a class="search-result elevated" href="/crates/{{ this.name }}">
                 <div class="search-result-infos">
                     <div class="search-result-title">
                         {{ this.name }} #{{ this.version }}

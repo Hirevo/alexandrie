@@ -38,7 +38,7 @@ struct SearchMeta {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct SearchParams {
+struct QueryParams {
     pub q: String,
     pub per_page: Option<NonZeroU32>,
     pub page: Option<NonZeroU32>,
@@ -47,7 +47,7 @@ struct SearchParams {
 /// Route to search through crates (used by `cargo search`).
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let params = req
-        .query::<SearchParams>()
+        .query::<QueryParams>()
         .map_err(|_| AlexError::MissingQueryParams {
             missing_params: &["q"],
         })?;
