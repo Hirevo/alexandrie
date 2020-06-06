@@ -4,7 +4,7 @@ use diesel::dsl as sql;
 use diesel::prelude::*;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::models::Crate;
 use crate::db::schema::*;
@@ -45,7 +45,7 @@ struct SearchParams {
 }
 
 /// Route to search through crates (used by `cargo search`).
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let params = req
         .query::<SearchParams>()
         .map_err(|_| AlexError::MissingQueryParams {

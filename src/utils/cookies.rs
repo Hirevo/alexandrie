@@ -2,8 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use cookie::{Cookie, CookieJar};
 use futures::future::BoxFuture;
-use http::header::HeaderMap;
-use tide::{Middleware, Next, Request, Response};
+use tide::{Middleware, Next, Request};
 
 /// Middleware for working with cookies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -21,20 +20,20 @@ impl<State: Send + Sync + 'static> Middleware<State> for CookiesMiddleware {
         &'a self,
         mut req: Request<State>,
         next: Next<'a, State>,
-    ) -> BoxFuture<'a, Response> {
+    ) -> BoxFuture<'a, tide::Result> {
         futures::FutureExt::boxed(async move {
-            let data = CookieData::from_headers(req.headers());
+            let data = CookieData::from_request(&req);
             let jar = data.content.clone();
-            req = req.set_local(data);
+            req.set_ext(data);
 
-            let mut res = next.run(req).await;
+            let mut res = next.run(req).await?;
 
             let locked = jar.read().unwrap();
             for cookie in locked.delta() {
-                res = res.set_header("set-cookie", cookie.encoded().to_string());
+                res.append_header("set-cookie", cookie.encoded().to_string());
             }
 
-            res
+            Ok(res)
         })
     }
 }
@@ -48,19 +47,18 @@ pub struct CookieData {
 
 impl CookieData {
     /// Construct the cookie jar from request headers.
-    pub fn from_headers(headers: &HeaderMap) -> Self {
+    pub fn from_request<State>(req: &Request<State>) -> Self {
         let mut jar = CookieJar::new();
 
-        let iter = headers
-            .get_all(http::header::COOKIE)
-            .iter()
-            .flat_map(|value| value.to_str());
-        for value in iter {
-            let iter = value
-                .split(';')
-                .flat_map(|value| Cookie::parse(value.trim().to_owned()));
-            for cookie in iter {
-                jar.add_original(cookie);
+        if let Some(headers) = req.header(tide::http::headers::COOKIE) {
+            for header in headers {
+                let iter = header
+                    .as_str()
+                    .split(';')
+                    .flat_map(|value| Cookie::parse(value.trim().to_owned()));
+                for cookie in iter {
+                    jar.add_original(cookie);
+                }
             }
         }
 
@@ -85,20 +83,20 @@ pub trait CookiesExt {
 
 impl<State> CookiesExt for Request<State> {
     fn get_cookie(&self, name: &str) -> Option<Cookie<'static>> {
-        let data = self.local::<CookieData>();
+        let data = self.ext::<CookieData>();
         let locked = data?.content.read().unwrap();
         locked.get(name).cloned()
     }
 
     fn set_cookie(&mut self, cookie: Cookie<'static>) -> Option<()> {
-        let data = self.local::<CookieData>();
+        let data = self.ext::<CookieData>();
         let mut locked = data?.content.write().unwrap();
         locked.add(cookie);
         Some(())
     }
 
     fn remove_cookie(&mut self, cookie: Cookie<'static>) -> Option<()> {
-        let data = self.local::<CookieData>();
+        let data = self.ext::<CookieData>();
         let mut locked = data?.content.write().unwrap();
         locked.remove(cookie);
         Some(())

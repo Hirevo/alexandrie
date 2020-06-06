@@ -1,12 +1,11 @@
 use diesel::prelude::*;
-use http::StatusCode;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
 use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::utils;
-use crate::{Error, State};
+use crate::State;
 
 /// Response body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -32,7 +31,7 @@ pub struct ResponseBody {
 }
 
 /// Route to get information about a crate.
-pub async fn get(req: Request<State>) -> Result<Response, Error> {
+pub async fn get(req: Request<State>) -> tide::Result {
     let name = req.param::<String>("name").unwrap();
 
     let state = req.state().clone();
@@ -53,7 +52,7 @@ pub async fn get(req: Request<State>) -> Result<Response, Error> {
         Some(krate) => krate,
         None => {
             return Ok(utils::response::error(
-                StatusCode::NOT_FOUND,
+                StatusCode::NotFound,
                 "the crate could not be found",
             ))
         }

@@ -12,10 +12,7 @@ use toml::de::Error as TOMLError;
 #[cfg(feature = "git2")]
 use git2::Error as Git2Error;
 
-use tide::{IntoResponse, Response};
-
 use crate::db::models::Author;
-use crate::utils;
 
 /// The Error type for the registry.
 ///
@@ -24,29 +21,29 @@ use crate::utils;
 pub enum Error {
     /// An IO error (file not found, access forbidden, etc...).
     #[error("IO error: {0}")]
-    IOError(#[source] IOError),
+    IOError(#[from] IOError),
     /// JSON (de)serialization error (invalid JSON parsed, etc...).
     #[error("JSON error: {0}")]
-    JSONError(#[source] JSONError),
+    JSONError(#[from] JSONError),
     /// TOML (de)serialization error (invalid TOML parsed, etc...).
     #[error("TOML error: {0}")]
-    TOMLError(#[source] TOMLError),
+    TOMLError(#[from] TOMLError),
     /// SQL error (invalid queries, database disconnections, etc...).
     #[error("SQL error: {0}")]
-    SQLError(#[source] SQLError),
+    SQLError(#[from] SQLError),
     /// Version parsing errors (invalid version format parsed, etc...).
     #[error("semver error: {0}")]
-    SemverError(#[source] SemverError),
+    SemverError(#[from] SemverError),
     /// Hexadecimal decoding errors (odd length, etc...).
     #[error("hex error: {0}")]
-    HexError(#[source] HexError),
+    HexError(#[from] HexError),
     /// Alexandrie's custom errors (crate not found, invalid token, etc...).
     #[error("alexandrie error: {0}")]
-    AlexError(#[source] AlexError),
+    AlexError(#[from] AlexError),
     /// Git2 error.
     #[error("libgit2 error: {0}")]
     #[cfg(feature = "git2")]
-    Git2Error(#[source] Git2Error),
+    Git2Error(#[from] Git2Error),
 }
 
 /// The Error type for Alexandrie's own errors.
@@ -87,66 +84,17 @@ pub enum AlexError {
     },
 }
 
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        error!("constructing error response: {0}", self);
-        let message = match self {
-            Error::AlexError(err) => err.to_string(),
-            _ => "internal server error".to_string(),
-        };
+// impl IntoResponse for Error {
+//     fn into_response(self) -> Response {
+//         error!("constructing error response: {0}", self);
+//         let message = match self {
+//             Error::AlexError(err) => err.to_string(),
+//             _ => "internal server error".to_string(),
+//         };
 
-        utils::response::error(http::StatusCode::INTERNAL_SERVER_ERROR, message)
-    }
-}
-
-impl From<IOError> for Error {
-    fn from(err: IOError) -> Error {
-        Error::IOError(err)
-    }
-}
-
-impl From<JSONError> for Error {
-    fn from(err: JSONError) -> Error {
-        Error::JSONError(err)
-    }
-}
-
-impl From<toml::de::Error> for Error {
-    fn from(err: toml::de::Error) -> Error {
-        Error::TOMLError(err)
-    }
-}
-
-impl From<SQLError> for Error {
-    fn from(err: SQLError) -> Error {
-        Error::SQLError(err)
-    }
-}
-
-impl From<SemverError> for Error {
-    fn from(err: SemverError) -> Error {
-        Error::SemverError(err)
-    }
-}
-
-impl From<HexError> for Error {
-    fn from(err: HexError) -> Error {
-        Error::HexError(err)
-    }
-}
-
-impl From<AlexError> for Error {
-    fn from(err: AlexError) -> Error {
-        Error::AlexError(err)
-    }
-}
-
-#[cfg(feature = "git2")]
-impl From<Git2Error> for Error {
-    fn from(err: Git2Error) -> Error {
-        Error::Git2Error(err)
-    }
-}
+//         utils::response::error(http::StatusCode::InternalServerError, message)
+//     }
+// }
 
 impl TryInto<IOError> for Error {
     type Error = ();

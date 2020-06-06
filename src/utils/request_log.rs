@@ -1,5 +1,5 @@
 use futures::future::BoxFuture;
-use tide::{Middleware, Next, Request, Response};
+use tide::{Middleware, Next, Request};
 
 /// Middleware for logging requests.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -16,26 +16,28 @@ impl RequestLogger {
         self,
         req: Request<State>,
         next: Next<'a, State>,
-    ) -> Response {
-        let path = req.uri().path().to_owned();
-        let method = req.method().as_str().to_owned();
-        trace!("IN => {} {}", method, path);
+    ) -> tide::Result {
+        let path = req.url().path().to_string();
+        let method = req.method();
+        info!("<-- {} {}", method, path);
         let start = std::time::Instant::now();
         let res = next.run(req).await;
-        let status = res.status();
-        info!(
-            "{} {} {} {}ms",
-            method,
-            path,
-            status.as_str(),
-            start.elapsed().as_millis()
-        );
+        let elapsed = start.elapsed().as_millis();
+        let status = match res.as_ref() {
+            Ok(res) => res.status(),
+            Err(err) => err.status(),
+        };
+        info!("--> {} {} {} {}ms", method, path, status, elapsed,);
         res
     }
 }
 
 impl<State: Send + Sync + 'static> Middleware<State> for RequestLogger {
-    fn handle<'a>(&'a self, req: Request<State>, next: Next<'a, State>) -> BoxFuture<'a, Response> {
+    fn handle<'a>(
+        &'a self,
+        req: Request<State>,
+        next: Next<'a, State>,
+    ) -> BoxFuture<'a, tide::Result> {
         Box::pin(async move { self.log_request(req, next).await })
     }
 }

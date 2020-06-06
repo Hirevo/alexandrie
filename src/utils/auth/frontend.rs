@@ -1,13 +1,10 @@
 use diesel::prelude::*;
 use futures::future::BoxFuture;
-use ring::digest as hasher;
-use ring::rand::{SecureRandom, SystemRandom};
-use tide::{IntoResponse, Middleware, Next, Request, Response};
+use tide::{Middleware, Next, Request};
 
 use crate::db::models::Author;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
-use crate::error::Error;
 use crate::utils::cookies::CookiesExt;
 use crate::State;
 
@@ -35,7 +32,7 @@ impl Middleware<State> for AuthMiddleware {
         &'a self,
         mut req: Request<State>,
         next: Next<'a, State>,
-    ) -> BoxFuture<'a, Response> {
+    ) -> BoxFuture<'a, tide::Result> {
         futures::FutureExt::boxed(async move {
             let now = chrono::Utc::now().naive_utc();
             let cookie = req.get_cookie(COOKIE_NAME);
@@ -55,7 +52,7 @@ impl Middleware<State> for AuthMiddleware {
 
                 let results = match query.await {
                     Ok(results) => results,
-                    Err(err) => return Error::from(err).into_response(),
+                    Err(err) => return Err(tide::Error::from(err)),
                 };
 
                 if let Some((expires, author)) = results {
@@ -64,7 +61,7 @@ impl Middleware<State> for AuthMiddleware {
                             .unwrap();
 
                     if expires > now {
-                        req = req.set_local(author);
+                        req.set_ext(author);
                     }
                 }
             }
@@ -87,18 +84,10 @@ pub trait AuthExt {
 
 impl AuthExt for Request<State> {
     fn get_author(&self) -> Option<Author> {
-        self.local::<Author>().cloned()
+        self.ext::<Author>().cloned()
     }
 
     fn is_authenticated(&self) -> bool {
-        self.local::<Author>().is_some()
+        self.ext::<Author>().is_some()
     }
-}
-
-/// Generates a new random registry token (as a hex-encoded SHA-512 digest).
-pub fn generate_token() -> String {
-    let mut data = [0u8; 16];
-    let rng = SystemRandom::new();
-    rng.fill(&mut data).unwrap();
-    hex::encode(hasher::digest(&hasher::SHA512, data.as_ref()))
 }

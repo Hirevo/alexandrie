@@ -1,13 +1,12 @@
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
 /// Token revocation routes (eg. "/account/manage/tokens/5/revoke").
 pub mod revoke;
 
 use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
-use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::utils::flash::{FlashExt, FlashMessage};
@@ -21,7 +20,7 @@ struct CreateTokenForm {
     token_name: String,
 }
 
-pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     let author = match req.get_author() {
         Some(author) => author,
         None => {
@@ -36,7 +35,7 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
             return Ok(utils::response::error_html(
                 req.state(),
                 Some(author),
-                http::StatusCode::BAD_REQUEST,
+                StatusCode::BadRequest,
                 "could not deseriailize form data",
             ));
         }

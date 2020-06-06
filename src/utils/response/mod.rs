@@ -1,7 +1,6 @@
-use http::status::StatusCode;
 use json::json;
 use serde::Serialize;
-use tide::Response;
+use tide::{Body, Response, StatusCode};
 
 /// Various utilities to construct common response pages.
 #[cfg(feature = "frontend")]
@@ -14,24 +13,27 @@ use crate::db::models::Author;
 
 /// Constructs a HTML response with the provided body.
 pub fn html(body: String) -> Response {
-    self::html_with_status(StatusCode::OK, body)
+    self::html_with_status(StatusCode::Ok, body)
 }
 
 /// Constructs a HTML response with the provided body and status code.
 pub fn html_with_status(status: StatusCode, body: String) -> Response {
-    Response::new(status.as_u16())
-        .body_string(body)
-        .set_header("content-type", "text/html")
+    let mut response = Response::new(status);
+    response.set_body(Body::from_string(body));
+    response.insert_header("content-type", "text/html");
+    response
 }
 
 /// Constructs a JSON response with the provided body.
 pub fn json(body: &impl Serialize) -> Response {
-    self::json_with_status(StatusCode::OK, body)
+    self::json_with_status(StatusCode::Ok, body)
 }
 
 /// Constructs a JSON response with the provided body and status code.
 pub fn json_with_status(status: StatusCode, body: &impl Serialize) -> Response {
-    Response::new(status.as_u16()).body_json(body).unwrap()
+    let mut response = Response::new(status);
+    response.set_body(Body::from_json(body).unwrap());
+    response
 }
 
 /// Constructs an API error (JSON) response with the specified status code and error message.
@@ -62,5 +64,7 @@ pub fn error_html(
 
 /// Constructs a redirection response (302 Found) to the specified URL.
 pub fn redirect(url: &str) -> Response {
-    Response::new(StatusCode::FOUND.as_u16()).set_header("location", url)
+    let mut response = Response::new(StatusCode::Found);
+    response.insert_header("location", url);
+    response
 }

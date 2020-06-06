@@ -1,12 +1,11 @@
 use diesel::prelude::*;
-use http::StatusCode;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
 use crate::db::models::AuthorToken;
 use crate::db::schema::*;
 use crate::utils;
-use crate::{Error, State};
+use crate::State;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,22 +24,25 @@ pub struct ResponseBody {
 }
 
 /// Route to get information about a registry token.
-pub async fn get(req: Request<State>) -> Result<Response, Error> {
+pub async fn get(req: Request<State>) -> tide::Result {
     let name = req.param::<String>("name").unwrap();
 
     let state = req.state().clone();
     let repo = &state.repo;
 
     //? Is the author logged in ?
-    let headers = req.headers().clone();
-    let author = repo
-        .run(move |conn| utils::checks::get_author(conn, &headers))
-        .await;
+    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
+        let header = headers.last().to_string();
+        repo.run(move |conn| utils::checks::get_author(conn, header))
+            .await
+    } else {
+        None
+    };
     let author = match author {
         Some(author) => author,
         None => {
             return Ok(utils::response::error(
-                StatusCode::UNAUTHORIZED,
+                StatusCode::Unauthorized,
                 "please log in first to access token information",
             ));
         }
@@ -62,7 +64,7 @@ pub async fn get(req: Request<State>) -> Result<Response, Error> {
         Some(token) => token,
         None => {
             return Ok(utils::response::error(
-                StatusCode::NOT_FOUND,
+                StatusCode::NotFound,
                 "no token was found for the supplied name",
             ))
         }
@@ -77,20 +79,23 @@ pub async fn get(req: Request<State>) -> Result<Response, Error> {
 }
 
 /// Route to get information about a registry token.
-pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
+pub async fn post(mut req: Request<State>) -> tide::Result {
     let state = req.state().clone();
     let repo = &state.repo;
 
     //? Is the author logged in ?
-    let headers = req.headers().clone();
-    let author = repo
-        .run(move |conn| utils::checks::get_author(conn, &headers))
-        .await;
+    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
+        let header = headers.last().to_string();
+        repo.run(move |conn| utils::checks::get_author(conn, header))
+            .await
+    } else {
+        None
+    };
     let author = match author {
         Some(author) => author,
         None => {
             return Ok(utils::response::error(
-                StatusCode::UNAUTHORIZED,
+                StatusCode::Unauthorized,
                 "please log in first to access token information",
             ));
         }
@@ -115,7 +120,7 @@ pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
         Some(token) => token,
         None => {
             return Ok(utils::response::error(
-                StatusCode::FORBIDDEN,
+                StatusCode::Forbidden,
                 "unauthorized access to this token",
             ))
         }

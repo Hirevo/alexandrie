@@ -61,7 +61,7 @@ impl DerefMut for FlashMessage {
 /// A trait to extend `Context` with helper methods for manipulating flash cookies.
 pub trait FlashExt {
     /// Get the received flash message for this request, if any.
-    /// This consumes the flash message (calling in twice for the same request will yield `None`).
+    /// This consumes the flash message (calling in twice for the same request will yield `None` for the second call).
     fn get_flash_message(&mut self) -> Option<FlashMessage>;
 
     /// Serializes the message and sets it as a flash cookie for the next request.
@@ -74,23 +74,13 @@ impl<State> FlashExt for Request<State> {
         let percent_decoded: Vec<u8> =
             percent_encoding::percent_decode_str(cookie.value()).collect();
         let payload = base64::decode(percent_decoded.as_slice()).ok()?;
-
-        let cookie = Cookie::build(COOKIE_NAME, "none")
-            .path("/")
-            .http_only(true)
-            .expires(time::at_utc(time::Timespec::new(0, 0)))
-            .finish();
-        self.set_cookie(cookie)?;
+        self.remove_cookie(cookie)?;
         Some(FlashMessage(payload))
     }
 
     fn set_flash_message(&mut self, message: FlashMessage) -> Option<()> {
         let message = base64::encode(message.as_slice());
-        let cookie = Cookie::build(COOKIE_NAME, message)
-            .path("/")
-            .http_only(true)
-            .finish();
-
+        let cookie = Cookie::build(COOKIE_NAME, message).http_only(true).finish();
         self.set_cookie(cookie)?;
         Some(())
     }

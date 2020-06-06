@@ -4,7 +4,7 @@ use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::models::Crate;
 use crate::db::schema::*;
@@ -22,7 +22,7 @@ struct SearchParams {
     pub page: Option<NonZeroU32>,
 }
 
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let params = req.query::<SearchParams>().unwrap();
     let searched_text = params.q.clone();
     let q = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));

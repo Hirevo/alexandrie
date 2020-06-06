@@ -1,5 +1,4 @@
-use http::status::StatusCode;
-use tide::Response;
+use tide::{Response, StatusCode};
 
 use crate::config::State;
 use crate::db::models::Author;
@@ -9,7 +8,7 @@ pub fn already_logged_in(state: &State, user: Author) -> Response {
     super::error_html(
         state,
         Some(user),
-        StatusCode::FORBIDDEN,
+        StatusCode::Forbidden,
         "You are already logged in.",
     )
 }
@@ -19,7 +18,7 @@ pub fn need_to_login(state: &State) -> Response {
     super::error_html(
         state,
         None,
-        StatusCode::FORBIDDEN,
+        StatusCode::Forbidden,
         "You need to login first.",
     )
 }

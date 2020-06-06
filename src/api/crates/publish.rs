@@ -13,7 +13,7 @@ use ring::digest as hasher;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use tar::Archive;
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::models::{
     Crate, NewBadge, NewCrate, NewCrateAuthor, NewCrateCategory, NewCrateKeyword,
@@ -171,12 +171,16 @@ fn link_badges(
 }
 
 /// Route to publish a new crate (used by `cargo publish`).
-pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
-    let headers = req.headers().clone();
+pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     let state = req.state().clone();
     let repo = &state.repo;
+
+    let headers = req
+        .header(utils::auth::AUTHORIZATION_HEADER)
+        .ok_or(AlexError::InvalidToken)?;
+    let header = headers.last().to_string();
     let author = repo
-        .run(move |conn| utils::checks::get_author(conn, &headers))
+        .run(move |conn| utils::checks::get_author(conn, header))
         .await
         .ok_or(AlexError::InvalidToken)?;
 
@@ -373,5 +377,5 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
         Ok(utils::response::json(&body))
     });
 
-    transaction.await
+    Ok(transaction.await?)
 }

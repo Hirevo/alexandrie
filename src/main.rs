@@ -58,8 +58,6 @@ use crate::utils::request_log::RequestLogger;
 use crate::utils::auth::AuthMiddleware;
 #[cfg(feature = "frontend")]
 use crate::utils::cookies::CookiesMiddleware;
-#[cfg(feature = "frontend")]
-use crate::utils::static_files::StaticFiles;
 
 /// The instantiated [`crate::db::Repo`] type alias.
 pub type Repo = db::Repo<db::Connection>;
@@ -73,40 +71,6 @@ embed_migrations!("migrations/mysql");
 embed_migrations!("migrations/sqlite");
 #[cfg(feature = "postgres")]
 embed_migrations!("migrations/postgres");
-
-use futures::future::{BoxFuture, FutureExt};
-use std::future::Future;
-use tide::{Endpoint, IntoResponse, Request, Response};
-
-struct Handler<F> {
-    handler: F,
-}
-
-impl<F, Fut> Handler<F>
-where
-    F: Fn(Request<State>) -> Fut + Send + 'static,
-    Fut: Future<Output = Result<Response, Error>> + Send + 'static,
-{
-    pub fn new(handler: F) -> Handler<F> {
-        Handler { handler }
-    }
-}
-
-impl<F, Fut> Endpoint<State> for Handler<F>
-where
-    F: Fn(Request<State>) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<Response, Error>> + Send + 'static,
-{
-    type Fut = BoxFuture<'static, Response>;
-
-    fn call(&self, req: Request<State>) -> Self::Fut {
-        let handler = &self.handler;
-        futures::FutureExt::boxed(handler(req).map(|ret| match ret {
-            Ok(value) => value.into_response(),
-            Err(err) => err.into_response(),
-        }))
-    }
-}
 
 #[allow(clippy::cognitive_complexity)]
 async fn run() -> Result<(), Error> {
@@ -140,91 +104,84 @@ async fn run() -> Result<(), Error> {
             app.middleware(AuthMiddleware::new());
 
             info!("mounting '/'");
-            app.at("/").get(Handler::new(frontend::index::get));
+            app.at("/").get(frontend::index::get);
             info!("mounting '/me'");
-            app.at("/me").get(Handler::new(frontend::me::get));
+            app.at("/me").get(frontend::me::get);
             info!("mounting '/search'");
-            app.at("/search").get(Handler::new(frontend::search::get));
+            app.at("/search").get(frontend::search::get);
             info!("mounting '/most-downloaded'");
             app.at("/most-downloaded")
-                .get(Handler::new(frontend::most_downloaded::get));
+                .get(frontend::most_downloaded::get);
             info!("mounting '/last-updated'");
-            app.at("/last-updated")
-                .get(Handler::new(frontend::last_updated::get));
+            app.at("/last-updated").get(frontend::last_updated::get);
             info!("mounting '/crates/:crate'");
-            app.at("/crates/:crate")
-                .get(Handler::new(frontend::krate::get));
+            app.at("/crates/:crate").get(frontend::krate::get);
 
             info!("mounting '/account/login'");
             app.at("/account/login")
-                .get(Handler::new(frontend::account::login::get))
-                .post(Handler::new(frontend::account::login::post));
+                .get(frontend::account::login::get)
+                .post(frontend::account::login::post);
             info!("mounting '/account/logout'");
             app.at("/account/logout")
-                .get(Handler::new(frontend::account::logout::get));
+                .get(frontend::account::logout::get);
             info!("mounting '/account/register'");
             app.at("/account/register")
-                .get(Handler::new(frontend::account::register::get))
-                .post(Handler::new(frontend::account::register::post));
+                .get(frontend::account::register::get)
+                .post(frontend::account::register::post);
             info!("mounting '/account/manage'");
             app.at("/account/manage")
-                .get(Handler::new(frontend::account::manage::get));
+                .get(frontend::account::manage::get);
             info!("mounting '/account/manage/password'");
             app.at("/account/manage/password")
-                .post(Handler::new(frontend::account::manage::passwd::post));
+                .post(frontend::account::manage::passwd::post);
             info!("mounting '/account/manage/tokens'");
             app.at("/account/manage/tokens")
-                .post(Handler::new(frontend::account::manage::tokens::post));
+                .post(frontend::account::manage::tokens::post);
             info!("mounting '/account/manage/tokens/:token-id/revoke'");
             app.at("/account/manage/tokens/:token-id/revoke")
-                .get(Handler::new(frontend::account::manage::tokens::revoke::get));
+                .get(frontend::account::manage::tokens::revoke::get);
 
             info!("mounting '/assets/*path'");
-            app.at("/assets/*path")
-                .get(StaticFiles::new("assets").await?);
+            app.at("/assets").serve_dir("assets")?;
         }
     }
 
     info!("mounting '/api/v1/account/register'");
     app.at("/api/v1/account/register")
-        .post(Handler::new(api::account::register::post));
+        .post(api::account::register::post);
     info!("mounting '/api/v1/account/login'");
     app.at("/api/v1/account/login")
-        .post(Handler::new(api::account::login::post));
+        .post(api::account::login::post);
     info!("mounting '/api/v1/account/tokens'");
     app.at("/api/v1/account/tokens")
-        .post(Handler::new(api::account::token::info::post))
-        .put(Handler::new(api::account::token::generate::put))
-        .delete(Handler::new(api::account::token::revoke::delete));
+        .post(api::account::token::info::post)
+        .put(api::account::token::generate::put)
+        .delete(api::account::token::revoke::delete);
     info!("mounting '/api/v1/account/tokens/:name'");
     app.at("/api/v1/account/tokens/:name")
-        .get(Handler::new(api::account::token::info::get));
+        .get(api::account::token::info::get);
     info!("mounting '/api/v1/categories'");
-    app.at("/api/v1/categories")
-        .get(Handler::new(api::categories::get));
+    app.at("/api/v1/categories").get(api::categories::get);
     info!("mounting '/api/v1/crates'");
-    app.at("/api/v1/crates")
-        .get(Handler::new(api::crates::search::get));
+    app.at("/api/v1/crates").get(api::crates::search::get);
     info!("mounting '/api/v1/crates/new'");
-    app.at("/api/v1/crates/new")
-        .put(Handler::new(api::crates::publish::put));
+    app.at("/api/v1/crates/new").put(api::crates::publish::put);
     info!("mounting '/api/v1/crates/:name'");
-    app.at("/api/v1/crates/:name")
-        .get(Handler::new(api::crates::info::get));
+    app.at("/api/v1/crates/:name").get(api::crates::info::get);
     info!("mounting '/api/v1/crates/:name/owners'");
     app.at("/api/v1/crates/:name/owners")
-        .get(Handler::new(api::crates::owners::get))
-        .put(Handler::new(api::crates::owners::put))
-        .delete(Handler::new(api::crates::owners::delete));
+        .get(api::crates::owners::get)
+        .put(api::crates::owners::put)
+        .delete(api::crates::owners::delete);
     info!("mounting '/api/v1/crates/:name/:version/yank'");
     app.at("/api/v1/crates/:name/:version/yank")
-        .delete(Handler::new(api::crates::yank::delete));
+        .delete(api::crates::yank::delete);
     info!("mounting '/api/v1/crates/:name/:version/unyank'");
     app.at("/api/v1/crates/:name/:version/unyank")
-        .put(Handler::new(api::crates::unyank::put));
+        .put(api::crates::unyank::put);
     info!("mounting '/api/v1/crates/:name/:version/download'");
     app.at("/api/v1/crates/:name/:version/download")
-        .get(Handler::new(api::crates::download::get));
+        .get(api::crates::download::get);
 
     info!("listening on {0}", addr);
     app.listen(addr).await?;

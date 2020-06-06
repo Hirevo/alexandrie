@@ -1,12 +1,11 @@
 use diesel::prelude::*;
-use http::status::StatusCode;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
 use crate::db::models::{Author, NewCrateAuthor};
 use crate::db::schema::*;
-use crate::error::{AlexError, Error};
+use crate::error::AlexError;
 use crate::utils;
 use crate::State;
 
@@ -34,7 +33,7 @@ struct OwnerDeleteBody {
     pub users: Vec<String>,
 }
 
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = req.param::<String>("name").unwrap();
 
     let state = req.state().clone();
@@ -45,7 +44,7 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {
             return Ok(utils::response::error(
-                StatusCode::NOT_FOUND,
+                StatusCode::NotFound,
                 format!("no crates named '{0}' could be found", name),
             ));
         }
@@ -78,7 +77,7 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
     transaction.await
 }
 
-pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     let name = req.param::<String>("name").unwrap();
     let OwnerAddBody { users: new_authors } = req.body_json().await?;
 
@@ -86,8 +85,11 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
     let repo = &state.repo;
 
     let transaction = repo.transaction(move |conn| {
-        let author =
-            utils::checks::get_author(conn, req.headers()).ok_or(AlexError::InvalidToken)?;
+        let headers = req
+            .header(utils::auth::AUTHORIZATION_HEADER)
+            .ok_or(AlexError::InvalidToken)?;
+        let header = headers.last().to_string();
+        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
 
         //? Get this crate's ID.
         let crate_id = crates::table
@@ -99,7 +101,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
             Some(id) => id,
             None => {
                 return Ok(utils::response::error(
-                    StatusCode::NOT_FOUND,
+                    StatusCode::NotFound,
                     format!("no crates named '{0}' could be found", name),
                 ))
             }
@@ -116,7 +118,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
         //? Check if user is one of these authors.
         if !crate_authors.contains(&author.id) {
             return Ok(utils::response::error(
-                StatusCode::FORBIDDEN,
+                StatusCode::Forbidden,
                 "you are not an author of this crate",
             ));
         }
@@ -175,7 +177,7 @@ pub(crate) async fn put(mut req: Request<State>) -> Result<Response, Error> {
     transaction.await
 }
 
-pub(crate) async fn delete(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
     let name = req.param::<String>("name").unwrap();
     let OwnerDeleteBody { users: old_authors } = req.body_json().await?;
 
@@ -183,9 +185,11 @@ pub(crate) async fn delete(mut req: Request<State>) -> Result<Response, Error> {
     let repo = &state.repo;
 
     let transaction = repo.transaction(move |conn| {
-        let author =
-            utils::checks::get_author(conn, req.headers()).ok_or(AlexError::InvalidToken)?;
-
+        let headers = req
+            .header(utils::auth::AUTHORIZATION_HEADER)
+            .ok_or(AlexError::InvalidToken)?;
+        let header = headers.last().to_string();
+        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
         //? Get this crate's ID.
         let crate_id = crates::table
             .select(crates::id)
@@ -196,7 +200,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> Result<Response, Error> {
             Some(id) => id,
             None => {
                 return Ok(utils::response::error(
-                    StatusCode::NOT_FOUND,
+                    StatusCode::NotFound,
                     format!("no crates named '{0}' could be found", name),
                 ))
             }
@@ -213,7 +217,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> Result<Response, Error> {
         //? Check if user is one of these authors.
         if !crate_authors.contains(&author.id) {
             return Ok(utils::response::error(
-                StatusCode::FORBIDDEN,
+                StatusCode::Forbidden,
                 "you are not an author of this crate",
             ));
         }
@@ -230,7 +234,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> Result<Response, Error> {
         //? Check if there will remain at least one author for this crate.
         if crate_authors.len() == 1 && old_authors.len() == 1 {
             return Ok(utils::response::error(
-                StatusCode::BAD_REQUEST,
+                StatusCode::BadRequest,
                 "cannot leave the crate without any authors",
             ));
         }

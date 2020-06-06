@@ -2,7 +2,7 @@ use async_std::io;
 
 use diesel::prelude::*;
 use semver::Version;
-use tide::{Request, Response};
+use tide::{Body, Request, Response, StatusCode};
 
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
@@ -12,7 +12,7 @@ use crate::State;
 /// Route to download a crate's tarball (used by `cargo build`).
 ///
 /// The response is streamed, for performance and memory footprint reasons.
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = req.param::<String>("name").unwrap();
     let version = req.param::<Version>("version").unwrap();
 
@@ -39,13 +39,14 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
             let mut krate = state.storage.read_crate(&name, version)?;
             let mut buf = Vec::new();
             krate.read_to_end(&mut buf)?;
-            Ok(Response::new(200)
-                .set_header("content-type", "application/octet-stream")
-                .body(io::Cursor::new(buf)))
+            let mut response = Response::new(StatusCode::Ok);
+            response.insert_header("content-type", "application/octet-stream");
+            response.set_body(Body::from_reader(io::Cursor::new(buf), None));
+            Ok(response)
         } else {
             Err(Error::from(AlexError::CrateNotFound { name }))
         }
     });
 
-    transaction.await
+    Ok(transaction.await?)
 }

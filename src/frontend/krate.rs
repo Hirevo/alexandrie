@@ -1,12 +1,11 @@
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
 use crate::db::models::{Badge, Crate, CrateAuthor, CrateCategory, CrateKeyword, Keyword};
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
-use crate::error::Error;
 use crate::frontend::helpers;
 use crate::index::Indexer;
 use crate::storage::Store;
@@ -21,7 +20,7 @@ struct BadgeRepr {
     href: Option<String>,
 }
 
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = req.param::<String>("crate").unwrap();
 
     let user = req.get_author();
@@ -42,7 +41,7 @@ pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
                 let response = utils::response::error_html(
                     state.as_ref(),
                     user,
-                    http::StatusCode::NOT_FOUND,
+                    StatusCode::NotFound,
                     format!("No crate named '{0}' has been found.", name),
                 );
                 return Ok(response);
