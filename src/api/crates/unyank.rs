@@ -1,14 +1,13 @@
-use http::status::StatusCode;
 use json::json;
 use semver::Version;
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
-use crate::error::{AlexError, Error};
+use crate::error::AlexError;
 use crate::index::Indexer;
 use crate::utils;
 use crate::State;
 
-pub(crate) async fn put(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn put(req: Request<State>) -> tide::Result {
     let name = req.param::<String>("name").unwrap();
     let version = req.param::<Version>("version").unwrap();
 
@@ -17,14 +16,17 @@ pub(crate) async fn put(req: Request<State>) -> Result<Response, Error> {
     let transaction = repo.transaction(move |conn| {
         let state = req.state();
 
-        let author =
-            utils::checks::get_author(conn, req.headers()).ok_or(AlexError::InvalidToken)?;
+        let headers = req
+            .header(utils::auth::AUTHORIZATION_HEADER)
+            .ok_or(AlexError::InvalidToken)?;
+        let header = headers.last().to_string();
+        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
 
         //? Does this crate exists?
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {
             return Ok(utils::response::error(
-                StatusCode::NOT_FOUND,
+                StatusCode::NotFound,
                 format!("no crates named '{0}' could be found", name),
             ));
         }
@@ -33,7 +35,7 @@ pub(crate) async fn put(req: Request<State>) -> Result<Response, Error> {
         let is_author = utils::checks::is_crate_author(conn, name.as_str(), author.id)?;
         if !is_author {
             return Ok(utils::response::error(
-                StatusCode::FORBIDDEN,
+                StatusCode::Forbidden,
                 "you are not an author of this crate",
             ));
         }

@@ -2,17 +2,16 @@ use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
-use crate::error::Error;
 use crate::frontend::helpers;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::State;
 
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let user = req.get_author();
     let state = req.state().clone();
     let repo = &state.repo;

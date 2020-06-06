@@ -33,7 +33,7 @@ pub struct FrontendConfig {
 /// The frontend state struct, created from [FrontendConfig].
 pub struct FrontendState {
     /// The Handlebars rendering struct.
-    pub handlebars: Handlebars,
+    pub handlebars: Handlebars<'static>,
     /// The frontend configuration.
     pub config: FrontendConfig,
 }

@@ -1,14 +1,13 @@
 use diesel::prelude::*;
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::schema::*;
-use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::utils::cookies::CookiesExt;
 use crate::State;
 
-pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     if !req.is_authenticated() {
         return Ok(utils::response::redirect("/"));
     }

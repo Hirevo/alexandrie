@@ -1,8 +1,7 @@
 use diesel::prelude::*;
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::schema::*;
-use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::utils::flash::{FlashExt, FlashMessage};
@@ -10,7 +9,7 @@ use crate::State;
 
 use super::ManageFlashError;
 
-pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     let author = match req.get_author() {
         Some(author) => author,
         None => {

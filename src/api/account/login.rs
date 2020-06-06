@@ -1,16 +1,15 @@
 use std::num::NonZeroU32;
 
 use diesel::prelude::*;
-use http::StatusCode;
 use ring::digest as hasher;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
 use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
 use crate::utils;
-use crate::{Error, State};
+use crate::State;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -29,18 +28,21 @@ pub struct ResponseBody {
 }
 
 /// Route to log in to an account.
-pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
+pub async fn post(mut req: Request<State>) -> tide::Result {
     let state = req.state().clone();
     let repo = &state.repo;
 
     //? Is the author logged in ?
-    let headers = req.headers().clone();
-    let author = repo
-        .run(move |conn| utils::checks::get_author(conn, &headers))
-        .await;
+    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
+        let header = headers.last().to_string();
+        repo.run(move |conn| utils::checks::get_author(conn, header))
+            .await
+    } else {
+        None
+    };
     if author.is_some() {
         return Ok(utils::response::error(
-            StatusCode::UNAUTHORIZED,
+            StatusCode::Unauthorized,
             "please log out first to register as a new author",
         ));
     }
@@ -62,7 +64,7 @@ pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
             Some(results) => results,
             None => {
                 return Ok(utils::response::error(
-                    StatusCode::FORBIDDEN,
+                    StatusCode::Forbidden,
                     "invalid email/password combination.",
                 ));
             }
@@ -76,7 +78,7 @@ pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
             Ok(results) => results,
             Err(_) => {
                 return Ok(utils::response::error(
-                    StatusCode::INTERNAL_SERVER_ERROR,
+                    StatusCode::InternalServerError,
                     "an author already exists for this email.",
                 ));
             }
@@ -111,7 +113,7 @@ pub async fn post(mut req: Request<State>) -> Result<Response, Error> {
 
         if !password_match {
             return Ok(utils::response::error(
-                StatusCode::FORBIDDEN,
+                StatusCode::Forbidden,
                 "invalid email/password combination.",
             ));
         }

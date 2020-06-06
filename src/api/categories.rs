@@ -1,10 +1,9 @@
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::models::Category;
 use crate::db::schema::*;
-use crate::error::Error;
 use crate::utils;
 use crate::State;
 
@@ -37,7 +36,7 @@ struct CategoriesMeta {
 }
 
 /// Route to list categories.
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let state = req.state();
     let repo = &state.repo;
 

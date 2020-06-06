@@ -1,4 +1,4 @@
-use cmark::{Event, Options, Parser, Tag};
+use cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 use syntect::easy::HighlightLines;
 use syntect::html::{
     start_highlighted_html_snippet, styled_line_to_highlighted_html, IncludeBackground,
@@ -37,15 +37,17 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
             Event::Start(Tag::CodeBlock(info)) => {
                 let theme = &config.themes.themes[&config.theme_name];
 
-                highlighter = Some(match info.trim().split(',').next() {
-                    Some(lang) => {
+                highlighter = Some(match info {
+                    CodeBlockKind::Fenced(lang) => {
                         let syntax = config
                             .syntaxes
-                            .find_syntax_by_token(lang)
+                            .find_syntax_by_token(lang.as_ref())
                             .unwrap_or_else(|| config.syntaxes.find_syntax_plain_text());
                         HighlightLines::new(syntax, theme)
                     }
-                    None => HighlightLines::new(config.syntaxes.find_syntax_plain_text(), theme),
+                    CodeBlockKind::Indented => {
+                        HighlightLines::new(config.syntaxes.find_syntax_plain_text(), theme)
+                    }
                 });
                 let snippet = start_highlighted_html_snippet(theme);
                 Event::Html(snippet.0.into())

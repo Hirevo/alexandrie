@@ -2,7 +2,7 @@ use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::Request;
 
 /// Password management routes (eg. "/account/manage/password").
 pub mod passwd;
@@ -11,7 +11,6 @@ pub mod tokens;
 
 use crate::db::models::AuthorToken;
 use crate::db::schema::*;
-use crate::error::Error;
 use crate::frontend::helpers;
 use crate::utils;
 use crate::utils::auth::AuthExt;
@@ -35,7 +34,7 @@ pub enum ManageFlashError {
     TokenRevocationError(String),
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     let author = match req.get_author() {
         Some(author) => author,
         None => {

@@ -5,12 +5,11 @@ use diesel::prelude::*;
 use json::json;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::{Request, StatusCode};
 
 use crate::db::models::NewSession;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
-use crate::error::Error;
 use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::utils::cookies::CookiesExt;
@@ -26,7 +25,7 @@ struct LoginForm {
     pub remember: Option<String>,
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     if let Some(author) = req.get_author() {
         let state = req.state().as_ref();
         let response = common::already_logged_in(state, author);
@@ -47,7 +46,7 @@ pub(crate) async fn get(mut req: Request<State>) -> Result<Response, Error> {
     ))
 }
 
-pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     if req.is_authenticated() {
         return Ok(utils::response::redirect("/"));
     }
@@ -59,7 +58,7 @@ pub(crate) async fn post(mut req: Request<State>) -> Result<Response, Error> {
             return Ok(utils::response::error_html(
                 req.state(),
                 None,
-                http::StatusCode::BAD_REQUEST,
+                StatusCode::BadRequest,
                 "could not deseriailize form data",
             ));
         }

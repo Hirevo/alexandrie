@@ -4,7 +4,7 @@ use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Request, Response};
+use tide::Request;
 
 use crate::db::models::Crate;
 use crate::db::schema::*;
@@ -21,7 +21,7 @@ struct Params {
     pub page: Option<NonZeroU32>,
 }
 
-pub(crate) async fn get(req: Request<State>) -> Result<Response, Error> {
+pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let params = req.query::<Params>().unwrap_or(Params { page: None });
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
