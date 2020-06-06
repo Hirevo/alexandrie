@@ -61,7 +61,7 @@ impl Middleware<State> for AuthMiddleware {
                             .unwrap();
 
                     if expires > now {
-                        req = req.set_ext(author);
+                        req.set_ext(author);
                     }
                 }
             }

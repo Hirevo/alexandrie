@@ -2,7 +2,7 @@ use async_std::io;
 
 use diesel::prelude::*;
 use semver::Version;
-use tide::{Request, Response, StatusCode};
+use tide::{Body, Request, Response, StatusCode};
 
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
@@ -39,9 +39,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             let mut krate = state.storage.read_crate(&name, version)?;
             let mut buf = Vec::new();
             krate.read_to_end(&mut buf)?;
-            Ok(Response::new(StatusCode::Ok)
-                .set_header("content-type", "application/octet-stream")
-                .body(io::Cursor::new(buf)))
+            let mut response = Response::new(StatusCode::Ok);
+            response.insert_header("content-type", "application/octet-stream");
+            response.set_body(Body::from_reader(io::Cursor::new(buf), None));
+            Ok(response)
         } else {
             Err(Error::from(AlexError::CrateNotFound { name }))
         }

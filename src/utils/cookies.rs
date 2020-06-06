@@ -24,13 +24,13 @@ impl<State: Send + Sync + 'static> Middleware<State> for CookiesMiddleware {
         futures::FutureExt::boxed(async move {
             let data = CookieData::from_request(&req);
             let jar = data.content.clone();
-            req = req.set_ext(data);
+            req.set_ext(data);
 
             let mut res = next.run(req).await?;
 
             let locked = jar.read().unwrap();
             for cookie in locked.delta() {
-                res = res.set_header("set-cookie", cookie.encoded().to_string());
+                res.append_header("set-cookie", cookie.encoded().to_string());
             }
 
             Ok(res)

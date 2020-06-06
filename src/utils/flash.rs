@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex};
 
+use cookie::Cookie;
 use serde::{Deserialize, Serialize};
 use tide::Request;
 
@@ -70,38 +70,18 @@ pub trait FlashExt {
 
 impl<State> FlashExt for Request<State> {
     fn get_flash_message(&mut self) -> Option<FlashMessage> {
-        let data = self.ext::<FlashData>()?;
-        let mut locked = data.content.lock().unwrap();
-        locked.take()
+        let cookie = self.get_cookie(COOKIE_NAME)?;
+        let percent_decoded: Vec<u8> =
+            percent_encoding::percent_decode_str(cookie.value()).collect();
+        let payload = base64::decode(percent_decoded.as_slice()).ok()?;
+        self.remove_cookie(cookie)?;
+        Some(FlashMessage(payload))
     }
 
     fn set_flash_message(&mut self, message: FlashMessage) -> Option<()> {
-        let data = self.ext::<FlashData>()?;
-        let mut locked = data.content.lock().unwrap();
-        locked.replace(message);
+        let message = base64::encode(message.as_slice());
+        let cookie = Cookie::build(COOKIE_NAME, message).http_only(true).finish();
+        self.set_cookie(cookie)?;
         Some(())
-    }
-}
-
-/// A representation of flash cookies which wraps a `FlashMessage`.
-#[derive(Debug, Clone)]
-pub struct FlashData {
-    /// The `FlashMessage` for the current request.
-    pub content: Arc<Mutex<Option<FlashMessage>>>,
-}
-
-impl FlashData {
-    /// Construct the flash data from request headers.
-    pub fn from_request<State>(req: &Request<State>) -> Self {
-        let flash_message = req.get_cookie(COOKIE_NAME).and_then(|cookie| {
-            let percent_decoded: Vec<u8> =
-                percent_encoding::percent_decode_str(cookie.value()).collect();
-            let payload = base64::decode(percent_decoded.as_slice()).ok()?;
-            Some(FlashMessage(payload))
-        });
-
-        FlashData {
-            content: Arc::new(Mutex::new(flash_message)),
-        }
     }
 }

@@ -17,7 +17,7 @@ impl RequestLogger {
         req: Request<State>,
         next: Next<'a, State>,
     ) -> tide::Result {
-        let path = req.uri().path().to_string();
+        let path = req.url().path().to_string();
         let method = req.method();
         info!("<-- {} {}", method, path);
         let start = std::time::Instant::now();
