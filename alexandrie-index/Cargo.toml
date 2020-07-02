@@ -1,0 +1,30 @@
+[package]
+name = "alexandrie-index"
+version = "0.1.0"
+edition = "2018"
+authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
+description = "The index management library for Alexandrie, an alternative crate registry."
+repository = "https://github.com/Hirevo/alexandrie"
+documentation = "https://crates.polomack.eu/docs/alexandrie"
+keywords = ["crates", "cargo", "web", "registry"]
+categories = ["development-tools"]
+license = "MIT OR Apache-2.0"
+
+# [badges]
+# codecov = { repository = "Hirevo/alexandrie"}
+
+[dependencies]
+# data types
+semver = { version = "0.10.0", features = ["serde"] }
+
+# file formats
+serde = { version = "1.0.111", features = ["derive"] }
+json = { package = "serde_json", version = "1.0.53" }
+
+# error handling
+thiserror = "1.0.19"
+
+# git2
+git2 = { version = "0.13.6", optional = true }
+
+[features]
