@@ -30,7 +30,10 @@ RUN \
 WORKDIR /alexandrie
 
 # copy source data
-COPY src src
+COPY alexandrie alexandrie
+COPY alexandrie-index alexandrie-index
+COPY alexandrie-storage alexandrie-storage
+COPY alexandrie-rendering alexandrie-rendering
 COPY syntect-syntaxes syntect-syntaxes
 COPY syntect-themes syntect-themes
 COPY migrations migrations
