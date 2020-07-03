@@ -31,7 +31,7 @@ The database is configured through the `[database]` table:
 
 ```toml
 [database]
-# Replace the '<...>' placeholders by the real values.
+# Replace the '<...>' placeholders by their real actual values.
 
 # For MySQL
 url = "mysql://<user>:<password>@<hostname>:<port>/<database>"
@@ -40,7 +40,7 @@ url = "mysql://<user>:<password>@<hostname>:<port>/<database>"
 url = "postgresql://<user>:<password>@<hostname>:<port>/<database>"
 
 # For SQLite
-url = "<path-to-sqlite-file>"
+url = "<path-to-sqlite-database-file>"
 # or:
 url = ":memory:" # ephemeral in-memory database, doesn't persists between restarts
 ```
@@ -74,8 +74,14 @@ In this case, it is `./crate-index`.
 To clone an existing crate index, you can run:
 
 ```bash
-# Replace the '<...>' placeholders by the real ones.
+# Replace the '<...>' placeholders by their real actual values.
 git clone <url-of-the-crate-index> <path-from-config>
+
+# <url-of-the-crate-index>: URL to the git repository serving as the registry's crate index.
+# <path-from-config>: Path to the same directory as the one specified as `index.path` in the `alexandrie.toml`.
+
+# Example:
+git clone 'https://github.com/Hirevo/alexandrie-index' 'crate-index'
 ```
 
 If you want to create one, you can refer to the [**Cargo's Alternative Registries RFC**][Cargo's Alternative Registries RFC] to learn about the layout of such an index.  
@@ -94,9 +100,13 @@ Then, if you want to use this index with Cargo, you can follow these steps:
 
 - Edit or create the `~/.cargo/config` file, and add the following code:
   ```toml
-  # Replace the '<...>' placeholders by the real ones.
+  # Replace the '<...>' placeholders by their real actual values.
   [registries.<name-of-your-registry>]
   index = "<url-of-the-crate-index>"
+
+  # <name-of-your-registry>: A name of your choosing, that you'll be using to refer to it in `cargo` commands.
+  # <url-of-the-crate-index>: URL to the git repository serving as the registry's crate index.
+  #                           BE CAREFUL: this is not the URL to the registry's API or frontend.
   ```
 - Then, run `cargo login --registry <name-of-your-registry>` and enter your author token.  
   To generate a token, you need to register as an author first.
