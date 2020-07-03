@@ -7,47 +7,18 @@ on:
       - master
 
 jobs:
-  simple_library_sqlite:
-    name: 'Scenario: Simple library (sqlite)'
+  simple_library:
+    name: 'Scenario: Simple library'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, mysql, postgres]
     steps:
       - name: Checkout master branch
         uses: actions/checkout@v2
       - name: Run Scenario
         env:
-          DATABASE: sqlite
-          SCENARIO: simple-library
-        run: |
-          cd e2e/images
-          git config --global user.name "Alexandrie E2E Tester"
-          git config --global user.email "nicolas@polomack.eu"
-          ./run-scenario.sh
-
-  simple_library_mysql:
-    name: 'Scenario: Simple library (mysql)'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout master branch
-        uses: actions/checkout@v2
-      - name: Run scenario
-        env:
-          DATABASE: mysql
-          SCENARIO: simple-library
-        run: |
-          cd e2e/images
-          git config --global user.name "Alexandrie E2E Tester"
-          git config --global user.email "nicolas@polomack.eu"
-          ./run-scenario.sh
-
-  simple_library_postgres:
-    name: 'Scenario: Simple library (postgres)'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout master branch
-        uses: actions/checkout@v2
-      - name: Run scenario
-        env:
-          DATABASE: postgres
+          DATABASE: ${{ matrix.database }}
           SCENARIO: simple-library
         run: |
           cd e2e/images
