@@ -42,9 +42,7 @@ COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 
 # build the app
-RUN cd alexandrie && \
-    cargo build --release --no-default-features --features "${DATABASE} frontend git2" && \
-    cd ..
+RUN cd alexandrie && cargo build --release --no-default-features --features "${DATABASE} frontend git2"
 
 ### Second stage: copy built application
 FROM debian:buster-slim as runner
