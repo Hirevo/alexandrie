@@ -59,7 +59,9 @@ dependencies = [
 name = "alexandrie"
 version = "0.1.0"
 dependencies = [
- "ammonia 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "alexandrie-index 0.1.0",
+ "alexandrie-rendering 0.1.0",
+ "alexandrie-storage 0.1.0",
  "async-std 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bigdecimal 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -70,13 +72,11 @@ dependencies = [
  "diesel_migrations 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 1.0.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "git2 0.13.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "handlebars 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-format 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "percent-encoding 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pulldown-cmark 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ring 0.16.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -86,13 +86,44 @@ dependencies = [
  "slog-scope 4.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog-stdlog 4.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog-term 2.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "syntect 4.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tar 0.4.28 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "tide 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.2.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "alexandrie-index"
+version = "0.1.0"
+dependencies = [
+ "git2 0.13.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "semver 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.53 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "alexandrie-rendering"
+version = "0.1.0"
+dependencies = [
+ "ammonia 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "semver 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syntect 4.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "alexandrie-storage"
+version = "0.1.0"
+dependencies = [
+ "semver 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

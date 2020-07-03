@@ -14,9 +14,15 @@ The currently supported vendors are:
 To build, you can then run:
 
 ```bash
+# navigate to the `alexandrie/` subfolder
+cd alexandrie
+
+# build the binary
+# (replace `(foo|bar)` occurences by one of `foo` or `bar`)
+# (replace `[foo]` occurences by either `foo` or nothing)
 cargo build [--release] \
     --no-default-features \
-    --features [frontend] [sqlite|mysql|postgres]
+    --features "[frontend] (sqlite|mysql|postgres)"
 ```
 
 Before running Alexandrie, you'll need to configure your instance in the `alexandrie.toml` file.

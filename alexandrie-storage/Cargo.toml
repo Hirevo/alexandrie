@@ -1,0 +1,26 @@
+[package]
+name = "alexandrie-storage"
+version = "0.1.0"
+edition = "2018"
+authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
+description = "The crate storage library for Alexandrie, an alternative crate registry."
+repository = "https://github.com/Hirevo/alexandrie"
+documentation = "https://crates.polomack.eu/docs/alexandrie"
+keywords = ["crates", "cargo", "web", "registry"]
+categories = ["development-tools"]
+license = "MIT OR Apache-2.0"
+
+# [badges]
+# codecov = { repository = "Hirevo/alexandrie"}
+
+[dependencies]
+# data types
+semver = { version = "0.10.0", features = ["serde"] }
+
+# file formats
+serde = { version = "1.0.111", features = ["derive"] }
+
+# error handling
+thiserror = "1.0.19"
+
+[features]

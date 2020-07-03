@@ -30,7 +30,10 @@ RUN \
 WORKDIR /alexandrie
 
 # copy source data
-COPY src src
+COPY alexandrie alexandrie
+COPY alexandrie-index alexandrie-index
+COPY alexandrie-storage alexandrie-storage
+COPY alexandrie-rendering alexandrie-rendering
 COPY syntect-syntaxes syntect-syntaxes
 COPY syntect-themes syntect-themes
 COPY migrations migrations
@@ -39,8 +42,7 @@ COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 
 # build the app
-RUN cargo build --release --no-default-features --features "${DATABASE} frontend git2"
-
+RUN cd alexandrie && cargo build --release --no-default-features --features "${DATABASE} frontend git2"
 
 ### Second stage: copy built application
 FROM debian:buster-slim as runner
