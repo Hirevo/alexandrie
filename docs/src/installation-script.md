@@ -46,7 +46,7 @@ fi
 
 if [ -d "$ALEXANDRIE_DIR" ]; then
     echo
-    echo "'{}' (ALEXANDRIE_DIR) is an existing directory, pulling latest changes ...";
+    echo "'$ALEXANDRIE_DIR' (ALEXANDRIE_DIR) is an existing directory, pulling latest changes ...";
     cd "$ALEXANDRIE_DIR";
     git pull;
     echo "Changes have been pulled successfully !";
