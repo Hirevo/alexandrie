@@ -69,6 +69,16 @@ addr = "127.0.0.1"  # Endpoint on which to serve the service.
 port = 3000         # Port on which to serve the service.
 ```
 
+Then, you need to configure a crate index.  
+A crate index is simply a git repository that the registry uses to keep metadata information about each crate and their individual versions.  
+The repository can be created on any machine you want, as long as it is reachable from the current machine as a git remote in a clone of that repository.  
+The remote can be specified using either an HTTPS or SSH link.  
+
+_If you're using SSH for the remote link, Cargo might have an issue where it can't fetch from the registry's index when doing `cargo search` or `cargo build`._  
+_This is because Cargo uses `libgit2` to fetch from remotes and fails to find the SSH credentials needed to do so._  
+_To work around this issue, you may need to set the `CARGO_NET_GIT_FETCH_WITH_CLI` environment variable to `true`, so that Cargo will offload the fetching from remotes operation to the `git` command-line utility._  
+_See [issue #44](https://github.com/Hirevo/alexandrie/issues/44) for a previous occurence of this exact issue._  
+
 To run the registry with the configuration above, be sure to clone your crate index at the location designated by the `path` key in `[index]`.  
 In this case, it is `./crate-index`.  
 To clone an existing crate index, you can run:
