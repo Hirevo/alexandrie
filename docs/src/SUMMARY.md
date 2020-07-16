@@ -3,6 +3,7 @@ Summary
 
 - [Introduction](./introduction.md)
 - [Getting started](./getting-started.md)
+- [Installation script](./installation-script.md)
 - [Concepts](./concepts/mod.md)
   - [Crate index](./concepts/crate-index.md)
   - [Crate storage](./concepts/crate-storage.md)

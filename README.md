@@ -148,8 +148,15 @@ Then, if you want to use this index with Cargo, you can follow these steps:
   - Generating a token at `/account/manage`.
 - You can now use the registry using `cargo [search|publish] --registry <name-of-your-registry>`
 
-`docker-compose`
--------
+Installation script
+-------------------
+
+If you wish to have a more concrete resource to learn how to setup an Alexandrie instance, like a shell script, you may refer to an example installation script which can help you get started:
+
+**<https://hirevo.github.io/alexandrie/installation-script.html>**
+
+Docker Compose
+--------------
 
 You can host Alexandrie in a Docker container on your computer or a host machine of your choosing. You will need both [docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/) installed.
 

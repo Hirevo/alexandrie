@@ -124,3 +124,10 @@ Then, if you want to use this index with Cargo, you can follow these steps:
   - Registering at `/account/register`.
   - Generating a token at `/account/manage`.
 - You can now use the registry using `cargo [search|publish] --registry <name-of-your-registry>`
+
+Installation script
+-------------------
+
+If you wish to have a more concrete resource to learn how to setup an Alexandrie instance, like a shell script, you may refer to an example installation script which can help you get started:
+
+**<https://hirevo.github.io/alexandrie/installation-script.html>**
