@@ -3,7 +3,7 @@
 #
 
 ### First stage: build the application
-FROM rust:1.40-slim-buster as builder
+FROM rust:1.44-slim-buster as builder
 
 ARG DATABASE
 
