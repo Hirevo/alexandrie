@@ -18,9 +18,9 @@ license = "MIT OR Apache-2.0"
 semver = { version = "0.10.0", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.111", features = ["derive"] }
+serde = { version = "1.0.114", features = ["derive"] }
 
 # error handling
-thiserror = "1.0.19"
+thiserror = "1.0.20"
 
 [features]

@@ -18,14 +18,14 @@ license = "MIT OR Apache-2.0"
 semver = { version = "0.10.0", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.111", features = ["derive"] }
+serde = { version = "1.0.114", features = ["derive"] }
 
 # error handling
-thiserror = "1.0.19"
+thiserror = "1.0.20"
 
 # README rendering
 syntect = "4.2.0"
-cmark = { package = "pulldown-cmark", version = "0.7.1" }
-ammonia = "3.0.0"
+cmark = { package = "pulldown-cmark", version = "0.7.2" }
+ammonia = "3.1.0"
 
 [features]

@@ -18,13 +18,13 @@ license = "MIT OR Apache-2.0"
 semver = { version = "0.10.0", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.111", features = ["derive"] }
-json = { package = "serde_json", version = "1.0.53" }
+serde = { version = "1.0.114", features = ["derive"] }
+json = { package = "serde_json", version = "1.0.56" }
 
 # error handling
-thiserror = "1.0.19"
+thiserror = "1.0.20"
 
 # git2
-git2 = { version = "0.13.6", optional = true }
+git2 = { version = "0.13.8", optional = true }
 
 [features]
