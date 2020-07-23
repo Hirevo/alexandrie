@@ -1,0 +1,28 @@
+sudo: false
+language: rust
+
+matrix:
+  include:
+    - rust: stable
+      env:
+      - FEATURES="i128"
+    - rust: beta
+      env:
+      - FEATURES="i128"
+    - rust: nightly
+      env:
+      - FEATURES="i128"
+      - BUILD_BENCH="true"
+    - rust: 1.0.0
+      script: cargo build
+    - rust: 1.20.0
+      script: cargo test
+
+script:
+  - cargo build --features "$FEATURES"
+  - cargo test --features "$FEATURES"
+  - cargo test --features "$FEATURES" --release
+  - cargo build --no-default-features --features "$FEATURES"
+  - cargo test --tests --no-default-features --features "$FEATURES"
+  - cargo test --tests --no-default-features --features "$FEATURES" --release
+  - if [ "$BUILD_BENCH" == "true" ]; then cargo bench --no-run --features "$FEATURES"; fi

@@ -1,0 +1,8 @@
+language: rust
+rust:
+- nightly
+- beta
+- 1.36.0
+cache: cargo
+script:
+- cargo test

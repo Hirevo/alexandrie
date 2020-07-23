@@ -1,0 +1,29 @@
+language: rust
+
+env:
+  - TASK=test RUSTFLAGS="-D warnings"
+
+matrix:
+  include:
+    - rust: nightly
+    - rust: stable
+      name: clippy-lint
+      before_script:
+        - rustup component add clippy
+      script:
+        - cargo clippy -- -D warnings
+    - rust: beta
+    - rust: stable
+    - rust: 1.32.0
+      script:
+        - cargo build
+    - rust: nightly
+      name: minimal-versions
+      script:
+        - cargo -Z minimal-versions build --verbose
+
+script:
+  - cargo $TASK --verbose
+  - cargo $TASK --no-default-features --features no_logging --verbose
+  - cargo $TASK --no-default-features --features dir_source --verbose
+  - cargo $TASK --no-default-features --features script_helper --verbose

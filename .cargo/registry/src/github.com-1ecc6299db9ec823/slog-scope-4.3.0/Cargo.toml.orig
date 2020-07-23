@@ -1,0 +1,23 @@
+[package]
+name = "slog-scope"
+version = "4.3.0"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "Logging scopes for slog-rs"
+keywords = ["slog", "logging", "slog", "log"]
+license = "MPL-2.0/MIT/Apache-2.0"
+documentation = "https://docs.rs/slog-scope"
+homepage = "https://github.com/slog-rs/slog"
+repository = "https://github.com/slog-rs/scope"
+readme = "README.md"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+slog = "2.4"
+lazy_static = "1.2"
+arc-swap = "0.4"
+
+[dev-dependencies]
+slog-term = "2"
+slog-async = "2"

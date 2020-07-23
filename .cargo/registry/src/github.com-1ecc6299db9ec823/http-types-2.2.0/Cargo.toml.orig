@@ -1,0 +1,46 @@
+[package]
+name = "http-types"
+version = "2.2.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/http-rs/http-types"
+documentation = "https://docs.rs/http-types"
+description = "Common types for HTTP operations."
+keywords = ["http", "types", "request", "response", "h2"]
+categories = ["asynchronous", "web-programming", "web-programming::http-client", "web-programming::http-server", "web-programming::websocket"]
+authors = ["Yoshua Wuyts <yoshuawuyts@gmail.com>"]
+readme = "README.md"
+edition = "2018"
+
+[package.metadata.docs.rs]
+features = ["docs"]
+rustdoc-args = ["--cfg", "feature=\"docs\""]
+
+[features]
+default = ["async_std", "cookie-secure"]
+docs = ["unstable"]
+unstable = []
+hyperium_http = ["http"]
+async_std = [] # "async-std" when it is not default
+cookie-secure = ["cookie/secure"]
+
+[dependencies]
+# Note(yoshuawuyts): used for async_std's `channel` only; use "core" once possible.
+# features: async_std
+async-std = { version = "1.6.0", features = ["unstable"] }
+
+# features: hyperium/http
+http = { version = "0.2.0", optional = true }
+
+anyhow = "1.0.26"
+cookie = { version = "0.14.0", features = ["percent-encode"] }
+infer = "0.1.2"
+pin-project-lite = "0.1.0"
+url = "2.1.1"
+serde_json = "1.0.51"
+serde = { version = "1.0.106", features = ["derive"] }
+serde_urlencoded = "0.6.1"
+rand = "0.7.3"
+
+[dev-dependencies]
+http = "0.2.0"
+async-std = { version = "1.6.0", features = ["unstable", "attributes"] }

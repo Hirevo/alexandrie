@@ -1,0 +1,19 @@
+language: rust
+rust:
+  - 1.17.0
+  - 1.31.0
+  - stable
+  - nightly
+sudo: false
+script: |
+  cargo build --verbose && \
+  cargo test --verbose && \
+  cargo doc
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_RUST_VERSION = nightly ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  echo '<meta http-equiv=refresh content=0;url=adler32/index.html>' > target/doc/index.html &&
+  pip install --user ghp-import &&
+  $HOME/.local/bin/ghp-import -n target/doc &&
+  git push -qf https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages

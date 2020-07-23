@@ -1,0 +1,23 @@
+[package]
+  name = "typenum"
+  build = "build/main.rs"
+  version = "1.12.0"
+  authors = [
+    "Paho Lurie-Gregg <paho@paholg.com>",
+    "Andre Bogus <bogusandre@gmail.com>"
+  ]
+  documentation = "https://docs.rs/typenum"
+  repository = "https://github.com/paholg/typenum"
+  readme = "README.md"
+  license = "MIT/Apache-2.0"
+  description = "Typenum is a Rust library for type-level numbers evaluated at compile time. It currently supports bits, unsigned integers, and signed integers. It also provides a type-level array of type-level numbers, but its implementation is incomplete."
+  categories = ["no-std"]
+
+[lib]
+  name = "typenum"
+
+[features]
+  no_std = []
+  i128 = []
+  strict = []
+  force_unix_path_separator = []

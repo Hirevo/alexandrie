@@ -1,0 +1,45 @@
+stages:
+  - compile
+  - test
+
+steps:
+  compile:
+    stage: compile
+    script:
+      - cargo build
+    cache:
+      key: "$CI_COMMIT_REF_SLUG:$RUST_KEY"
+      paths:
+        - /root/.cargo/git
+        - /root/.cargo/registry
+        - target/
+    artifacts:
+      paths:
+        - target/
+
+  test:
+    stage: test
+    script:
+      - cargo test
+      - cargo test --no-default-features
+    dependencies:
+      - compile
+
+matrix:
+  rust:
+    variable: RUST_KEY
+    variants:
+      stable:
+        image: liuchong/rustup:stable
+      stable-musl:
+        image: liuchong/rustup:stable-musl
+      beta:
+        image: liuchong/rustup:stable
+      beta-musl:
+        image: liuchong/rustup:stable-musl
+      nightly:
+        image: liuchong/rustup:stable
+        allow_failure: true
+      nightly-musl:
+        image: liuchong/rustup:stable-musl
+        allow_failure: true

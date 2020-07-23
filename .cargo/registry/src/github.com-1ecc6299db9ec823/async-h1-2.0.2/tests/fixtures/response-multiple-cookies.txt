@@ -1,0 +1,6 @@
+HTTP/1.1 200 OK
+host: example.com
+content-length: 0
+set-cookie: sessionId=e8bb43229de9
+set-cookie: qwerty=219ffwef9w0f
+

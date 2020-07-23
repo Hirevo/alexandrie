@@ -1,0 +1,25 @@
+[package]
+name = "femme"
+version = "2.1.0"
+license = "MIT OR Apache-2.0"
+authors = ["lrlna <shestak.irina@gmail.com>", "yoshuawuyts <yoshuawuyts@gmail.com"]
+repository = "https://github.com/lrlna/femme"
+documentation = "https://docs.rs/femme"
+description = "Not just a pretty (inter)face: pretty-printer and ndjson logger for log crate."
+keywords = ["pretty-printer", "ndjson", "femme", "log", "logger"]
+readme = "README.md"
+edition = "2018"
+
+[dependencies]
+log = { version = "0.4.7", features = ["kv_unstable", "std"] }
+serde = "1.0.97"
+serde_derive = "1.0.97"
+cfg-if = "0.1.9"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3.25", features = ["console"] }
+js-sys = "0.3.25"
+wasm-bindgen = { version = "0.2.48", features = ["serde-serialize"] }
+
+[dev-dependencies]
+kv-log-macro = "1.0.5"

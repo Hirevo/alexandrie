@@ -1,0 +1,55 @@
+[package]
+name = "handlebars"
+version = "3.1.0"
+authors = ["Ning Sun <sunng@pm.me>"]
+description = "Handlebars templating implemented in Rust."
+license = "MIT"
+keywords = ["handlebars", "templating", "web"]
+categories = ["template-engine"]
+homepage = "https://github.com/sunng87/handlebars-rust"
+repository = "https://github.com/sunng87/handlebars-rust"
+documentation = "https://docs.rs/crate/handlebars/"
+readme = "README.md"
+edition = "2018"
+
+[lib]
+name = "handlebars"
+path = "src/lib.rs"
+
+[[bin]]
+name = "handlebars-cli"
+path = "src/cli.rs"
+
+[dependencies]
+log = { version = "0.4.0" }
+quick-error = "1.2.3"
+pest = "2.1.0"
+pest_derive = "2.1.0"
+serde = "1.0.0"
+serde_json = "1.0.39"
+walkdir = { version = "2.2.3", optional = true }
+rhai = { version = "0.14.1", optional = true, features = ["sync"] }
+
+[dev-dependencies]
+env_logger = "0.7.1"
+maplit = "1.0.0"
+serde_derive = "1.0.75"
+tempfile = "3.0.0"
+criterion = "0.3"
+pprof = { version = "0.3.13", features = ["flamegraph", "protobuf"] }
+
+[features]
+dir_source = ["walkdir"]
+script_helper = ["rhai"]
+no_logging = []
+default = []
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[[bench]]
+name = "bench"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true

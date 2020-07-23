@@ -1,0 +1,53 @@
+language: rust
+sudo: false
+matrix:
+  include:
+    # MSRV is lower for non-dev builds
+    - rust: 1.18.0
+      env:
+       - SKIP_TEST=1
+    - rust: 1.32.0
+    - rust: 1.34.2
+    - rust: stable
+      env:
+       - FEATURES='serde-1'
+    - rust: stable
+      env:
+       - FEATURES='rayon'
+    - rust: beta
+    - rust: nightly
+      env:
+       - TEST_BENCH=1
+    - rust: nightly
+      env:
+       - FEATURES='test_low_transition_point'
+    - rust: 1.36.0
+      env: TARGET=thumbv6m-none-eabi
+      before_script:
+        - rustup target add $TARGET
+        - set -ex
+      script:
+        - cargo build -vv --target=$TARGET
+        - cargo build -v -p test-nostd --target=$TARGET
+    - rust: stable
+      env: TARGET=thumbv6m-none-eabi
+      before_script:
+        - rustup target add $TARGET
+        - set -ex
+      script:
+        - cargo build -vv --target=$TARGET
+        - cargo build -v -p test-nostd --target=$TARGET
+branches:
+  only:
+    - master
+script:
+  - |
+      cargo build --verbose --features "$FEATURES" &&
+      if [ -z "$SKIP_TEST" ]; then
+        cargo test --verbose --features "$FEATURES" &&
+        cargo test --release --verbose --features "$FEATURES"
+      fi &&
+      if [ -n "$TEST_BENCH" ]; then
+        cargo test -v --benches --no-run --features "$FEATURES"
+      fi &&
+      cargo doc --verbose --features "$FEATURES"

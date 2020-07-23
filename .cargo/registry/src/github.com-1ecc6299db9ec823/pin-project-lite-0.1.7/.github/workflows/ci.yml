@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - staging
+      - trying
+  schedule:
+    - cron: '00 01 * * *'
+
+env:
+  RUSTFLAGS: -Dwarnings
+  RUST_BACKTRACE: 1
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: test
+    strategy:
+      matrix:
+        rust:
+          # This is the minimum supported Rust version of this crate.
+          # When updating this, the reminder to update the minimum supported Rust version in README.md.
+          - 1.37.0
+          - stable
+          - beta
+          - nightly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust
+        run: |
+          . ./ci/install-rust.sh ${{ matrix.rust }}
+      - name: Install cargo-hack
+        if: matrix.rust == 'nightly'
+        run: |
+          cargo install cargo-hack
+      - name: Add targets
+        if: matrix.rust == 'nightly'
+        run: |
+          rustup target add thumbv7m-none-eabi
+      - name: cargo test
+        run: |
+          cargo test --all
+      - name: cargo check (no-std)
+        if: matrix.rust == 'nightly'
+        run: |
+          cargo check --target thumbv7m-none-eabi --manifest-path tests/no-std/Cargo.toml
+      - name: cargo check (minimal versions)
+        if: matrix.rust == 'nightly'
+        run: |
+          . ./ci/check-minimal-versions.sh
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust
+        run: |
+          . ./ci/install-rust.sh
+      - name: Install clippy
+        run: |
+          . ./ci/install-component.sh clippy
+      - name: cargo clippy
+        run: |
+          cargo clippy --all --all-features --all-targets
+
+  rustfmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust
+        run: |
+          . ./ci/install-rust.sh
+      - name: Install rustfmt
+        run: |
+          . ./ci/install-component.sh rustfmt
+      - name: cargo fmt --check
+        run: |
+          cargo fmt --all -- --check
+
+  rustdoc:
+    name: rustdoc
+    env:
+      RUSTDOCFLAGS: -Dwarnings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust
+        run: |
+          . ./ci/install-rust.sh
+      - name: cargo doc
+        run: |
+          cargo doc --no-deps --all --all-features
+
+  # These jobs don't actually test anything, but they're used to tell bors the
+  # build completed, as there is no practical way to detect when a workflow is
+  # successful listening to webhooks only.
+  #
+  # ALL THE PREVIOUS JOBS NEEDS TO BE ADDED TO THE `needs` SECTION OF THIS JOB!
+
+  ci-success:
+    name: ci
+    if: github.event_name == 'push' && success()
+    needs:
+      - test
+      - clippy
+      - rustfmt
+      - rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark the job as a success
+        run: exit 0
+  ci-failure:
+    name: ci
+    if: github.event_name == 'push' && !success()
+    needs:
+      - test
+      - clippy
+      - rustfmt
+      - rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark the job as a failure
+        run: exit 1

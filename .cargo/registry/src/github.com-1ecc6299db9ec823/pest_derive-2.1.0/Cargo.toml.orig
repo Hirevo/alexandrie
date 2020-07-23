@@ -1,0 +1,26 @@
+[package]
+name = "pest_derive"
+description = "pest's derive macro"
+version = "2.1.0"
+authors = ["Dragoș Tiselice <dragostiselice@gmail.com>"]
+homepage = "https://pest-parser.github.io/"
+repository = "https://github.com/pest-parser/pest"
+documentation = "https://docs.rs/pest"
+keywords = ["pest", "parser", "peg", "grammar"]
+categories = ["parsing"]
+license = "MIT/Apache-2.0"
+readme = "_README.md"
+
+[lib]
+name = "pest_derive"
+proc-macro = true
+
+[dependencies]
+# for tests, included transitively anyway
+pest = { path = "../pest", version = "2.1.0" }
+pest_generator = { path = "../generator", version = "2.1.0" }
+
+[badges]
+codecov = { repository = "pest-parser/pest" }
+maintenance = { status = "actively-developed" }
+travis-ci = { repository = "pest-parser/pest" }

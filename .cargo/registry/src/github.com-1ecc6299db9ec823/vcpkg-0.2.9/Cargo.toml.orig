@@ -1,0 +1,20 @@
+[package]
+name = "vcpkg"
+version = "0.2.9"
+authors = ["Jim McGrath <jimmc2@gmail.com>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/mcgoo/vcpkg-rs"
+readme = "../README.md"
+documentation = "https://docs.rs/vcpkg"
+description = """
+A library to find native dependencies in a vcpkg tree at build
+time in order to be used in Cargo build scripts.
+"""
+keywords = ["build-dependencies", "windows", "ffi", "win32"]
+categories = ["development-tools::build-utils"]
+
+[dependencies]
+
+[dev-dependencies]
+tempdir = "0.3.7"
+lazy_static = "1"

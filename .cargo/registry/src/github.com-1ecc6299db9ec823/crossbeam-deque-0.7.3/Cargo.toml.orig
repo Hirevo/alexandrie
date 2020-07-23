@@ -1,0 +1,30 @@
+[package]
+name = "crossbeam-deque"
+# When publishing a new version:
+# - Update CHANGELOG.md
+# - Update README.md
+# - Create "crossbeam-deque-X.Y.Z" git tag
+version = "0.7.3"
+authors = ["The Crossbeam Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/crossbeam-rs/crossbeam"
+homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque"
+documentation = "https://docs.rs/crossbeam-deque"
+description = "Concurrent work-stealing deque"
+keywords = ["chase-lev", "lock-free", "scheduler", "scheduling"]
+categories = ["algorithms", "concurrency", "data-structures"]
+
+[dependencies]
+maybe-uninit = "2.0.0"
+
+[dependencies.crossbeam-epoch]
+version = "0.8"
+path = "../crossbeam-epoch"
+
+[dependencies.crossbeam-utils]
+version = "0.7"
+path = "../crossbeam-utils"
+
+[dev-dependencies]
+rand = "0.6"

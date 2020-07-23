@@ -1,0 +1,37 @@
+name: build
+
+on:
+  push:
+    branches:
+    - master
+    paths:
+    - 'Cargo*'
+    - 'src/**'
+    - 'tests/**'
+    - 'testdata/**'
+  pull_request:
+    branches:
+    - master
+    paths:
+    - 'Cargo*'
+    - 'src/**'
+    - 'tests/**'
+    - 'testdata/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install rustfm
+      run: rustup component add rustfmt
+    - name: Install clippy
+      run: rustup component add clippy
+    - name: Check format
+      run: cargo fmt --all -- --check
+    - name: Lint
+      run: cargo clippy --all-targets --all-features -- -D clippy::all
+    - name: Build
+      run: cargo build --verbose
+    - name: Test
+      run: cargo test --verbose

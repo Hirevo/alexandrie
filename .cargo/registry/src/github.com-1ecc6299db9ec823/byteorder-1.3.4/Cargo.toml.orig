@@ -1,0 +1,38 @@
+[package]
+name = "byteorder"
+version = "1.3.4"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Library for reading/writing numbers in big-endian and little-endian."
+documentation = "https://docs.rs/byteorder"
+homepage = "https://github.com/BurntSushi/byteorder"
+repository = "https://github.com/BurntSushi/byteorder"
+readme = "README.md"
+categories = ["encoding", "parsing"]
+keywords = ["byte", "endian", "big-endian", "little-endian", "binary"]
+license = "Unlicense OR MIT"
+exclude = ["/ci/*"]
+build = "build.rs"
+
+[lib]
+name = "byteorder"
+bench = false
+
+[dev-dependencies]
+quickcheck = { version = "0.8", default-features = false }
+rand = "0.6"
+doc-comment = "0.3"
+
+[features]
+default = ["std"]
+std = []
+
+# This feature is no longer used and is DEPRECATED. This crate now
+# automatically enables i128 support for Rust compilers that support it. The
+# feature will be removed if and when a new major version is released.
+i128 = []
+
+[profile.bench]
+opt-level = 3
+
+[badges]
+travis-ci = { repository = "BurntSushi/byteorder" }

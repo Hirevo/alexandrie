@@ -1,0 +1,14 @@
+sudo: false
+language: rust
+rust:
+  - 1.36.0
+  - nightly
+  - beta
+  - stable
+os:
+  - linux
+script:
+  - cargo build
+  - cargo test --all
+  - "cd string-cache-codegen && cargo build && cd .."
+  - "if [ $TRAVIS_RUST_VERSION = nightly ]; then cd integration-tests && cargo test --features unstable && cd ..; fi"

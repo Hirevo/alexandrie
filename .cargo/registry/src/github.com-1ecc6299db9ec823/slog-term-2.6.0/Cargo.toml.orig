@@ -1,0 +1,28 @@
+[package]
+name = "slog-term"
+version = "2.6.0"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "Unix terminal drain and formatter for slog-rs"
+keywords = ["slog", "logging", "log", "term"]
+license = "MPL-2.0/MIT/Apache-2.0"
+documentation = "https://docs.rs/slog-term"
+homepage = "https://github.com/slog-rs/slog"
+repository = "https://github.com/slog-rs/term"
+readme = "README.md"
+edition = "2018"
+
+[features]
+nested-values = ["erased-serde", "serde", "serde_json", "slog/nested-values"]
+
+[dependencies]
+slog = "2"
+atty = "0.2"
+chrono = "0.4"
+thread_local = "1"
+term = "0.6"
+erased-serde = {version = "0.3", optional = true }
+serde = {version = "1.0", optional = true }
+serde_json = {version = "1.0", optional = true }
+
+[dev-dependencies]
+slog-async = "2"

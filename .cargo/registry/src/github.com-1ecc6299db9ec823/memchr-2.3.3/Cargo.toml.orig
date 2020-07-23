@@ -1,0 +1,37 @@
+[package]
+name = "memchr"
+version = "2.3.3"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>", "bluss"]
+description = "Safe interface to memchr."
+documentation = "https://docs.rs/memchr/"
+homepage = "https://github.com/BurntSushi/rust-memchr"
+repository = "https://github.com/BurntSushi/rust-memchr"
+readme = "README.md"
+keywords = ["memchr", "char", "scan", "strchr", "string"]
+license = "Unlicense/MIT"
+exclude = ["/ci/*", "/.travis.yml", "/Makefile", "/appveyor.yml"]
+
+[lib]
+name = "memchr"
+bench = false
+
+[features]
+default = ["std"]
+
+# The 'std' feature permits the memchr crate to use the standard library. This
+# permits this crate to use runtime CPU feature detection to automatically
+# accelerate searching via vector instructions. Without the standard library,
+# this automatic detection is not possible.
+std = []
+# The 'use_std' feature is DEPRECATED. It will be removed in memchr 3. Until
+# then, it is alias for the 'std' feature.
+use_std = ["std"]
+
+[dependencies]
+libc = { version = "0.2.18", default-features = false, optional = true }
+
+[dev-dependencies]
+quickcheck = { version = "0.9", default-features = false }
+
+[profile.test]
+opt-level = 3

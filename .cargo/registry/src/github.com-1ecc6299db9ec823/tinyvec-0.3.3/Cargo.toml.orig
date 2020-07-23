@@ -1,0 +1,57 @@
+[package]
+name = "tinyvec"
+description = "Just, really the littlest Vec you could need. So smol."
+version = "0.3.3"
+authors = ["Lokathor <zefria@gmail.com>"]
+edition = "2018"
+license = "Zlib"
+keywords = ["vec", "no_std", "no-std", "smol"]
+categories = ["data-structures", "no-std"]
+repository = "https://github.com/Lokathor/tinyvec"
+
+[dependencies]
+# not even std!
+
+[features]
+default = []
+
+# Provide things that utilize the `alloc` crate.
+alloc = []
+
+# (not part of Vec!) Extra methods to let you grab the slice of memory after the
+# "active" portion of an `ArrayVec`.
+grab_spare_slice = []
+
+# allow use of nightly feature `slice_partition_dedup`,
+# will become useless once that is stabilized:
+# https://github.com/rust-lang/rust/issues/54279
+nightly_slice_partition_dedup = []
+
+# use const generics for arrays
+nightly_const_generics = []
+
+# NOT considered part of the crate's SemVer!!!
+# This experimental feature adds `core::fmt::Write` to ArrayVec.
+experimental_write_impl = []
+
+[badges]
+appveyor = { repository = "Lokathor/tinyvec" }
+travis-ci = { repository = "Lokathor/tinyvec" }
+
+[package.metadata.docs.rs]
+all-features = true
+
+[workspace]
+members = ["fuzz"]
+
+[dev-dependencies]
+criterion = "0.3.0"
+
+[[test]]
+name = "tinyvec"
+required-features = ["alloc"]
+
+[[bench]]
+name = "macros"
+harness = false
+required-features = ["alloc"]

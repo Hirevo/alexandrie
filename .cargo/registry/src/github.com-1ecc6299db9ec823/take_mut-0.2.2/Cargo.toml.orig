@@ -1,0 +1,9 @@
+[package]
+name = "take_mut"
+version = "0.2.2"
+authors = ["Sgeo <sgeoster@gmail.com>"]
+license = "MIT"
+homepage = "https://github.com/Sgeo/take_mut"
+repository = "https://github.com/Sgeo/take_mut"
+description = "Take a T from a &mut T temporarily"
+categories = ["rust-patterns"]

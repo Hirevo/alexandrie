@@ -1,0 +1,35 @@
+[dependencies]
+annotate-snippets = "0.8.0"
+atty = "0.2"
+log = "0.4"
+termcolor = "1.0"
+termize = "0.1.1"
+unicode-width = "0.1.4"
+
+[dependencies.rustc_data_structures]
+package = "rustc-ap-rustc_data_structures"
+version = "664.0.0"
+
+[dependencies.rustc_serialize]
+package = "rustc-ap-rustc_serialize"
+version = "664.0.0"
+
+[dependencies.rustc_span]
+package = "rustc-ap-rustc_span"
+version = "664.0.0"
+
+[lib]
+doctest = false
+path = "lib.rs"
+
+[package]
+authors = ["The Rust Project Developers"]
+description = "Automatically published version of the package `rustc_errors` in the rust-lang/rust repository from commit 3ddf48053e83f4949d00dcaf6eb8d9e28fc6bb95 The publishing script for this crate lives at: https://github.com/alexcrichton/rustc-auto-publish\n            "
+edition = "2018"
+license = "MIT / Apache-2.0"
+name = "rustc-ap-rustc_errors"
+repository = "https://github.com/rust-lang/rust"
+version = "664.0.0"
+[target."cfg(windows)".dependencies.winapi]
+features = ["handleapi", "synchapi", "winbase"]
+version = "0.3"

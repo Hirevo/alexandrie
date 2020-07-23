@@ -1,0 +1,90 @@
+[package]
+name = "syntect"
+description = "library for high quality syntax highlighting and code intelligence using Sublime Text's grammars"
+documentation = "https://docs.rs/syntect"
+repository = "https://github.com/trishume/syntect"
+keywords = ["syntax", "highlighting", "highlighter", "colouring", "parsing"]
+categories = ["parser-implementations", "parsing", "text-processing"]
+readme = "Readme.md"
+license = "MIT"
+version = "4.2.0" # remember to update html_root_url
+authors = ["Tristan Hume <tristan@thume.ca>"]
+edition = "2018"
+exclude = [
+    "testdata/*",
+    "/scripts/*",
+    "/Makefile",
+    "/codecov.yml"
+]
+
+[dependencies]
+yaml-rust = { version = "0.4", optional = true }
+onig = { version = "6.0", optional = true, default-features = false }
+fancy-regex = { version = "0.3.2", optional = true }
+walkdir = "2.0"
+regex-syntax = { version = "0.6", optional = true }
+lazy_static = "1.0"
+lazycell = "1.0"
+bitflags = "1.0.4"
+plist = "1"
+bincode = { version = "1.0", optional = true }
+flate2 = { version = "1.0", optional = true, default-features = false }
+fnv = { version = "1.0", optional = true }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+
+[dev-dependencies]
+criterion = "0.3"
+rayon = "1.0.0"
+regex = "1.0"
+getopts = "0.2"
+pretty_assertions = "0.6"
+
+[features]
+
+# If you enable two dump loading features or two creation features the build
+# will fail, choose one of each. If you are using both creation and loading,
+# your binary will be smaller if you choose the same one for each.
+
+# Pure Rust dump loading, slower than regular `dump-load`
+dump-load-rs = ["flate2/rust_backend", "bincode"]
+# Dump loading using flate2, which depends on the miniz C library.
+dump-load = ["flate2/default", "bincode"]
+# Dump creation using flate2, which depends on the miniz C library.
+dump-create = ["flate2/default", "bincode"]
+# Pure Rust dump creation, worse compressor so produces larger dumps than dump-create
+dump-create-rs = ["flate2/rust_backend", "bincode"]
+
+regex-fancy = ["fancy-regex"]
+regex-onig = ["onig"]
+parsing = ["regex-syntax", "fnv"]
+# Support for .tmPreferenes metadata files (indentation, comment syntax, etc)
+metadata = ["parsing"]
+# The `assets` feature enables inclusion of the default theme and syntax packages.
+# For `assets` to do anything, it requires one of `dump-load-rs` or `dump-load` to be set.
+assets = []
+html = ["parsing", "assets"]
+yaml-load = ["yaml-rust", "parsing"]
+default-onig = ["parsing", "assets", "html", "yaml-load", "dump-load", "dump-create", "regex-onig"]
+# In order to switch to the fancy-regex engine, disable default features then add the default-fancy feature
+default-fancy = ["parsing", "assets", "html", "yaml-load", "dump-load", "dump-create", "regex-fancy"]
+default = ["default-onig"]
+
+# [profile.release]
+# debug = true
+
+[lib]
+bench = false
+
+[[bench]]
+name = "highlighting"
+harness = false
+
+[[bench]]
+name = "loading"
+harness = false
+
+[[bench]]
+name = "parsing"
+harness = false

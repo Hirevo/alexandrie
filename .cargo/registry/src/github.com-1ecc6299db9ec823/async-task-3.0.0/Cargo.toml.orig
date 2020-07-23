@@ -1,0 +1,23 @@
+[package]
+name = "async-task"
+version = "3.0.0"
+authors = ["Stjepan Glavina <stjepang@gmail.com>"]
+edition = "2018"
+license = "Apache-2.0/MIT"
+repository = "https://github.com/stjepang/async-task"
+homepage = "https://github.com/stjepang/async-task"
+documentation = "https://docs.rs/async-task"
+description = "Task abstraction for building executors"
+keywords = ["futures", "task", "executor", "spawn"]
+categories = ["asynchronous", "concurrency", "no-std"]
+readme = "README.md"
+
+[features]
+default = ["std"]
+std = []
+
+[dev-dependencies]
+crossbeam = "0.7.3"
+crossbeam-utils = "0.7.2"
+futures = "0.3.4"
+lazy_static = "1.4.0"

@@ -1,0 +1,46 @@
+[package]
+name = "aho-corasick"
+version = "0.7.13"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Fast multiple substring searching."
+homepage = "https://github.com/BurntSushi/aho-corasick"
+repository = "https://github.com/BurntSushi/aho-corasick"
+readme = "README.md"
+keywords = ["string", "search", "text", "aho", "multi"]
+license = "Unlicense/MIT"
+categories = ["text-processing"]
+autotests = false
+exclude = [
+  "/aho-corasick-debug", "/ci/*", "/.travis.yml", "/appveyor.yml",
+]
+
+[workspace]
+members = ["bench"]
+# We'd ideally not do this, but since the debug tool uses Rust 2018, older
+# versions of Rust (such as 1.28) fail to parse the manifest because it treats
+# `edition = "2018"` as an unstable feature.
+#
+# When we move our MSRV to Rust 2018, then we should be able to add this back
+# to the workspace.
+exclude = ["aho-corasick-debug"]
+
+[lib]
+name = "aho_corasick"
+
+[features]
+default = ["std"]
+std = ["memchr/use_std"]
+
+[dependencies]
+memchr = { version = "2.2.0", default-features = false }
+
+[dev-dependencies]
+# TODO: Re-enable this once the MSRV is 1.43 or greater.
+# See: https://github.com/BurntSushi/aho-corasick/issues/62
+doc-comment = "0.3.1"
+
+[profile.release]
+debug = true
+
+[profile.bench]
+debug = true

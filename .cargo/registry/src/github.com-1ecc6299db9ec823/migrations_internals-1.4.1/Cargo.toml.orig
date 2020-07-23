@@ -1,0 +1,17 @@
+[package]
+name = "migrations_internals"
+version = "1.4.1"
+authors = ["Sean Griffin <sean@seantheprogrammer.com>"]
+license = "MIT OR Apache-2.0"
+description = "Internal implementation of diesels migration mechanism"
+homepage = "http://diesel.rs"
+
+[dependencies]
+diesel = { version = "~1.4.0", default-features = false }
+barrel = { version = ">= 0.5.0", optional = true, features = ["diesel"] }
+
+[dev-dependencies]
+tempdir = "0.3.4"
+
+[features]
+default = []

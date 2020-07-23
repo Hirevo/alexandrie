@@ -1,0 +1,75 @@
+[package]
+name = "crossbeam"
+# When publishing a new version:
+# - Update CHANGELOG.md
+# - Update README.md
+# - Create "crossbeam-X.Y.Z" git tag
+version = "0.7.3"
+authors = ["The Crossbeam Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/crossbeam-rs/crossbeam"
+homepage = "https://github.com/crossbeam-rs/crossbeam"
+documentation = "https://docs.rs/crossbeam"
+description = "Tools for concurrent programming"
+keywords = ["atomic", "garbage", "non-blocking", "lock-free", "rcu"]
+categories = ["concurrency", "memory-management", "data-structures", "no-std"]
+exclude = ["/ci/*", "/.travis.yml", "/bors.toml"]
+
+[badges]
+travis-ci = { repository = "crossbeam-rs/crossbeam" }
+
+[features]
+default = ["std"]
+nightly = ["crossbeam-epoch/nightly", "crossbeam-utils/nightly"]
+std = [
+  "crossbeam-channel",
+  "crossbeam-deque",
+  "crossbeam-epoch/std",
+  "crossbeam-queue",
+  "crossbeam-utils/std",
+]
+alloc = ["crossbeam-epoch/alloc", "crossbeam-utils/alloc"]
+
+[dependencies]
+cfg-if = "0.1.2"
+
+[dependencies.crossbeam-channel]
+version = "0.4"
+path = "./crossbeam-channel"
+optional = true
+
+[dependencies.crossbeam-deque]
+version = "0.7.0"
+path = "./crossbeam-deque"
+optional = true
+
+[dependencies.crossbeam-epoch]
+version = "0.8"
+path = "./crossbeam-epoch"
+default-features = false
+
+[dependencies.crossbeam-queue]
+version = "0.2"
+path = "./crossbeam-queue"
+optional = true
+
+[dependencies.crossbeam-utils]
+version = "0.7"
+path = "./crossbeam-utils"
+default-features = false
+
+[dev-dependencies]
+rand = "0.6"
+
+[workspace]
+members = [
+  ".",
+  "crossbeam-channel",
+  "crossbeam-channel/benchmarks",
+  "crossbeam-deque",
+  "crossbeam-epoch",
+  "crossbeam-queue",
+  "crossbeam-skiplist",
+  "crossbeam-utils",
+]

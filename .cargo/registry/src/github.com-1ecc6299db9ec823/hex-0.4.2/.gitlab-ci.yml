@@ -1,0 +1,182 @@
+stages:
+  - compile
+  - test
+
+compile:rust-stable:
+  image: liuchong/rustup:stable
+  stage: compile
+  script:
+    - cargo build
+  cache:
+    key: $CI_COMMIT_REF_SLUG:$RUST_KEY
+    paths:
+      - /root/.cargo/git
+      - /root/.cargo/registry
+      - target/
+  artifacts:
+    paths:
+      - target/
+  variables:
+    RUST_KEY: rust-stable
+
+compile:rust-stable-musl:
+  image: liuchong/rustup:stable-musl
+  stage: compile
+  script:
+    - cargo build
+  cache:
+    key: $CI_COMMIT_REF_SLUG:$RUST_KEY
+    paths:
+      - /root/.cargo/git
+      - /root/.cargo/registry
+      - target/
+  artifacts:
+    paths:
+      - target/
+  variables:
+    RUST_KEY: rust-stable-musl
+
+compile:rust-beta:
+  image: liuchong/rustup:stable
+  stage: compile
+  script:
+    - cargo build
+  cache:
+    key: $CI_COMMIT_REF_SLUG:$RUST_KEY
+    paths:
+      - /root/.cargo/git
+      - /root/.cargo/registry
+      - target/
+  artifacts:
+    paths:
+      - target/
+  variables:
+    RUST_KEY: rust-beta
+
+compile:rust-beta-musl:
+  image: liuchong/rustup:stable-musl
+  stage: compile
+  script:
+    - cargo build
+  cache:
+    key: $CI_COMMIT_REF_SLUG:$RUST_KEY
+    paths:
+      - /root/.cargo/git
+      - /root/.cargo/registry
+      - target/
+  artifacts:
+    paths:
+      - target/
+  variables:
+    RUST_KEY: rust-beta-musl
+
+compile:rust-nightly:
+  image: liuchong/rustup:stable
+  stage: compile
+  script:
+    - cargo build
+  cache:
+    key: $CI_COMMIT_REF_SLUG:$RUST_KEY
+    paths:
+      - /root/.cargo/git
+      - /root/.cargo/registry
+      - target/
+  artifacts:
+    paths:
+      - target/
+  variables:
+    RUST_KEY: rust-nightly
+  allow_failure: true
+
+compile:rust-nightly-musl:
+  image: liuchong/rustup:stable-musl
+  stage: compile
+  script:
+    - cargo build
+  cache:
+    key: $CI_COMMIT_REF_SLUG:$RUST_KEY
+    paths:
+      - /root/.cargo/git
+      - /root/.cargo/registry
+      - target/
+  artifacts:
+    paths:
+      - target/
+  variables:
+    RUST_KEY: rust-nightly-musl
+  allow_failure: true
+
+test:rust-stable:
+  image: liuchong/rustup:stable
+  stage: test
+  dependencies:
+    - compile:rust-stable
+  script:
+    - cargo test
+    - cargo test --features serde
+    - cargo test --no-default-features
+  variables:
+    RUST_KEY: rust-stable
+
+test:rust-stable-musl:
+  image: liuchong/rustup:stable-musl
+  stage: test
+  dependencies:
+    - compile:rust-stable-musl
+  script:
+    - cargo test
+    - cargo test --features serde
+    - cargo test --no-default-features
+  variables:
+    RUST_KEY: rust-stable-musl
+
+test:rust-beta:
+  image: liuchong/rustup:stable
+  stage: test
+  dependencies:
+    - compile:rust-beta
+  script:
+    - cargo test
+    - cargo test --features serde
+    - cargo test --no-default-features
+  variables:
+    RUST_KEY: rust-beta
+
+test:rust-beta-musl:
+  image: liuchong/rustup:stable-musl
+  stage: test
+  dependencies:
+    - compile:rust-beta-musl
+  script:
+    - cargo test
+    - cargo test --features serde
+    - cargo test --no-default-features
+  variables:
+    RUST_KEY: rust-beta-musl
+
+test:rust-nightly:
+  image: liuchong/rustup:stable
+  stage: test
+  dependencies:
+    - compile:rust-nightly
+  script:
+    - cargo test
+    - cargo test --features serde
+    - cargo test --no-default-features
+  variables:
+    RUST_KEY: rust-nightly
+  allow_failure: true
+
+test:rust-nightly-musl:
+  image: liuchong/rustup:stable-musl
+  stage: test
+  dependencies:
+    - compile:rust-nightly-musl
+  script:
+    - cargo test
+    - cargo test --features serde
+    - cargo test --no-default-features
+  variables:
+    RUST_KEY: rust-nightly-musl
+  allow_failure: true
+

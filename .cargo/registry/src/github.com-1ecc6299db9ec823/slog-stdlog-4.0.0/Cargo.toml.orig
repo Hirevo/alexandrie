@@ -1,0 +1,25 @@
+[package]
+name = "slog-stdlog"
+version = "4.0.0"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "`log` crate adapter for slog-rs"
+keywords = ["slog", "logging", "json", "log"]
+license = "MPL-2.0/MIT/Apache-2.0"
+documentation = "https://docs.rs/slog-stdlog"
+homepage = "https://github.com/slog-rs/stdlog"
+repository = "https://github.com/slog-rs/stdlog"
+readme = "README.md"
+edition = "2018"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+slog = "2"
+slog-scope = "4"
+log = { version = "0.4.8", features = ["std"] }
+crossbeam = "0.7.1"
+
+[dev-dependencies]
+slog-term = "2"
+slog-async = "2"

@@ -1,0 +1,26 @@
+[package]
+name = "pin-project-internal"
+version = "0.4.19"
+authors = ["Taiki Endo <te316e89@gmail.com>"]
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/taiki-e/pin-project"
+homepage = "https://github.com/taiki-e/pin-project"
+documentation = "https://docs.rs/pin-project-internal"
+keywords = ["pin", "macros", "attribute"]
+categories = ["no-std", "rust-patterns"]
+description = """
+An internal crate to support pin_project - do not use directly
+"""
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0.13", features = ["full", "visit-mut"] }
+

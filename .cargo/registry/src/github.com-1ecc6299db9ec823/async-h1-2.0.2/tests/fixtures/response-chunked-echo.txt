@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+transfer-encoding: chunked
+date: {DATE}
+content-type: text/plain
+
+7
+Mozilla
+9
+Developer
+7
+Network
+0
+

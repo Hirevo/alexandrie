@@ -1,0 +1,35 @@
+[dependencies]
+bitflags = "1.2.1"
+log = "0.4"
+
+[dependencies.rustc_data_structures]
+package = "rustc-ap-rustc_data_structures"
+version = "664.0.0"
+
+[dependencies.rustc_index]
+package = "rustc-ap-rustc_index"
+version = "664.0.0"
+
+[dependencies.rustc_macros]
+package = "rustc-ap-rustc_macros"
+version = "664.0.0"
+
+[dependencies.rustc_serialize]
+package = "rustc-ap-rustc_serialize"
+version = "664.0.0"
+
+[dependencies.rustc_span]
+package = "rustc-ap-rustc_span"
+version = "664.0.0"
+
+[lib]
+path = "lib.rs"
+
+[package]
+authors = ["The Rust Project Developers"]
+description = "Automatically published version of the package `rustc_target` in the rust-lang/rust repository from commit 3ddf48053e83f4949d00dcaf6eb8d9e28fc6bb95 The publishing script for this crate lives at: https://github.com/alexcrichton/rustc-auto-publish\n            "
+edition = "2018"
+license = "MIT / Apache-2.0"
+name = "rustc-ap-rustc_target"
+repository = "https://github.com/rust-lang/rust"
+version = "664.0.0"

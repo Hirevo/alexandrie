@@ -1,0 +1,28 @@
+[package]
+name = "async-sse"
+version = "3.0.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/http-rs/async-sse"
+documentation = "https://docs.rs/async-sse"
+description = "Async Server Sent Event parser and encoder"
+readme = "README.md"
+edition = "2018"
+keywords = ["async", "server-sent-events", "sse", "client", "server"]
+categories = []
+authors = [
+    "Renée Kooi <renee@kooi.me>",
+    "Yoshua Wuyts <yoshuawuyts@gmail.com>",
+]
+
+[features]
+
+[dependencies]
+async-std = { version = "1.6.0", features = ["unstable"] }
+http-types = "2.0.1"
+log = "0.4.8"
+memchr = "2.3.3"
+pin-project-lite = "0.1.4"
+
+[dev-dependencies]
+femme = "2.0.0"
+async-std = { version = "1.6.0", features = ["attributes", "unstable"] }

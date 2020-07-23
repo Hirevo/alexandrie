@@ -1,0 +1,29 @@
+[package]
+name = "slog-async"
+version = "2.5.0"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "Asynchronous drain for slog-rs"
+keywords = ["slog", "logging", "log", "asynchronous"]
+categories = ["development-tools::debugging"]
+license = "MPL-2.0/MIT/Apache-2.0"
+documentation = "https://docs.rs/slog-async"
+homepage = "https://github.com/slog-rs/slog"
+repository = "https://github.com/slog-rs/async"
+readme = "README.md"
+
+[features]
+nested-values = ["slog/nested-values"]
+dynamic-keys = ["slog/dynamic-keys"]
+default = []
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+slog = "2.1"
+thread_local = "1"
+take_mut = "0.2.0"
+crossbeam-channel = "0.4"
+
+[package.metadata.docs.rs]
+features = ["nested-values", "dynamic-keys"]
