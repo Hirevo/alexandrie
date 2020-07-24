@@ -330,37 +330,45 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         //? Update badges.
         link_badges(conn, krate.id, metadata.badges)?;
 
+        //? Render the crate's readme.
+        let rendered_readme = {
+            let mut archive = Archive::new(GzDecoder::new(crate_bytes.as_slice()));
+            let base_path = PathBuf::from(format!("{0}-{1}", crate_desc.name, crate_desc.vers));
+            let readme_path = base_path.join("README.md");
+            let mut entries = archive.entries()?;
+            let found = entries.find(|entry| match entry {
+                Ok(entry) => entry
+                    .path()
+                    .map(|path| path == readme_path)
+                    .unwrap_or(false),
+                Err(_) => false,
+            });
+
+            //? Start render if it has a README.
+            match found {
+                Some(found) => {
+                    let mut contents = String::new();
+                    found?.read_to_string(&mut contents)?;
+
+                    Some(alexandrie_rendering::render_readme(&state.syntect, contents.as_str()))
+                }
+                None => None,
+            }
+        };
+
         //? Store the crate's tarball.
         state.storage.store_crate(
             &crate_desc.name,
             crate_desc.vers.clone(),
-            crate_bytes.as_slice(),
+            crate_bytes,
         )?;
 
-        //? Render the crate's readme.
-        let mut archive = Archive::new(GzDecoder::new(crate_bytes.as_slice()));
-        let base_path = PathBuf::from(format!("{0}-{1}", crate_desc.name, crate_desc.vers));
-        let readme_path = base_path.join("README.md");
-        let mut entries = archive.entries()?;
-        let found = entries.find(|entry| match entry {
-            Ok(entry) => entry
-                .path()
-                .map(|path| path == readme_path)
-                .unwrap_or(false),
-            Err(_) => false,
-        });
-
-        //? Start render if it has a README.
-        if let Some(found) = found {
-            let mut contents = String::new();
-            found?.read_to_string(&mut contents)?;
-
-            let rendered = alexandrie_rendering::render_readme(&state.syntect, contents.as_str());
-
+        //? Store the crate's readme.
+        if let Some(rendered) = rendered_readme {
             state.storage.store_readme(
                 &crate_desc.name,
                 crate_desc.vers.clone(),
-                rendered.as_bytes(),
+                rendered,
             )?;
         }
 

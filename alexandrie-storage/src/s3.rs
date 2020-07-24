@@ -103,19 +103,11 @@ impl S3Storage {
         Ok(reader)
     }
 
-    fn put_object<T>(&self, key: String, mut data: T) -> Result<(), Error>
-    where
-        T: Read,
-    {
-        // This seems pretty painful, but the best we can do (see
-        // https://github.com/Hirevo/alexandrie/issues/9#issuecomment-659578212).
-        let mut buffered_data = Vec::new();
-        data.read_to_end(&mut buffered_data)?;
-
+    fn put_object(&self, key: String, data: Vec<u8>) -> Result<(), Error> {
         let request = PutObjectRequest {
             bucket: self.bucket.clone(),
             key,
-            body: Some(StreamingBody::from(buffered_data)),
+            body: Some(StreamingBody::from(data)),
             ..Default::default()
         };
 
@@ -135,10 +127,7 @@ impl Store for S3Storage {
         self.get_object_reader(self.crate_key(name, version))
     }
 
-    fn store_crate<T>(&self, name: &str, version: Version, data: T) -> Result<(), Error>
-    where
-        T: Read,
-    {
+    fn store_crate(&self, name: &str, version: Version, data: Vec<u8>) -> Result<(), Error> {
         self.put_object(self.crate_key(name, version), data)
     }
 
@@ -155,10 +144,7 @@ impl Store for S3Storage {
         self.get_object_reader(self.readme_key(name, version))
     }
 
-    fn store_readme<T>(&self, name: &str, version: Version, data: T) -> Result<(), Error>
-    where
-        T: Read,
-    {
-        self.put_object(self.readme_key(name, version), data)
+    fn store_readme(&self, name: &str, version: Version, data: String) -> Result<(), Error> {
+        self.put_object(self.readme_key(name, version), data.into_bytes())
     }
 }
