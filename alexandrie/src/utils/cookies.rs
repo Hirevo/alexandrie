@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 
 use cookie::{Cookie, CookieJar};
-use futures::future::BoxFuture;
+use tide::utils::async_trait;
 use tide::{Middleware, Next, Request};
 
 /// Middleware for working with cookies.
@@ -15,26 +15,21 @@ impl CookiesMiddleware {
     }
 }
 
-impl<State: Send + Sync + 'static> Middleware<State> for CookiesMiddleware {
-    fn handle<'a>(
-        &'a self,
-        mut req: Request<State>,
-        next: Next<'a, State>,
-    ) -> BoxFuture<'a, tide::Result> {
-        futures::FutureExt::boxed(async move {
-            let data = CookieData::from_request(&req);
-            let jar = data.content.clone();
-            req.set_ext(data);
+#[async_trait]
+impl<State: Clone + Send + Sync + 'static> Middleware<State> for CookiesMiddleware {
+    async fn handle(&self, mut req: Request<State>, next: Next<'_, State>) -> tide::Result {
+        let data = CookieData::from_request(&req);
+        let jar = data.content.clone();
+        req.set_ext(data);
 
-            let mut res = next.run(req).await?;
+        let mut res = next.run(req).await;
 
-            let locked = jar.read().unwrap();
-            for cookie in locked.delta() {
-                res.append_header("set-cookie", cookie.encoded().to_string());
-            }
+        let locked = jar.read().unwrap();
+        for cookie in locked.delta() {
+            res.append_header("set-cookie", cookie.encoded().to_string());
+        }
 
-            Ok(res)
-        })
+        Ok(res)
     }
 }
 

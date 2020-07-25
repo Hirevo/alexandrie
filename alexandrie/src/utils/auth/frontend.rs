@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use futures::future::BoxFuture;
+use tide::utils::async_trait;
 use tide::{Middleware, Next, Request};
 
 use crate::db::models::Author;
@@ -27,47 +27,44 @@ impl AuthMiddleware {
     }
 }
 
+#[async_trait]
 impl Middleware<State> for AuthMiddleware {
-    fn handle<'a>(
-        &'a self,
-        mut req: Request<State>,
-        next: Next<'a, State>,
-    ) -> BoxFuture<'a, tide::Result> {
-        futures::FutureExt::boxed(async move {
-            let now = chrono::Utc::now().naive_utc();
-            let cookie = req.get_cookie(COOKIE_NAME);
+    async fn handle(&self, mut req: Request<State>, next: Next<'_, State>) -> tide::Result {
+        let now = chrono::Utc::now().naive_utc();
+        let cookie = req.get_cookie(COOKIE_NAME);
 
-            if let Some(cookie) = cookie {
-                let state = req.state().clone();
-                let repo = &state.repo;
-                let query = repo.run(move |conn| {
-                    //? Get the session matching the user-provided token.
-                    sessions::table
-                        .inner_join(authors::table)
-                        .select((sessions::expires, authors::all_columns))
-                        .filter(sessions::token.eq(cookie.value()))
-                        .first::<(String, Author)>(conn)
-                        .optional()
-                });
+        if let Some(cookie) = cookie {
+            let state = req.state().clone();
+            let repo = &state.repo;
+            let query = repo.run(move |conn| {
+                //? Get the session matching the user-provided token.
+                sessions::table
+                    .inner_join(authors::table)
+                    .select((sessions::expires, authors::all_columns))
+                    .filter(sessions::token.eq(cookie.value()))
+                    .first::<(String, Author)>(conn)
+                    .optional()
+            });
 
-                let results = match query.await {
-                    Ok(results) => results,
-                    Err(err) => return Err(tide::Error::from(err)),
-                };
+            let results = match query.await {
+                Ok(results) => results,
+                Err(err) => return Err(tide::Error::from(err)),
+            };
 
-                if let Some((expires, author)) = results {
-                    let expires =
-                        chrono::NaiveDateTime::parse_from_str(expires.as_str(), DATETIME_FORMAT)
-                            .unwrap();
+            if let Some((expires, author)) = results {
+                let expires =
+                    chrono::NaiveDateTime::parse_from_str(expires.as_str(), DATETIME_FORMAT)
+                        .unwrap();
 
-                    if expires > now {
-                        req.set_ext(author);
-                    }
+                if expires > now {
+                    req.set_ext(author);
                 }
             }
+        }
 
-            next.run(req).await
-        })
+        let response = next.run(req).await;
+
+        Ok(response)
     }
 }
 
