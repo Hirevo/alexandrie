@@ -70,11 +70,9 @@ embed_migrations!("../migrations/postgres");
 
 #[allow(clippy::cognitive_complexity)]
 async fn run() -> Result<(), Error> {
-    let _guard = logs::init();
-
     let contents = fs::read("alexandrie.toml").await?;
     let config: Config = toml::from_slice(contents.as_slice())?;
-    let addr = format!("{0}:{1}", config.general.addr, config.general.port);
+    let addr = config.general.bind_address.clone();
 
     #[cfg(feature = "frontend")]
     let frontend_enabled = config.frontend.enabled;
@@ -182,7 +180,7 @@ async fn run() -> Result<(), Error> {
     app.at("/api/v1/crates/:name/:version/download")
         .get(api::crates::download::get);
 
-    info!("listening on {0}", addr);
+    info!("listening on '{0}'", addr);
     app.listen(addr).await?;
 
     Ok(())
@@ -190,7 +188,9 @@ async fn run() -> Result<(), Error> {
 
 #[async_std::main]
 async fn main() {
+    let _guard = logs::init();
+
     if let Err(err) = run().await {
-        eprintln!("{}", err);
+        log::error!("{}", err);
     }
 }
