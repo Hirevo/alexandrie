@@ -28,6 +28,6 @@ RUN pwd
 RUN ls
 
 # build the app
-RUN cargo build --release
+#RUN cargo build --release
 
-CMD cargo run --release
+#CMD cargo run --release
