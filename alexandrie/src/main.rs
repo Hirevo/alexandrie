@@ -49,7 +49,7 @@ pub mod frontend;
 use crate::config::Config;
 use crate::error::Error;
 use crate::utils::request_log::RequestLogger;
-use clap::{Arg, App};
+use clap::{App, Arg};
 
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
@@ -72,12 +72,15 @@ embed_migrations!("../migrations/postgres");
 #[allow(clippy::cognitive_complexity)]
 async fn run() -> Result<(), Error> {
     let matches = App::new("alexandrie")
-                          .arg(Arg::with_name("config")
-                               .short("c")
-                               .long("config")
-                               .value_name("alexandrie.toml")
-                               .help("config file path")
-                               .takes_value(true)).get_matches();
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("alexandrie.toml")
+                .help("config file path")
+                .takes_value(true),
+        )
+        .get_matches();
     let config = matches.value_of("config").unwrap_or("alexandrie.toml");
     let _guard = logs::init();
 
