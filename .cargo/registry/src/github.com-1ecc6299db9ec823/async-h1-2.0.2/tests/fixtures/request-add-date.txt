@@ -1,6 +1,0 @@
-POST / HTTP/1.1
-host: localhost:8080
-content-length: 5
-content-type: text/plain;charset=utf-8
-
-hello

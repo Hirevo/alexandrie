@@ -1,2 +1,0 @@
-[target.x86_64-linux-android]
-image = "rustembedded/cross:x86_64-linux-android"
