@@ -90,7 +90,7 @@ async fn run() -> Result<(), Error> {
 
     #[cfg(feature = "frontend")]
     let frontend_enabled = config.frontend.enabled;
-
+    let asset = config.asset.path.clone();
     let state: config::State = config.into();
 
     info!("running database migrations");
@@ -150,7 +150,7 @@ async fn run() -> Result<(), Error> {
                 .get(frontend::account::manage::tokens::revoke::get);
 
             info!("mounting '/assets/*path'");
-            app.at("/assets").serve_dir("assets")?;
+            app.at("/assets").serve_dir(asset)?;
         }
     }
 
