@@ -97,7 +97,7 @@ async fn run() -> Result<(), Error> {
     //handle when response error,set error message into body.
     app.middleware(After(|mut res: Response| async {
         if let Some(err) = res.error() {
-            &res.set_body(format!("Error: {}", err.to_string()));
+            res.set_body(format!("Error: {}", err.to_string()));
         }
         Ok(res)
     }));
