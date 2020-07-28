@@ -27,7 +27,7 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
             resp_msg = err.to_string()
         }
         info!(
-            "--> {} {} {} {}ms {}",
+            "--> {} {} {} {}ms , {}",
             method, path, status, elapsed, resp_msg
         );
         Ok(res)
