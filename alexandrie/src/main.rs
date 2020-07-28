@@ -29,6 +29,9 @@ use std::sync::Arc;
 
 use async_std::fs;
 
+use tide::utils::After;
+use tide::Response;
+
 /// API endpoints definitions.
 pub mod api;
 /// Configuration and internal state type definitions.
@@ -83,13 +86,21 @@ async fn run() -> Result<(), Error> {
 
     info!("running database migrations");
     #[rustfmt::skip]
-    state.repo.run(|conn| embedded_migrations::run(conn)).await
+        state.repo.run(|conn| embedded_migrations::run(conn)).await
         .expect("migration execution error");
 
     let mut app = tide::with_state(Arc::new(state));
 
     info!("setting up request logger middleware");
     app.middleware(RequestLogger::new());
+
+    //handle when response error,set error message into body.
+    app.middleware(After(|mut res: Response| async {
+        if let Some(err) = res.error() {
+            &res.set_body(format!("Error: {}", err.to_string()));
+        }
+        Ok(res)
+    }));
 
     #[cfg(feature = "frontend")]
     {

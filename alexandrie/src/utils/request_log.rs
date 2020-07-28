@@ -22,7 +22,14 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
         let res = next.run(req).await;
         let elapsed = start.elapsed().as_millis();
         let status = res.status();
-        info!("--> {} {} {} {}ms", method, path, status, elapsed,);
+        let mut resp_msg = "OK".into();
+        if let Some(err) = res.error() {
+            resp_msg = err.to_string()
+        }
+        info!(
+            "--> {} {} {} {}ms {}",
+            method, path, status, elapsed, resp_msg
+        );
         Ok(res)
     }
 }
