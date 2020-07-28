@@ -1,5 +1,5 @@
 # Docker Image Tutorial
-Short tutorial on getting your Docker Image up and running. We will be assuming that you're using a SQLite databse. Link to [Docker Installation](https://docs.docker.com/get-docker/)
+Short tutorial on getting your Docker Image up and running. We will be assuming that you're using a SQLite database. Link to [Docker Installation](https://docs.docker.com/get-docker/)
 
 ## Building the Image
 Manual build
