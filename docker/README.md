@@ -1,6 +1,7 @@
 # Running Alexandrie via Docker
 
 ## Introduction
+Alexandrie is an open source implementation of the Crates registry API.
 This tutorial walks through setting up a local instance of Alexandrie so you can test publishing a crate to an [alternative registry](https://doc.rust-lang.org/cargo/reference/registries.html#using-an-alternate-registry)
 
 ## Dependencies
@@ -9,15 +10,15 @@ This tutorial walks through setting up a local instance of Alexandrie so you can
 ## Steps
 
 ### Pull Image
-We provide a docker image you can use to run a local instance of Alexandrie. Pull it with
+We provided a docker image you can use to run a local instance of Alexandrie. Pull it with the command: 
 > docker pull rtohaan/alexandrie:latest
 
-This image uses the default Alexandrie configuration and comes with sqlite installed.
+This image uses the default Alexandrie configuration that comes with a pre-installed SQLite3 for data storage.
 
-Alternatively, you can build it yourself from the root of this repo with
+Alternatively, you can build it yourself from the root of this repo with the command:
 > docker build -t alexandrie -f Dockerfile .
 
-The remaining steps assume you have pulled rtohaan/alexandrie:latest.
+The remaining steps assume you have pulled the image: rtohaan/alexandrie:latest.
 
 ### Setting up directories for application data
 Alexandrie requires 3 locations to store data. 
@@ -27,7 +28,7 @@ Alexandrie requires 3 locations to store data.
 
 ./crate-storage stores the crate's binaries
 
-./data will contain the sqlite database that Alexandrie needs to keep track of accounts, tokens, etc.
+./data will contain the SQLite database that Alexandrie needs to keep track of accounts, tokens, etc.
 
 ./crate-index stores meta-data for each version of the crate. [Link](https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification) to the alternative-registry spec
 
