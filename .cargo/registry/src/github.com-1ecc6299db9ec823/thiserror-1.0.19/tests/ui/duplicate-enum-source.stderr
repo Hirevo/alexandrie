@@ -1,5 +1,0 @@
-error: duplicate #[source] attribute
- --> $DIR/duplicate-enum-source.rs:8:9
-  |
-8 |         #[source]
-  |         ^^^^^^^^^

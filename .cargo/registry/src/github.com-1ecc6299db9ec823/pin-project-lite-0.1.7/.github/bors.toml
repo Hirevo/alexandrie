@@ -1,2 +1,0 @@
-status = ["ci"]
-delete_merged_branches = true

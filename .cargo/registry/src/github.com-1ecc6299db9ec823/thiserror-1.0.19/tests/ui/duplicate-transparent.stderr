@@ -1,5 +1,0 @@
-error: duplicate #[error(transparent)] attribute
- --> $DIR/duplicate-transparent.rs:5:1
-  |
-5 | #[error(transparent)]
-  | ^^^^^^^^^^^^^^^^^^^^^

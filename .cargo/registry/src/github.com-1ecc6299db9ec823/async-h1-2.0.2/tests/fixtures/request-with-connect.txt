@@ -1,5 +1,0 @@
-CONNECT example.com:443 HTTP/1.1
-host: example.com
-proxy-connection: keep-alive
-content-length: 0
-

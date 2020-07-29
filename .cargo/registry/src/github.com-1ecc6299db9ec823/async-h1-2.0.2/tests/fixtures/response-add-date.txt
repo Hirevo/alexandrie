@@ -1,5 +1,0 @@
-HTTP/1.1 200 OK
-content-length: 0
-date: {DATE}
-content-type: text/plain;charset=utf-8
-

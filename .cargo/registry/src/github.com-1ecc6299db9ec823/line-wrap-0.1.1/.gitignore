@@ -1,5 +1,0 @@
-/target
-**/*.rs.bk
-/.idea
-/perf.data*
-/tmp
