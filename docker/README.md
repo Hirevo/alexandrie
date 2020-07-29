@@ -26,11 +26,11 @@ Alexandrie requires 3 locations to store data.
 - ./data
 - ./crate-index
 
-./crate-storage stores the crate's binaries
+`./crate-storage` stores the crate's binaries
 
-./data will contain the SQLite database that Alexandrie needs to keep track of accounts, tokens, etc.
+`./data` will contain the SQLite database that Alexandrie needs to keep track of accounts, tokens, etc.
 
-./crate-index stores meta-data for each version of the crate. [Link](https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification) to the alternative-registry spec
+`./crate-index` stores meta-data for each version of the crate. [Link](https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification) to the alternative-registry spec
 
 These need to be created in the root directory of Alexandrie. *Note: Registries are linked to git repositories*.
 
@@ -88,14 +88,25 @@ Next, we need to login to your local registry with
 
 ### Publishing a crate
 Lets create a dummy crate to publish to our registry
-> cargo new testpackage  && cd testpackage  
+```
+cargo new testpackage
+cd testpackage
+```
+Create a `~/.cargo/config` so that Alexandrie can locate the alternative registry.
+```
+[registries.local]
+index = "<alternative registry location>"
+```
 
 Commit the new crate.
-> git add . && git commit -m "new crate"
+```
+git add . 
+git commit -m "new crate"
+```
 
 Publish
-> cargo publish --registry &lt;registry&gt;
+> cargo publish --registry local
 
 
 ## Conclusion
-Congrats you know publish a private crate!
+With this tutorial we have covered pulling the docker image from Docker Hub, created an account for Alexandrie, and configured our alternative registry so that we can publish to it.
