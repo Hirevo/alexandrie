@@ -1,8 +1,14 @@
 # Running Alexandrie via Docker
 
 ## Introduction
-Alexandrie is an open source implementation of the Crates registry API.
-This tutorial walks through setting up a local instance of Alexandrie so you can test publishing a crate to an [alternative registry](https://doc.rust-lang.org/cargo/reference/registries.html#using-an-alternate-registry)
+
+[crates.io](https://crates.io/) is the Rust community's public package registry. Rust libraries (crates) are often published and shared via crates.io. 
+
+Often, teams and people may want to publish packages to internal, non-public-facing registries.
+
+Alexandrie is an open source implementation of the Crates Registry API.
+
+This tutorial walks through setting up a local instance of Alexandrie so you can test publishing a crate to an [alternate registry](https://doc.rust-lang.org/cargo/reference/registries.html#using-an-alternate-registry)
 
 ## Dependencies
 - [Docker](https://docs.docker.com/get-docker/)
@@ -24,7 +30,7 @@ The remaining steps assume you have pulled `rtohaan/alexandrie:latest`.
 Alexandrie requires 3 locations to store data. 
 - `./crate-storage` - stores the crate's binaries
 - `./data` - will contain the SQLite database that Alexandrie needs to keep track of accounts, tokens, etc.
-- `./crate-index` - is a git repo that stores meta-data for each version of the crate. [See alternative-registry spec here](https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification). The crate index is additionally what consumers would use to reference available crates and versions in a given registry.
+- `./crate-index` - is a git repo that stores meta-data for each version of the crate. [See the alternate-registry spec here](https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification). The crate index is additionally what consumers would use to reference available crates and versions in a given registry.
 
 We will create these directories and mount them into our running container so we can persist relevant application data between restarts.
 
@@ -115,7 +121,7 @@ Copy your token and keep it handy. We'll need this to login through `cargo`.
 
 ![token](https://i.fluffy.cc/zB4LdrZH8m35LttNmgqdNMqCPgCbGSCp.png)
 
-### Configuring an Alternative Registry
+### Configuring an Alternate Registry
 
 We'll configure your local `cargo` with an [alternative crates registry](https://doc.rust-lang.org/cargo/reference/registries.html#using-an-alternate-registry), pointing to your locally configured Alexandrie application.
 
