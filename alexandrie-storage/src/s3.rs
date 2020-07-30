@@ -1,5 +1,6 @@
 use crate::error::Error;
 use crate::Store;
+use lazy_static::lazy_static;
 use rusoto_core::Region;
 use rusoto_s3::{GetObjectOutput, GetObjectRequest, PutObjectRequest, S3Client, StreamingBody, S3};
 use semver::Version;
@@ -7,7 +8,13 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::io::{self, Read};
 use tokio::runtime::Runtime;
-use std::sync::{Arc, Mutex};
+
+// Rusoto needs a tokio runtime.
+lazy_static! {
+    // Seems reasonable to panic here if we can't create a runtime. We'll force
+    // this to load in `new` below so we panic on startup if there's a problem.
+    static ref RUNTIME: Runtime = Runtime::new().unwrap();
+}
 
 /// The S3-backed storage strategy.
 ///
@@ -17,7 +24,6 @@ pub struct S3Storage {
     client: S3Client,
     bucket: String,
     key_prefix: String,
-    runtime: Arc<Mutex<Runtime>>,
 }
 
 impl fmt::Debug for S3Storage {
@@ -31,15 +37,13 @@ impl S3Storage {
     /// Instantiate a new `S3Storage` handle with the given S3 region, bucket
     /// name, and key prefix.
     pub fn new(region: Region, bucket: String, key_prefix: String) -> Self {
-        // go ahead and panic if we can't start a runtime, since operations
-        // will end up panicking anyway
-        let runtime = Runtime::new().unwrap();
+        // Start up the tokio runtime so if something goes wrong we fail fast.
+        lazy_static::initialize(&RUNTIME);
 
         Self {
             client: S3Client::new(region),
             bucket,
             key_prefix,
-            runtime: Arc::new(Mutex::new(runtime)),
         }
     }
 
@@ -60,7 +64,7 @@ impl S3Storage {
             key,
             ..Default::default()
         };
-        Ok(self.runtime.lock().unwrap().block_on(self.client.get_object(request))?)
+        Ok(RUNTIME.handle().block_on(self.client.get_object(request))?)
     }
 
     // NOTE: S3 requests can succeed but then give us a body of `None`. I'm not sure
@@ -112,7 +116,7 @@ impl S3Storage {
         };
 
         // Don't think we need any of the data we get back from S3 on a PUT.
-        let _output = self.runtime.lock().unwrap().block_on(self.client.put_object(request))?;
+        let _output = RUNTIME.handle().block_on(self.client.put_object(request))?;
 
         Ok(())
     }

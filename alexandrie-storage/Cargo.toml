@@ -24,10 +24,11 @@ serde = { version = "1.0.114", features = ["derive"] }
 thiserror = "1.0.20"
 
 # S3 crate storage
+lazy_static = { version = "1.4.0", optional = true }
 rusoto_core = { version = "0.45", optional = true }
 rusoto_s3 = { version = "0.45", optional = true }
 tokio = { version = "0.2.22", optional = true }
 
 [features]
 default = []
-s3 = ["rusoto_core", "rusoto_s3", "tokio/rt-threaded"]
+s3 = ["lazy_static", "rusoto_core", "rusoto_s3", "tokio/rt-threaded"]
