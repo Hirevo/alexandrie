@@ -6,6 +6,9 @@ pub mod config;
 /// Local on-disk crate storage mechanism.
 pub mod disk;
 pub mod error;
+/// S3 storage mechanism.
+#[cfg(feature = "s3")]
+pub mod s3;
 
 use crate::disk::DiskStorage;
 use crate::error::Error;
@@ -13,12 +16,14 @@ use crate::error::Error;
 /// The crate storage strategy enum type.  
 ///
 /// It represents which storage strategy is currently used.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Storage {
     /// Local on-disk crate storage.
     Disk(DiskStorage),
-    // TODO: Add a `Store` implementation using S3.
-    // S3(S3Storage),
+
+    /// S3 crate storage.
+    #[cfg(feature = "s3")]
+    S3(s3::S3Storage),
 
     // TODO: Add a `Store` implementation using a git repository.
     // Git(GitStorage),
@@ -77,12 +82,16 @@ impl Store for Storage {
     fn get_crate(&self, name: &str, version: Version) -> Result<Vec<u8>, Error> {
         match self {
             Storage::Disk(storage) => storage.get_crate(name, version),
+            #[cfg(feature = "s3")]
+            Storage::S3(storage) => storage.get_crate(name, version),
         }
     }
 
     fn read_crate(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
         match self {
             Storage::Disk(storage) => storage.read_crate(name, version),
+            #[cfg(feature = "s3")]
+            Storage::S3(storage) => storage.read_crate(name, version),
         }
     }
 
@@ -92,18 +101,24 @@ impl Store for Storage {
     {
         match self {
             Storage::Disk(storage) => storage.store_crate(name, version, data),
+            #[cfg(feature = "s3")]
+            Storage::S3(storage) => storage.store_crate(name, version, data),
         }
     }
 
     fn get_readme(&self, name: &str, version: Version) -> Result<String, Error> {
         match self {
             Storage::Disk(storage) => storage.get_readme(name, version),
+            #[cfg(feature = "s3")]
+            Storage::S3(storage) => storage.get_readme(name, version),
         }
     }
 
     fn read_readme(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
         match self {
             Storage::Disk(storage) => storage.read_readme(name, version),
+            #[cfg(feature = "s3")]
+            Storage::S3(storage) => storage.read_readme(name, version),
         }
     }
 
@@ -113,6 +128,8 @@ impl Store for Storage {
     {
         match self {
             Storage::Disk(storage) => storage.store_readme(name, version, data),
+            #[cfg(feature = "s3")]
+            Storage::S3(storage) => storage.store_readme(name, version, data),
         }
     }
 }
