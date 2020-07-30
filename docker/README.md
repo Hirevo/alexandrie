@@ -5,7 +5,7 @@ Alexandrie is an open source implementation of the Crates registry API.
 This tutorial walks through setting up a local instance of Alexandrie so you can test publishing a crate to an [alternative registry](https://doc.rust-lang.org/cargo/reference/registries.html#using-an-alternate-registry)
 
 ## Dependencies
-- Docker
+- [Docker](https://docs.docker.com/get-docker/)
 
 ## Steps
 
@@ -18,39 +18,81 @@ This image uses the default Alexandrie configuration that comes with a pre-insta
 Alternatively, you can build it yourself from the root of this repo with the command:
 > docker build -t alexandrie -f Dockerfile .
 
-The remaining steps assume you have pulled the image: rtohaan/alexandrie:latest.
+The remaining steps assume you have pulled `rtohaan/alexandrie:latest`.
 
 ### Setting up directories for application data
 Alexandrie requires 3 locations to store data. 
-- ./crate-storage  
-- ./data
-- ./crate-index
+- `./crate-storage` - stores the crate's binaries
+- `./data` - will contain the SQLite database that Alexandrie needs to keep track of accounts, tokens, etc.
+- `./crate-index` - is a git repo that stores meta-data for each version of the crate. [See alternative-registry spec here](https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification). The crate index is additionally what consumers would use to reference available crates and versions in a given registry.
 
-`./crate-storage` stores the crate's binaries
+We will create these directories and mount them into our running container so we can persist relevant application data between restarts.
 
-`./data` will contain the SQLite database that Alexandrie needs to keep track of accounts, tokens, etc.
+Create a new empty working directory
+```bash
+mkdir scratch
+cd scratch
+```
 
-`./crate-index` stores meta-data for each version of the crate. [Link](https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification) to the alternative-registry spec
+Create the storage and data directories.
+```
+mkdir crate-storage
+mkdir data
+```
 
-These need to be created in the root directory of Alexandrie. *Note: Registries are linked to git repositories*.
+To create `./crate-index`, we've provided a template repo you can use to initialize your local crates index repo.
 
-To create ./crate-storage
-> mkdir crate-storage
+```bash
+git clone https://github.com/RangerStation/rangerstation-alexandrie-index.git ./crate-index
 
-To create ./data
-> mkdir data
+cd crate-index
+```
 
-To create ./crate-index
-> git clone https://github.com/RangerStation/rangerstation-alexandrie-index.git ./crate-index
+For running a local instance only, we'll set the git remote of the index repo to be the path where it will be mounted into Alexandrie, so our local Alexandrie instance can easily `git push` when making updates for new crates.
+
+```
+git remote set-url origin file://localhost/alexandrie/crate-index
+```
+
+Save the absolute path to this crates index repo on your *host machine* for use later in configuring `cargo`.
+
+```
+export CRATES_INDEX_HOST_PATH=$(pwd)
+```
+
+> This is for develoment purposes. In a more production use case, you want to configure a remote repo and give the Alexandrie application access to write to it, and configure `cargo` to use the hosted repo. 
+
+Go back into the root of your working directory.
+
+```
+cd ..
+```
+
+Your local directory structure should look like 
+```
+scratch
+├── crate-index
+│   ├── config.json
+│   ├── crate-index
+│   ├── crate-storage
+│   ├── data
+│   │   └── alexandrie.db
+│   └── README.md
+├── crate-storage
+└── data
+```
 
 ### Starting the container
-Common flags used with `docker run` 
-- -p Binds the port being used in the docker container to a port on your local machine
-- -d Runs the docker container in the background
-- -v Mounts the docker container to your local filesystem
-- -it Makes the docker container interactable through your terminal emulator
 
-Example
+Ensure you are in the root of your working directory.
+
+Common flags used with `docker run` are
+- `-p` Binds the port being used in the docker container to a port on your local machine
+- `-d` Runs the docker container in the background
+- `-v` Mounts the docker container to your local filesystem
+- `-it` Makes the docker container interactable through your terminal emulator
+
+Start your local instance of Alexandrie, mounting to your local directories with:
 ```
 docker run \
     -it \
@@ -61,41 +103,43 @@ docker run \
     rtohaan/alexandrie:latest
 ```
 
-### Configuring an Alternative Registry
-For Alexandrie to locate the alternative registry, a `~/.cargo/config` file needs to be created.
+Congrats! Your Alexandrie instance is running and available at `localhost:3000`. Visit `localhost:3000` in your browser to see the Alexandrie home page.
 
-Example:
-```toml
-[registries.local]
-index = "https://github.com/RangerStation/rangerstation-alexandrie-index"
-```
-Example for configuring a local index repo
-```toml
-[registries.local]
-index = "file://localhost/home/ankit/Documents/Dev/crate-index"
-```
+![alexandrie_hompage](./images/alexandrie_homepage.png)
+### Create a new user and token
+Visit `http://localhost:3000/`, and on the top right, register a new user.
 
-### Login to your Registry
-Visit `http://localhost:3000/` and on the top right. Register and login to your newly created account.
+Visit `http://localhost:3000/account/manage` to create a token for your user.
 
-Visit `http://localhost:3000/account/manage` to create a token for your account.
+Copy your token and keep it handy. We'll need this to login through `cargo`.
 
-Copy and Paste your new token, we'll need this to login through `cargo`.
 ![token](https://i.fluffy.cc/zB4LdrZH8m35LttNmgqdNMqCPgCbGSCp.png)
 
+### Configuring an Alternative Registry
+
+We'll configure your local `cargo` with an [alternative crates registry](https://doc.rust-lang.org/cargo/reference/registries.html#using-an-alternate-registry), pointing to your locally configured Alexandrie application.
+
+Create a `~/.cargo/config` file if it does not already exists.
+
+Append this block in `~/.cargo/config` to add a new registry, naming it `local`. 
+
+Use the path we saved into the `CRATES_INDEX_HOST_PATH` variable earlier. For example, if your `CRATES_INDEX_HOST_PATH` is `/home/ranger/scratch/crate-index`, your entry will be
+
+```toml
+[registries.local]
+index = "file://localhost/home/ranger/scratch/crate-index"
+```
+
 Next, we need to login to your local registry with
-> cargo login --registry local &lt;token&gt;
+```bash
+cargo login --registry local <token>
+```
 
 ### Publishing a crate
-Lets create a dummy crate to publish to our registry
+In a new terminal, create a dummy crate to publish to our registry
 ```
 cargo new testpackage
 cd testpackage
-```
-Create a `~/.cargo/config` so that Alexandrie can locate the alternative registry.
-```
-[registries.local]
-index = "<alternative registry location>"
 ```
 
 Commit the new crate.
@@ -105,8 +149,9 @@ git commit -m "new crate"
 ```
 
 Publish
-> cargo publish --registry local
-
+```bash
+cargo publish --registry local
+```
 
 ## Conclusion
-With this tutorial we have covered pulling the docker image from Docker Hub, created an account for Alexandrie, and configured our alternative registry so that we can publish to it.
+With this tutorial we have covered pulling the docker image from Docker Hub, running a local instance of a crates registry, configured our local `cargo` to reference the local crates registry, and published a crate to it!
