@@ -350,26 +350,25 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
                     let mut contents = String::new();
                     found?.read_to_string(&mut contents)?;
 
-                    Some(alexandrie_rendering::render_readme(&state.syntect, contents.as_str()))
+                    Some(alexandrie_rendering::render_readme(
+                        &state.syntect,
+                        contents.as_str(),
+                    ))
                 }
                 None => None,
             }
         };
 
         //? Store the crate's tarball.
-        state.storage.store_crate(
-            &crate_desc.name,
-            crate_desc.vers.clone(),
-            crate_bytes,
-        )?;
+        state
+            .storage
+            .store_crate(&crate_desc.name, crate_desc.vers.clone(), crate_bytes)?;
 
         //? Store the crate's readme.
         if let Some(rendered) = rendered_readme {
-            state.storage.store_readme(
-                &crate_desc.name,
-                crate_desc.vers.clone(),
-                rendered,
-            )?;
+            state
+                .storage
+                .store_readme(&crate_desc.name, crate_desc.vers.clone(), rendered)?;
         }
 
         //? Update the crate index.

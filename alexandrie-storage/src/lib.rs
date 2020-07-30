@@ -24,7 +24,6 @@ pub enum Storage {
     /// S3 crate storage.
     #[cfg(feature = "s3")]
     S3(s3::S3Storage),
-
     // TODO: Add a `Store` implementation using a git repository.
     // Git(GitStorage),
 }
