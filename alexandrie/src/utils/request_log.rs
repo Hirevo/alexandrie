@@ -22,10 +22,13 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
         let res = next.run(req).await;
         let elapsed = start.elapsed().as_millis();
         let status = res.status();
-        let mut resp_msg = "OK".into();
-        if let Some(err) = res.error() {
-            resp_msg = err.to_string()
-        }
+        let mut resp_msg = {
+            if let Some(err) = res.error() {
+                err.to_string()
+            } else {
+                "OK".into()
+            }
+        };
         info!(
             "--> {} {} {} {}ms , {}",
             method, path, status, elapsed, resp_msg
