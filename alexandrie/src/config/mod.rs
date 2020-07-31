@@ -1,5 +1,3 @@
-use std::net;
-
 use serde::{Deserialize, Serialize};
 
 /// Database configuration (`[database]` section).
@@ -25,10 +23,8 @@ pub use crate::config::frontend::*;
 /// The general configuration options struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GeneralConfig {
-    /// The host address to bind on.
-    pub addr: net::IpAddr,
-    /// The port to listen on.
-    pub port: u16,
+    /// The address to bind the server on.
+    pub bind_address: String,
 }
 
 /// The application configuration struct.
