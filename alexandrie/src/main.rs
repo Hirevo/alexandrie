@@ -97,7 +97,14 @@ async fn run() -> Result<(), Error> {
     //handle when response error,set error message into body.
     app.middleware(After(|mut res: Response| async {
         if let Some(err) = res.error() {
-            res.set_body(format!("Error: {}", err.to_string()));
+            let payload = json::json!({
+                "errors": [{
+                    "detail": err.to_string(),
+                }]
+            });
+            res.set_status(200);
+            res.set_content_type(tide::http::mime::JSON);
+            res.set_body(tide::Body::from_json(&payload)?);
         }
         Ok(res)
     }));
