@@ -85,8 +85,9 @@ async fn run() -> Result<(), Error> {
     let state: config::State = config.into();
 
     info!("running database migrations");
+
     #[rustfmt::skip]
-        state.repo.run(|conn| embedded_migrations::run(conn)).await
+    state.repo.run(|conn| embedded_migrations::run(conn)).await
         .expect("migration execution error");
 
     let mut app = tide::with_state(Arc::new(state));
