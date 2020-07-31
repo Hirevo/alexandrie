@@ -22,7 +22,7 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
         let res = next.run(req).await;
         let elapsed = start.elapsed().as_millis();
         let status = res.status();
-        let mut resp_msg = {
+        let resp_msg = {
             if let Some(err) = res.error() {
                 err.to_string()
             } else {
