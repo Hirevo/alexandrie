@@ -29,6 +29,9 @@ use std::sync::Arc;
 
 use async_std::fs;
 
+use tide::utils::After;
+use tide::Response;
+
 /// API endpoints definitions.
 pub mod api;
 /// Configuration and internal state type definitions.
@@ -86,7 +89,7 @@ async fn run() -> Result<(), Error> {
 
     let contents = fs::read(config).await?;
     let config: Config = toml::from_slice(contents.as_slice())?;
-    let addr = format!("{0}:{1}", config.general.addr, config.general.port);
+    let addr = config.general.bind_address.clone();
 
     #[cfg(feature = "frontend")]
     let frontend_enabled = config.frontend.enabled;
@@ -94,6 +97,7 @@ async fn run() -> Result<(), Error> {
     let state: config::State = config.into();
 
     info!("running database migrations");
+
     #[rustfmt::skip]
     state.repo.run(|conn| embedded_migrations::run(conn)).await
         .expect("migration execution error");
@@ -102,6 +106,21 @@ async fn run() -> Result<(), Error> {
 
     info!("setting up request logger middleware");
     app.middleware(RequestLogger::new());
+
+    //handle when response error,set error message into body.
+    app.middleware(After(|mut res: Response| async {
+        if let Some(err) = res.error() {
+            let payload = json::json!({
+                "errors": [{
+                    "detail": err.to_string(),
+                }]
+            });
+            res.set_status(200);
+            res.set_content_type(tide::http::mime::JSON);
+            res.set_body(tide::Body::from_json(&payload)?);
+        }
+        Ok(res)
+    }));
 
     #[cfg(feature = "frontend")]
     {
@@ -194,7 +213,7 @@ async fn run() -> Result<(), Error> {
     app.at("/api/v1/crates/:name/:version/download")
         .get(api::crates::download::get);
 
-    info!("listening on {0}", addr);
+    info!("listening on '{0}'", addr);
     app.listen(addr).await?;
 
     Ok(())
@@ -202,7 +221,9 @@ async fn run() -> Result<(), Error> {
 
 #[async_std::main]
 async fn main() {
+    let _guard = logs::init();
+
     if let Err(err) = run().await {
-        eprintln!("{}", err);
+        log::error!("{}", err);
     }
 }
