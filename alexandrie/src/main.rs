@@ -85,7 +85,6 @@ async fn run() -> Result<(), Error> {
         )
         .get_matches();
     let config = matches.value_of("config").unwrap_or("alexandrie.toml");
-    let _guard = logs::init();
 
     let contents = fs::read(config).await?;
     let config: Config = toml::from_slice(contents.as_slice())?;
