@@ -13,6 +13,12 @@ enabled = true
 title = "Alexandrie"
 description = "An alternative crate registry for Cargo, the Rust package manager."
 
+[frontend.assets]
+path = "assets"
+
+[frontend.templates]
+path = "templates"
+
 [database]
 # note that 'mysqldb' is the name of the container in the mysql-compose file, and
 # is automatically populated in the hosts file by docker

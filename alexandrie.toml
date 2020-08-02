@@ -1,7 +1,6 @@
 [general]
 bind_address = "127.0.0.1:3000"
-[asset]
-path="assets"
+
 [frontend]
 enabled = true
 title = "Alexandrie"
@@ -11,6 +10,12 @@ links = [
     { name = "Github repository", href = "https://github.com/Hirevo/alexandrie" },
     { name = "User documentation", href = "https://hirevo.github.io/alexandrie" },
 ]
+
+[frontend.assets]
+path = "assets"
+
+[frontend.templates]
+path = "templates"
 
 [database]
 # url = "mysql://root:root@127.0.0.1:3306/alexandrie"

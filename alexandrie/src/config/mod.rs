@@ -26,19 +26,12 @@ pub struct GeneralConfig {
     /// The address to bind the server on.
     pub bind_address: String,
 }
-/// The asset confiuration options struct
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct AssetCoonfig {
-    /// asset dir path
-    pub path: String,
-}
+
 /// The application configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Config {
     /// General instance configuration options.
     pub general: GeneralConfig,
-    /// asset configuration options
-    pub asset: AssetCoonfig,
     /// The crate index management strategy to use.
     pub index: IndexConfig,
     /// The crate storage strategy to use.

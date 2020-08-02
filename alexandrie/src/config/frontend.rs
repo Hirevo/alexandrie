@@ -14,6 +14,20 @@ pub struct Link {
     pub href: String,
 }
 
+/// The asset configuration options struct.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AssetsConfig {
+    /// Assets directory path.
+    pub path: String,
+}
+
+/// The templates configuration options struct.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TemplatesConfig {
+    /// Templates directory path.
+    pub path: String,
+}
+
 /// The frontend configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FrontendConfig {
@@ -28,6 +42,10 @@ pub struct FrontendConfig {
     pub favicon: Option<String>,
     /// Some related links.
     pub links: Option<Vec<Link>>,
+    /// Assets configuration options.
+    pub assets: AssetsConfig,
+    /// Templates configuration options.
+    pub templates: TemplatesConfig,
 }
 
 /// The frontend state struct, created from [FrontendConfig].
@@ -40,15 +58,14 @@ pub struct FrontendState {
 
 impl From<FrontendConfig> for FrontendState {
     fn from(config: FrontendConfig) -> FrontendState {
+        let mut engine = Handlebars::new();
+        engine
+            .register_templates_directory(".hbs", &config.templates.path)
+            .expect("handlebars configuration error");
+
         FrontendState {
             config,
-            handlebars: {
-                let mut engine = Handlebars::new();
-                engine
-                    .register_templates_directory(".hbs", "templates")
-                    .expect("handlebars configuration error");
-                engine
-            },
+            handlebars: { engine },
         }
     }
 }
