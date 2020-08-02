@@ -23,7 +23,7 @@ alexandrie-rendering = { path = "../alexandrie-rendering", version = "0.1.0" }
 
 # core
 tide = "0.12.0"
-
+clap = "2.33.1"
 # data types
 url = "2.1.1"
 semver = { version = "0.10.0", features = ["serde"] }

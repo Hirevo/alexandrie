@@ -13,6 +13,12 @@ enabled = true
 title = "Alexandrie"
 description = "An alternative crate registry for Cargo, the Rust package manager."
 
+[frontend.assets]
+path = "assets"
+
+[frontend.templates]
+path = "templates"
+
 [database]
 url = "appdata/sqlite/alexandrie.db"
 

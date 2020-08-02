@@ -11,6 +11,12 @@ links = [
     { name = "User documentation", href = "https://hirevo.github.io/alexandrie" },
 ]
 
+[frontend.assets]
+path = "assets"
+
+[frontend.templates]
+path = "templates"
+
 [database]
 # url = "mysql://root:root@127.0.0.1:3306/alexandrie"
 # url = "postgresql://root:root@127.0.0.1:5432/alexandrie"

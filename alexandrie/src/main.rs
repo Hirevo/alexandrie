@@ -52,6 +52,7 @@ pub mod frontend;
 use crate::config::Config;
 use crate::error::Error;
 use crate::utils::request_log::RequestLogger;
+use clap::{App, Arg};
 
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
@@ -73,13 +74,26 @@ embed_migrations!("../migrations/postgres");
 
 #[allow(clippy::cognitive_complexity)]
 async fn run() -> Result<(), Error> {
-    let contents = fs::read("alexandrie.toml").await?;
+    let matches = App::new("alexandrie")
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("alexandrie.toml")
+                .help("config file path")
+                .takes_value(true),
+        )
+        .get_matches();
+    let config = matches.value_of("config").unwrap_or("alexandrie.toml");
+
+    let contents = fs::read(config).await?;
     let config: Config = toml::from_slice(contents.as_slice())?;
     let addr = config.general.bind_address.clone();
 
     #[cfg(feature = "frontend")]
     let frontend_enabled = config.frontend.enabled;
-
+    #[cfg(feature = "frontend")]
+    let assets_path = config.frontend.assets.path.clone();
     let state: config::State = config.into();
 
     info!("running database migrations");
@@ -155,7 +169,7 @@ async fn run() -> Result<(), Error> {
                 .get(frontend::account::manage::tokens::revoke::get);
 
             info!("mounting '/assets/*path'");
-            app.at("/assets").serve_dir("assets")?;
+            app.at("/assets").serve_dir(assets_path)?;
         }
     }
 
