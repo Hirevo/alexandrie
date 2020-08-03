@@ -29,11 +29,10 @@ pub struct S3Storage {
 impl fmt::Debug for S3Storage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         // Can't get the region back out of S3Client, and it doesn't impl Debug itself :(
-        write!(
-            f,
-            "S3Storage {{ bucket: {0}, key_prefix: {1} }}",
-            self.bucket, self.key_prefix
-        )
+        f.debug_struct("S3Storage")
+            .field("bucket", &self.bucket)
+            .field("key_prefix", &self.key_prefix)
+            .finish()
     }
 }
 
