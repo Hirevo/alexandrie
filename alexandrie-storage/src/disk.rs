@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
 use semver::Version;
@@ -52,16 +52,13 @@ impl Store for DiskStorage {
         Ok(Box::new(file))
     }
 
-    fn store_crate<T>(&self, name: &str, version: Version, mut data: T) -> Result<(), Error>
-    where
-        T: Read,
-    {
+    fn store_crate(&self, name: &str, version: Version, data: Vec<u8>) -> Result<(), Error> {
         let path = self.path.join(DiskStorage::format_name(name, version));
         let mut file = fs::OpenOptions::new()
             .create_new(true)
             .write(true)
             .open(&path)?;
-        io::copy(&mut data, &mut file)?;
+        file.write_all(&data)?;
         Ok(())
     }
 
@@ -80,10 +77,7 @@ impl Store for DiskStorage {
         Ok(Box::new(file))
     }
 
-    fn store_readme<T>(&self, name: &str, version: Version, mut data: T) -> Result<(), Error>
-    where
-        T: Read,
-    {
+    fn store_readme(&self, name: &str, version: Version, data: String) -> Result<(), Error> {
         let path = self
             .path
             .join(DiskStorage::format_readme_name(name, version));
@@ -91,7 +85,7 @@ impl Store for DiskStorage {
             .create_new(true)
             .write(true)
             .open(&path)?;
-        io::copy(&mut data, &mut file)?;
+        file.write_all(data.as_bytes())?;
         Ok(())
     }
 }
