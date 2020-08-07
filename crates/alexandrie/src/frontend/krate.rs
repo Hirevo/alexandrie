@@ -24,6 +24,8 @@ struct BadgeRepr {
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = req.param("crate")?.to_string();
 
+    let canon_name = utils::canonical_name(name);
+
     let user = req.get_author();
     let state = req.state().clone();
     let repo = &state.repo;
@@ -33,7 +35,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 
         //? Get this crate's data.
         let crate_desc = crates::table
-            .filter(crates::name.eq(&name))
+            .filter(crates::canon_name.eq(canon_name.as_str()))
             .first::<Crate>(conn)
             .optional()?;
         let crate_desc = match crate_desc {
@@ -43,7 +45,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                     state.as_ref(),
                     user,
                     StatusCode::NotFound,
-                    format!("No crate named '{0}' has been found.", name),
+                    format!("No crate named '{0}' has been found.", canon_name),
                 );
             }
         };

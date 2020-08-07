@@ -25,6 +25,8 @@ pub use crate::config::frontend::*;
 pub struct GeneralConfig {
     /// The address to bind the server on.
     pub bind_address: String,
+    /// The maximum size of crates.
+    pub max_payload_size: usize,
 }
 
 /// The application configuration struct.

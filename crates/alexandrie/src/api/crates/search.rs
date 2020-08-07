@@ -58,8 +58,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     //? Fetch the latest index changes.
     // state.index.refresh()?;
 
+    let name = utils::canonical_name(params.q.as_str());
+
     //? Build the search pattern.
-    let name_pattern = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
+    let name_pattern = format!("%{0}%", name.replace('\\', "\\\\").replace('%', "\\%"));
 
     let transaction = repo.transaction(move |conn| {
         let state = req.state();
@@ -69,7 +71,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             (Some(per_page), Some(page)) => {
                 //? Get search results for the given page number and entries per page.
                 crates::table
-                    .filter(crates::name.like(name_pattern.as_str()))
+                    .filter(crates::canon_name.like(name_pattern.as_str()))
                     .limit(i64::from(per_page.get()))
                     .offset(i64::from((page.get() - 1) * per_page.get()))
                     .load::<Crate>(conn)?
@@ -77,22 +79,22 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             (Some(per_page), None) => {
                 //? Get the first page of search results with the given entries per page.
                 crates::table
-                    .filter(crates::name.like(name_pattern.as_str()))
+                    .filter(crates::canon_name.like(name_pattern.as_str()))
                     .limit(i64::from(per_page.get()))
                     .load::<Crate>(conn)?
             }
             _ => {
                 //? Get ALL the crates (might be too much, tbh).
                 crates::table
-                    .filter(crates::name.like(name_pattern.as_str()))
+                    .filter(crates::canon_name.like(name_pattern.as_str()))
                     .load::<Crate>(conn)?
             }
         };
 
         //? Fetch the total result count.
         let total = crates::table
-            .select(sql::count(crates::name))
-            .filter(crates::name.like(name_pattern.as_str()))
+            .select(sql::count(crates::id))
+            .filter(crates::canon_name.like(name_pattern.as_str()))
             .first::<i64>(conn)?;
 
         let crates = results

@@ -206,6 +206,8 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     let transaction = repo.transaction(move |conn| {
         let state = req.state();
 
+        let canon_name = utils::canonical_name(metadata.name.as_str());
+
         //? Construct a crate description.
         let crate_desc = CrateVersion {
             name: metadata.name,
@@ -242,6 +244,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         let now = Utc::now().naive_utc().format(DATETIME_FORMAT).to_string();
         let new_crate = NewCrate {
             name: crate_desc.name.as_str(),
+            canon_name: canon_name.as_str(),
             description: metadata.description.as_deref(),
             documentation: metadata.documentation.as_deref(),
             repository: metadata.repository.as_deref(),
@@ -250,7 +253,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         };
 
         //? Does the crate already exists?
-        let exists = utils::checks::crate_exists(conn, new_crate.name)?;
+        let exists = utils::checks::crate_exists(conn, new_crate.canon_name)?;
 
         //? Are we adding a new crate or updating a new one?
         let operation = if exists {
