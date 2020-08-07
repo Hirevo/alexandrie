@@ -32,12 +32,12 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     let form: CreateTokenForm = match req.body_form().await {
         Ok(form) => form,
         Err(_) => {
-            return Ok(utils::response::error_html(
+            return utils::response::error_html(
                 req.state(),
                 Some(author),
                 StatusCode::BadRequest,
                 "could not deseriailize form data",
-            ));
+            );
         }
     };
 

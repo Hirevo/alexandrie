@@ -224,6 +224,7 @@ async fn main() {
     let _guard = logs::init();
 
     if let Err(err) = run().await {
-        log::error!("{}", err);
+        eprintln!("{}", err);
+        std::process::exit(1);
     }
 }

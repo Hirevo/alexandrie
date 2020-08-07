@@ -111,7 +111,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             }).collect::<Result<Vec<_>, Error>>()?,
         });
         Ok(utils::response::html(
-            engine.render("last-updated", &context).unwrap(),
+            engine.render("last-updated", &context)?,
         ))
     });
 

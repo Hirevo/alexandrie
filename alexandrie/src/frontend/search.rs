@@ -24,7 +24,7 @@ struct SearchParams {
 }
 
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let params = req.query::<SearchParams>().unwrap();
+    let params = req.query::<SearchParams>()?;
     let searched_text = params.q.clone();
     let q = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
@@ -120,7 +120,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             }).collect::<Result<Vec<_>, Error>>()?,
         });
         Ok(utils::response::html(
-            engine.render("search", &context).unwrap(),
+            engine.render("search", &context)?,
         ))
     });
 

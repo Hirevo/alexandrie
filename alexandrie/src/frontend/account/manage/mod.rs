@@ -39,8 +39,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         Some(author) => author,
         None => {
             let state = req.state().as_ref();
-            let response = common::need_to_login(state);
-            return Ok(response);
+            return common::need_to_login(state);
         }
     };
 
@@ -101,7 +100,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
             "token_revocation_error_msg": token_revoke_error_msg,
         });
         Ok(utils::response::html(
-            engine.render("account/manage", &context).unwrap(),
+            engine.render("account/manage", &context)?,
         ))
     });
 
