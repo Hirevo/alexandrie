@@ -66,7 +66,7 @@ COPY syntect /home/alex/syntect
 COPY templates /home/alex/templates
 COPY migrations /home/alex/migrations
 # copy diesel config
-COPY diesel.toml /home/alex/diesel.toml
+# COPY diesel.toml /home/alex/diesel.toml
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
