@@ -1,5 +1,6 @@
 use json::json;
 use serde::Serialize;
+use tide::http::mime;
 use tide::{Body, Response, StatusCode};
 
 /// Various utilities to construct common response pages.
@@ -20,7 +21,7 @@ pub fn html(body: String) -> Response {
 pub fn html_with_status(status: StatusCode, body: String) -> Response {
     let mut response = Response::new(status);
     response.set_body(Body::from_string(body));
-    response.insert_header("content-type", "text/html");
+    response.set_content_type(mime::HTML);
     response
 }
 

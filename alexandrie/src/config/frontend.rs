@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 
@@ -18,14 +20,14 @@ pub struct Link {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AssetsConfig {
     /// Assets directory path.
-    pub path: String,
+    pub path: PathBuf,
 }
 
 /// The templates configuration options struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TemplatesConfig {
     /// Templates directory path.
-    pub path: String,
+    pub path: PathBuf,
 }
 
 /// The frontend configuration struct.
