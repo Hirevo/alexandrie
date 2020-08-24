@@ -6,6 +6,7 @@ pub mod checks;
 pub mod request_log;
 /// Various utilities to assist building HTTP responses.
 pub mod response;
+pub mod version;
 
 /// Utilities for using cookies.
 #[cfg(feature = "frontend")]
