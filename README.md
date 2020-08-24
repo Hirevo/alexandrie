@@ -185,7 +185,7 @@ To stop Alexandrie, do:
 
 The script assumes a Bash environment, and was only tested on Ubuntu 19.10. For more details and examples, see the docs.
 
-how to get alexandrie version
+How to get alexandrie version
 -------
 
 ```bash
