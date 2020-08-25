@@ -22,5 +22,5 @@ pub mod flash;
 /// been replaced by underscores ('_') for consistency, because
 /// they are considered to be equivalent.
 pub fn canonical_name(name: impl AsRef<str>) -> String {
-    name.as_ref().replace("-", "_")
+    name.as_ref().to_ascii_lowercase().replace("-", "_")
 }

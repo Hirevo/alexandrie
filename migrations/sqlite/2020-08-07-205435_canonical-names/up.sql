@@ -11,5 +11,5 @@ create table crates (
     repository varchar(1024)
 );
 insert into crates (id, name, canon_name, description, created_at, updated_at, downloads, documentation, repository)
-    select id, name, replace(name, '-', '_'), description, created_at, updated_at, downloads, documentation, repository from crates_old;
+    select id, lower(name), replace(lower(name), '-', '_'), description, created_at, updated_at, downloads, documentation, repository from crates_old;
 drop table crates_old;
