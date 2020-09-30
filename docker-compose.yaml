@@ -7,6 +7,8 @@ services:
       context: .
       args:
         - DATABASE=${DATABASE}
+        - GROUP_ID=${GROUP_ID}
+        - USER_ID=${USER_ID}
     # tag the image after it's built
     #        app / app version : docker image version (per app version)
     image: alexandrie-0.1.0-${DATABASE}:0.1
