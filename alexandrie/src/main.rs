@@ -57,7 +57,7 @@ use clap::{App, Arg};
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
 #[cfg(feature = "frontend")]
-use crate::utils::cookies::CookiesMiddleware;
+use crate::utils::{cookies::CookiesMiddleware, version::version};
 
 /// The instantiated [`crate::db::Repo`] type alias.
 pub type Repo = db::Repo<db::Connection>;
@@ -75,6 +75,7 @@ embed_migrations!("../migrations/postgres");
 #[allow(clippy::cognitive_complexity)]
 async fn run() -> Result<(), Error> {
     let matches = App::new("alexandrie")
+        .version(version().as_str())
         .arg(
             Arg::with_name("config")
                 .short("c")

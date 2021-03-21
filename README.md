@@ -185,6 +185,20 @@ To stop Alexandrie, do:
 
 The script assumes a Bash environment, and was only tested on Ubuntu 19.10. For more details and examples, see the docs.
 
+How to get alexandrie version
+-------
+
+```bash
+➜  ~ ./alexandrie -V
+alexandrie version:0.3.14
+branch:master
+commit-hash:9560be54
+build_time:2020-08-25 02:39:21
+build_env:rustc 1.45.0 (5c1f21c3b 2020-07-13),stable-x86_64-apple-darwin (default)
+
+➜  ~ 
+```
+
 License
 -------
 
