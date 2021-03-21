@@ -2,7 +2,7 @@
 # This is an expansion upon the docker-compose.yaml file in the root of this repo
 # It applies additional configuration to use a postgres database
 #
-# Apply it like `docker-compose -f docker-compose.yaml -f docker/postgresql/postgres-compose.yaml up`
+# Apply it like `docker-compose -f docker-compose.yaml -f docker/postgres/postgres-compose.yaml up`
 # (Note file options should be applied before the `up` command)
 #
 version: "3.7"
@@ -37,4 +37,4 @@ services:
 secrets:
   postgres_root_pass:
     # this path is relative to the repo's root docker-compose file
-    file: ./docker/postgresql/rootpass.txt
+    file: ./docker/postgres/rootpass.txt

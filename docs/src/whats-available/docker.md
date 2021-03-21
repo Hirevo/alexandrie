@@ -24,7 +24,7 @@ A small bit of setup is required before you can start the docker containers. Fir
 * Set `GIT_SSH_KEY` to a new or existing passwordless SSH key. The `.pub` key associated with this key should be added to github/gitlab/etc. to grant access to clone and push the crate index.
 
 
-By default Alexandrie will use SQLite. If you want to use either MySQL or PostgreSQL instead, you'll need to create a file at either `docker/mysqsl/rootpass.txt` or `docker/postgresql/rootpass.txt` which contains the password that will be given to the root user of the database.
+By default Alexandrie will use SQLite. If you want to use either MySQL or PostgreSQL instead, you'll need to create a file at either `docker/mysql/rootpass.txt` or `docker/postgres/rootpass.txt` which contains the password that will be given to the root user of the database.
 
 
 ### Additional Configuration

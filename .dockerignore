@@ -12,9 +12,9 @@
 !docker/mysql/alexandrie.toml
 !docker/mysql/Cargo.toml
 !docker/mysql/mysql-compose.yaml
-!docker/postgresql/alexandrie.toml
-!docker/postgresql/Cargo.toml
-!docker/postgresql/postgresql-compose.yaml
+!docker/postgres/alexandrie.toml
+!docker/postgres/Cargo.toml
+!docker/postgres/postgres-compose.yaml
 !docker/startup.sh
 !migrations
 !alexandrie

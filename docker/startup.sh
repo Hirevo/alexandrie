@@ -64,7 +64,7 @@ if [ "${DATABASE}" = "mysql" ] || [ "${DATABASE}" = "postgres" ]; then
         export DATABASE_URL=$(grep "^url" alexandrie.toml | awk '{print substr($3,2,length($3)-2)}')
         if [ "${DATABASE}" = "mysql" ]; then
             export MIGRATION_DIRECTORY=migrations/mysql
-        elif [ "${DATABASE}" = "postgresql" ]; then
+        elif [ "${DATABASE}" = "postgres" ]; then
             export MIGRATION_DIRECTORY=migrations/postgres
         fi
 
