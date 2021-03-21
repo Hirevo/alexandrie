@@ -41,6 +41,10 @@ region = ["custom", "https://my.custom.s3.endpoint/"]
 In order to authenticate the registry to S3, you can either:
 
 - define both `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables when running the registry.
-- have credentials stored in `~/.aws/config` (called the 'profile') and giving the registry read permission to it.
+- have a `credential_process` command specified in `~/.aws/config`.
+- have credentials stored in `~/.aws/credentials` and giving the registry read permission to it.
+- using an IAM instance profile, which will only work if running on an EC2 instance with an instance profile/role assigned.
 
-The environment method is prioritized over the profile method.
+These different options are attempted in that same order, whichever is found to have valid credentials first.
+
+> For more details on how authentication is resolved, you can refer to the Rusoto's documentation on that matter.
