@@ -156,14 +156,13 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
             .values(new_authors)
             .execute(&**conn)?;
 
-        let authors_list = match new_authors_names.len() {
-            0 => String::new(),
-            1 => new_authors_names.into_iter().next().unwrap(),
-            2 => new_authors_names.join(" and "),
-            _ => {
-                let fsts = new_authors_names[..new_authors_names.len() - 1].join(", ");
-                let last = new_authors_names.into_iter().last().unwrap();
-                [fsts, last].join(" and ")
+        let authors_list = match new_authors_names.as_slice() {
+            [] => String::new(),
+            [author] => author.clone(),
+            [fst, snd] => format!("{}, and {}", fst, snd),
+            [fsts @ .., last] => {
+                let fsts = fsts.join(", ");
+                format!("{} and {}", fsts, last)
             }
         };
 
@@ -258,14 +257,13 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
         )
         .execute(conn)?;
 
-        let authors_list = match old_authors_names.len() {
-            0 => String::new(),
-            1 => old_authors_names.into_iter().next().unwrap(),
-            2 => old_authors_names.join(" and "),
-            _ => {
-                let fsts = old_authors_names[..old_authors_names.len() - 1].join(", ");
-                let last = old_authors_names.into_iter().last().unwrap();
-                [fsts, last].join(" and ")
+        let authors_list = match old_authors_names.as_slice() {
+            [] => String::new(),
+            [author] => author.clone(),
+            [fst, snd] => format!("{}, and {}", fst, snd),
+            [fsts @ .., last] => {
+                let fsts = fsts.join(", ");
+                format!("{} and {}", fsts, last)
             }
         };
 
