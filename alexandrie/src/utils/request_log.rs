@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use tide::utils::async_trait;
 use tide::{Middleware, Next, Request};
 
@@ -18,7 +20,7 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
         let path = req.url().path().to_string();
         let method = req.method();
         info!("<-- {} {}", method, path);
-        let start = std::time::Instant::now();
+        let start = Instant::now();
         let res = next.run(req).await;
         let elapsed = start.elapsed().as_millis();
         let status = res.status();
@@ -26,7 +28,7 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
             .error()
             .map(|err| err.to_string())
             .unwrap_or_else(|| "OK".to_string());
-        info!("--> {} {} {} {}ms , {}", method, path, status, elapsed, msg);
+        info!("--> {} {} {} {}ms, {}", method, path, status, elapsed, msg);
         Ok(res)
     }
 }

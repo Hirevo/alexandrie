@@ -2,6 +2,7 @@ use async_std::io;
 
 use diesel::prelude::*;
 use semver::Version;
+use tide::http::mime;
 use tide::{Body, Request, Response, StatusCode};
 
 use alexandrie_storage::Store;
@@ -41,7 +42,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             let mut buf = Vec::new();
             krate.read_to_end(&mut buf)?;
             let mut response = Response::new(StatusCode::Ok);
-            response.insert_header("content-type", "application/octet-stream");
+            response.set_content_type(mime::BYTE_STREAM);
             response.set_body(Body::from_reader(io::Cursor::new(buf), None));
             Ok(response)
         } else {
