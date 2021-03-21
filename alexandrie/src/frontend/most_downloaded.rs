@@ -111,7 +111,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             }).collect::<Result<Vec<_>, Error>>()?,
         });
         Ok(utils::response::html(
-            engine.render("most-downloaded", &context).unwrap(),
+            engine.render("most-downloaded", &context)?,
         ))
     });
 

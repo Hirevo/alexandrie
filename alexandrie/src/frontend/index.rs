@@ -66,7 +66,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             }).collect::<Vec<_>>(),
         });
         Ok(utils::response::html(
-            engine.render("index", &context).unwrap(),
+            engine.render("index", &context)?,
         ))
     });
 

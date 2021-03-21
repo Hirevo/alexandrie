@@ -39,13 +39,12 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         let crate_desc = match crate_desc {
             Some(crate_desc) => crate_desc,
             None => {
-                let response = utils::response::error_html(
+                return utils::response::error_html(
                     state.as_ref(),
                     user,
                     StatusCode::NotFound,
                     format!("No crate named '{0}' has been found.", name),
                 );
-                return Ok(response);
             }
         };
         let krate = state.index.latest_record(&crate_desc.name)?;
@@ -347,9 +346,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             "keywords": keywords,
             "categories": categories,
         });
-        Ok(utils::response::html(
-            engine.render("crate", &context).unwrap(),
-        ))
+        Ok(utils::response::html(engine.render("crate", &context)?))
     });
 
     transaction.await

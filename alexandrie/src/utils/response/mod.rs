@@ -52,14 +52,17 @@ pub fn error_html(
     user: Option<Author>,
     status: StatusCode,
     error_msg: impl AsRef<str>,
-) -> Response {
+) -> tide::Result {
     let engine = &state.frontend.handlebars;
     let context = json!({
         "user": user,
         "instance": &state.frontend.config,
         "error_msg": error_msg.as_ref(),
     });
-    self::html_with_status(status, engine.render("error", &context).unwrap())
+    Ok(self::html_with_status(
+        status,
+        engine.render("error", &context)?,
+    ))
 }
 
 /// Constructs a redirection response (302 Found) to the specified URL.

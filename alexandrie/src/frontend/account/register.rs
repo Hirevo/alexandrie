@@ -33,8 +33,7 @@ struct RegisterForm {
 pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     if let Some(author) = req.get_author() {
         let state = req.state().as_ref();
-        let response = common::already_logged_in(state, author);
-        return Ok(response);
+        return common::already_logged_in(state, author);
     }
 
     let error_msg = req
@@ -47,7 +46,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         "error_msg": error_msg,
     });
     Ok(utils::response::html(
-        engine.render("account/register", &context).unwrap(),
+        engine.render("account/register", &context)?,
     ))
 }
 
@@ -60,12 +59,12 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     let form: RegisterForm = match req.body_form().await {
         Ok(form) => form,
         Err(_) => {
-            return Ok(utils::response::error_html(
+            return utils::response::error_html(
                 req.state(),
                 None,
                 StatusCode::BadRequest,
                 "could not deseriailize form data",
-            ));
+            );
         }
     };
 
