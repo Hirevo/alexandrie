@@ -159,7 +159,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         let authors_list = match new_authors_names.as_slice() {
             [] => String::new(),
             [author] => author.clone(),
-            [fst, snd] => format!("{} and {}", fst, snd),
+            [fst, snd] => format!("{}, and {}", fst, snd),
             [fsts @ .., last] => {
                 let fsts = fsts.join(", ");
                 format!("{} and {}", fsts, last)
@@ -260,7 +260,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
         let authors_list = match old_authors_names.as_slice() {
             [] => String::new(),
             [author] => author.clone(),
-            [fst, snd] => format!("{} and {}", fst, snd),
+            [fst, snd] => format!("{}, and {}", fst, snd),
             [fsts @ .., last] => {
                 let fsts = fsts.join(", ");
                 format!("{} and {}", fsts, last)
