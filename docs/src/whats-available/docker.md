@@ -31,6 +31,7 @@ By default Alexandrie will use SQLite. If you want to use either MySQL or Postgr
 
 If necessary, `alexandrie.toml` and even `diesel.toml` can still be modified, and the docker images can be configured to use those modified files instead. You should read the [Internals](#internals) section first, and will likely need to already have docker knowledge. Some other config files and scripts will need to be modified if you change Alexandrie's port or appdata mount location, for example.
 
+You can also defined the environment variables `USER_ID` and `GROUP_ID` to specify the UID and GID of the alex user created in the web container.
 
 ## Usage
 
