@@ -22,7 +22,8 @@ fn main() {
 
     print!("loading themes from directory... ");
     io::stdout().flush().expect("could not flush stdout");
-    let themes = ThemeSet::load_from_folder("syntect/themes").expect("could not load themes from directory");
+    let themes =
+        ThemeSet::load_from_folder("syntect/themes").expect("could not load themes from directory");
     println!("OK !");
 
     let mut sorted_sytaxes: Vec<_> = syntaxes
