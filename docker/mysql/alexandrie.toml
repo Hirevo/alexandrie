@@ -34,9 +34,9 @@ path = "appdata/crate-storage"
 
 [syntect.syntaxes]
 type = "dump"
-path = "syntect-dumps/syntaxes.dump"
+path = "syntect/dumps/syntaxes.dump"
 
 [syntect.themes]
 type = "dump"
-path = "syntect-dumps/themes.dump"
+path = "syntect/dumps/themes.dump"
 theme_name = "frontier-contrast"

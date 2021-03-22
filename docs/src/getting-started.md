@@ -14,8 +14,8 @@ The currently supported vendors are:
 To build, you can then run:
 
 ```bash
-# navigate to the `alexandrie/` subfolder
-cd alexandrie
+# navigate to the `crates/alexandrie/` subfolder
+cd crates/alexandrie
 
 # build the binary
 # (replace `(foo|bar)` occurences by one of `foo` or `bar`)

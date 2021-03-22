@@ -30,19 +30,16 @@ RUN \
 WORKDIR /alexandrie
 
 # copy source data
-COPY alexandrie alexandrie
-COPY alexandrie-index alexandrie-index
-COPY alexandrie-storage alexandrie-storage
-COPY alexandrie-rendering alexandrie-rendering
-COPY syntect-syntaxes syntect-syntaxes
-COPY syntect-themes syntect-themes
+COPY crates crates
+COPY helpers helpers
+COPY syntect syntect
 COPY migrations migrations
 COPY wasm-pbkdf2 wasm-pbkdf2
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 
 # build the app
-RUN cd alexandrie && cargo build --release --no-default-features --features "${DATABASE} frontend git2"
+RUN cd crates/alexandrie && cargo build --release --no-default-features --features "${DATABASE} frontend git2"
 
 ### Second stage: copy built application
 FROM debian:buster-slim as runner
@@ -65,7 +62,7 @@ COPY --from=builder /usr/local/cargo/bin/diesel /usr/bin/diesel
 COPY docker/startup.sh /home/alex/startup.sh
 # copy runtime assets
 COPY assets /home/alex/assets
-COPY syntect-dumps /home/alex/syntect-dumps
+COPY syntect /home/alex/syntect
 COPY templates /home/alex/templates
 COPY migrations /home/alex/migrations
 # copy diesel config
