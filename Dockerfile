@@ -31,7 +31,6 @@ WORKDIR /alexandrie
 
 # copy source data
 COPY crates crates
-COPY helpers helpers
 COPY syntect syntect
 COPY migrations migrations
 COPY wasm-pbkdf2 wasm-pbkdf2
