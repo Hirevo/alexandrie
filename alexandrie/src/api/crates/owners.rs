@@ -34,7 +34,7 @@ struct OwnerDeleteBody {
 }
 
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param::<String>("name").unwrap();
+    let name = req.param("name")?.to_string();
 
     let state = req.state().clone();
     let repo = &state.repo;
@@ -78,7 +78,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 }
 
 pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
-    let name = req.param::<String>("name").unwrap();
+    let name = req.param("name")?.to_string();
     let OwnerAddBody { users: new_authors } = req.body_json().await?;
 
     let state = req.state().clone();
@@ -177,7 +177,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
 }
 
 pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
-    let name = req.param::<String>("name").unwrap();
+    let name = req.param("name")?.to_string();
     let OwnerDeleteBody { users: old_authors } = req.body_json().await?;
 
     let state = req.state().clone();

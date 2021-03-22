@@ -19,7 +19,7 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
     async fn handle(&self, req: Request<State>, next: Next<'_, State>) -> tide::Result {
         let path = req.url().path().to_string();
         let method = req.method();
-        info!("<-- {} {}", method, path);
+        log::info!("<-- {} {}", method, path);
         let start = Instant::now();
         let res = next.run(req).await;
         let elapsed = start.elapsed().as_millis();
@@ -28,7 +28,7 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestLogger {
             .error()
             .map(|err| err.to_string())
             .unwrap_or_else(|| "OK".to_string());
-        info!("--> {} {} {} {}ms, {}", method, path, status, elapsed, msg);
+        log::info!("--> {} {} {} {}ms, {}", method, path, status, elapsed, msg);
         Ok(res)
     }
 }

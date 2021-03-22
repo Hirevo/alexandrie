@@ -17,7 +17,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         }
     };
 
-    let id = req.param::<i64>("token-id").unwrap();
+    let id: i64 = req.param("token-id")?.parse()?;
 
     let state = req.state().clone();
     let repo = &state.repo;
