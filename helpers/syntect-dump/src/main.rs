@@ -15,14 +15,14 @@ fn main() {
         builder.add_plain_text_syntax();
         builder
             .add_from_folder("syntect/syntaxes", true)
-            .expect("couldn't load syntaxes");
+            .expect("could not load syntaxes from directory");
         builder.build()
     };
     println!("OK !");
 
-    print!("loading syntaxes from directory... ");
+    print!("loading themes from directory... ");
     io::stdout().flush().expect("could not flush stdout");
-    let themes = ThemeSet::load_from_folder("syntect/themes").expect("couldn't load themes");
+    let themes = ThemeSet::load_from_folder("syntect/themes").expect("could not load themes from directory");
     println!("OK !");
 
     let mut sorted_sytaxes: Vec<_> = syntaxes
@@ -48,18 +48,18 @@ fn main() {
     }
     println!();
 
-    fs::create_dir_all("syntect/dumps").expect("couldn't create dumps' folder");
+    fs::create_dir_all("syntect/dumps").expect("could not create dumps' folder");
 
     print!("generating syntaxes dump... ");
     io::stdout().flush().expect("could not flush stdout");
     dumps::dump_to_file(&syntaxes, "syntect/dumps/syntaxes.dump")
-        .expect("couldn't generate syntaxes dump");
+        .expect("could not generate syntaxes dump");
     println!("OK !");
 
     print!("generating themes dump... ");
     io::stdout().flush().expect("could not flush stdout");
     dumps::dump_to_file(&themes, "syntect/dumps/themes.dump")
-        .expect("couldn't generate themes dump");
+        .expect("could not generate themes dump");
     println!("OK !");
 
     println!();
