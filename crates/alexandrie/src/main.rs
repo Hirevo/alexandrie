@@ -71,11 +71,11 @@ pub type Repo = db::Repo<db::Connection>;
 pub type State = Arc<config::State>;
 
 #[cfg(feature = "mysql")]
-embed_migrations!("../migrations/mysql");
+embed_migrations!("../../migrations/mysql");
 #[cfg(feature = "sqlite")]
-embed_migrations!("../migrations/sqlite");
+embed_migrations!("../../migrations/sqlite");
 #[cfg(feature = "postgres")]
-embed_migrations!("../migrations/postgres");
+embed_migrations!("../../migrations/postgres");
 
 #[cfg(feature = "frontend")]
 fn frontend_routes(state: State, assets_path: PathBuf) -> io::Result<Server<State>> {

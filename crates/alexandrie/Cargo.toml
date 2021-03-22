@@ -11,8 +11,6 @@ categories = ["development-tools"]
 license = "MIT OR Apache-2.0"
 build = "build.rs"
 
-default-run = "alexandrie"
-
 [badges]
 codecov = { repository = "Hirevo/alexandrie"}
 

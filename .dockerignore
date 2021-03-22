@@ -17,12 +17,8 @@
 !docker/postgres/postgres-compose.yaml
 !docker/startup.sh
 !migrations
-!alexandrie
-!alexandrie-index
-!alexandrie-storage
-!alexandrie-rendering
-!syntect-dumps
-!syntect-syntaxes
-!syntect-themes
+!crates
+!helpers
+!syntect
 !templates
 !wasm-pbkdf2

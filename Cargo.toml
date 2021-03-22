@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "alexandrie",
-    "alexandrie-index",
-    "alexandrie-storage",
-    "alexandrie-rendering"
+    "crates/alexandrie",
+    "crates/alexandrie-index",
+    "crates/alexandrie-storage",
+    "crates/alexandrie-rendering",
 ]
