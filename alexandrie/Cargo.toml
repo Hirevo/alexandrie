@@ -23,59 +23,60 @@ alexandrie-storage = { path = "../alexandrie-storage", version = "0.1.0" }
 alexandrie-rendering = { path = "../alexandrie-rendering", version = "0.1.0" }
 
 # core
-tide = "0.12.0"
-clap = "2.33.1"
+tide = "0.16.0"
+clap = "2.33.3"
+
 # data types
-url = "2.1.1"
-semver = { version = "0.10.0", features = ["serde"] }
-chrono = { version = "0.4.13", features = ["serde"] }
+url = "2.2.1"
+semver = { version = "0.11.0", features = ["serde"] }
+chrono = { version = "0.4.19", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.114", features = ["derive"] }
-json = { package = "serde_json", version = "1.0.56" }
-toml = "0.5.6"
+serde = { version = "1.0.124", features = ["derive"] }
+json = { package = "serde_json", version = "1.0.64" }
+toml = "0.5.8"
 
 # binary parsing
-byteorder = "1.3.4"
+byteorder = "1.4.3"
 
 # (en|de)coding / hashing
-ring = "0.16.15"
-hex = "0.4.2"
-base64 = "0.12.3"
+ring = "0.16.20"
+hex = "0.4.3"
+base64 = "0.13.0"
 percent-encoding = "2.1.0"
 
 # database
-diesel = { version = "1.4.5", features = ["r2d2", "chrono"] }
+diesel = { version = "1.4.6", features = ["r2d2", "chrono"] }
 diesel_migrations = "1.4.0"
 
 # async primitives
-async-std = { version = "1.6.2", features = ["unstable", "attributes"] }
-futures = "0.3.5"
+async-std = { version = "1.9.0", features = ["attributes"] }
+futures = "0.3.13"
 
 # error handling
-thiserror = "1.0.20"
+thiserror = "1.0.24"
 
 # README rendering
-flate2 = "1.0.16"
-tar = "0.4.29"
+flate2 = "1.0.20"
+tar = "0.4.33"
 
-#build
-shadow-rs = "0.3"
+# build-tme debug information
+shadow-rs = "0.5.24"
 
 # frontend
-handlebars = { version = "3.3.0", features = ["dir_source"], optional = true }
-cookie = { version = "0.14.2", features = ["percent-encode"], optional = true }
-time = { version = "0.2.16", optional = true }
+handlebars = { version = "3.5.3", features = ["dir_source"], optional = true }
+cookie = { version = "0.15.0", features = ["percent-encode"], optional = true }
+time = { version = "0.2.26", optional = true }
 num-format = { version = "0.4.0", optional = true }
 bigdecimal = { version = "0.1.2", features = ["serde"], optional = true }
 
 # logs
-log = "0.4.11"
-slog = "2.5.2"
-slog-stdlog = "4.0.0"
-slog-scope = "4.3.0"
-slog-term = "2.6.0"
-slog-async = "2.5.0"
+log = "0.4.14"
+slog = "2.7.0"
+slog-stdlog = "4.1.0"
+slog-scope = "4.4.0"
+slog-term = "2.8.0"
+slog-async = "2.6.0"
 
 [features]
 default = ["frontend", "sqlite"]
@@ -89,4 +90,4 @@ git2 = ["alexandrie-index/git2"]
 s3 = ["alexandrie-storage/s3"]
 
 [build-dependencies]
-shadow-rs = "0.3"
+shadow-rs = "0.5.24"

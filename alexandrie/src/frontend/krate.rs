@@ -22,7 +22,7 @@ struct BadgeRepr {
 }
 
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param::<String>("crate").unwrap();
+    let name = req.param("crate")?.to_string();
 
     let user = req.get_author();
     let state = req.state().clone();

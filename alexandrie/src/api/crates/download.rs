@@ -15,8 +15,8 @@ use crate::State;
 ///
 /// The response is streamed, for performance and memory footprint reasons.
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param::<String>("name").unwrap();
-    let version = req.param::<Version>("version").unwrap();
+    let name = req.param("name")?.to_string();
+    let version: Version = req.param("version")?.parse()?;
 
     let state = req.state().clone();
     let repo = &state.repo;

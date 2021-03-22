@@ -32,7 +32,7 @@ pub struct ResponseBody {
 
 /// Route to get information about a crate.
 pub async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param::<String>("name").unwrap();
+    let name = req.param("name")?.to_string();
 
     let state = req.state().clone();
     let repo = &state.repo;
