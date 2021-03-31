@@ -5,4 +5,5 @@ members = [
     "crates/alexandrie-storage",
     "crates/alexandrie-rendering",
     "helpers/syntect-dump",
+    "helpers/readme-render",
 ]
