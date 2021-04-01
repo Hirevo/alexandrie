@@ -26,7 +26,10 @@ struct SearchParams {
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let params = req.query::<SearchParams>()?;
     let searched_text = utils::canonical_name(params.q.as_str());
-    let q = format!("%{0}%", searched_text.replace('\\', "\\\\").replace('%', "\\%"));
+    let q = format!(
+        "%{0}%",
+        searched_text.replace('\\', "\\\\").replace('%', "\\%")
+    );
 
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
