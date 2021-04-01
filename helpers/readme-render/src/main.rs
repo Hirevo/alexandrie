@@ -1,9 +1,9 @@
-use std::fs;
 use std::env;
+use std::fs;
 
 use alexandrie_rendering::config::{SyntectConfig, SyntectState};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Config {
@@ -12,10 +12,15 @@ pub struct Config {
 }
 
 fn main() {
-    let readme_path = env::args().skip(1).next().expect("could not find a command-line argument");
+    let readme_path = env::args()
+        .skip(1)
+        .next()
+        .expect("could not find a command-line argument");
 
-    let contents = fs::read("alexandrie.toml").expect("could not open configuration file `alexandrie.toml`");
-    let config: Config = toml::from_slice(contents.as_slice()).expect("could not parse configuration file");
+    let contents =
+        fs::read("alexandrie.toml").expect("could not open configuration file `alexandrie.toml`");
+    let config: Config =
+        toml::from_slice(contents.as_slice()).expect("could not parse configuration file");
 
     let state = SyntectState::from(config.syntect);
 
