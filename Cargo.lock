@@ -2835,6 +2835,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "syntect-dump"
+version = "0.1.0"
+dependencies = [
+ "syntect",
+]
+
+[[package]]
 name = "take_mut"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
