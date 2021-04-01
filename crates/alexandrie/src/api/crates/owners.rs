@@ -36,6 +36,8 @@ struct OwnerDeleteBody {
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = req.param("name")?.to_string();
 
+    let name = utils::canonical_name(name);
+
     let state = req.state().clone();
     let repo = &state.repo;
 
@@ -54,7 +56,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             .inner_join(authors::table)
             .inner_join(crates::table)
             .select(authors::all_columns)
-            .filter(crates::name.eq(name.as_str()))
+            .filter(crates::canon_name.eq(name.as_str()))
             .load::<Author>(conn)?;
 
         let users = authors
@@ -79,6 +81,8 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 
 pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     let name = req.param("name")?.to_string();
+    let name = utils::canonical_name(name);
+
     let OwnerAddBody { users: new_authors } = req.body_json().await?;
 
     let state = req.state().clone();
@@ -94,7 +98,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         //? Get this crate's ID.
         let crate_id = crates::table
             .select(crates::id)
-            .filter(crates::name.eq(name.as_str()))
+            .filter(crates::canon_name.eq(name.as_str()))
             .first::<i64>(conn)
             .optional()?;
         let crate_id = match crate_id {
@@ -112,7 +116,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
             .inner_join(authors::table)
             .inner_join(crates::table)
             .select(authors::id)
-            .filter(crates::name.eq(name.as_str()))
+            .filter(crates::id.eq(crate_id))
             .load::<i64>(conn)?;
 
         //? Check if user is one of these authors.
@@ -178,6 +182,8 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
 
 pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
     let name = req.param("name")?.to_string();
+    let name = utils::canonical_name(name);
+
     let OwnerDeleteBody { users: old_authors } = req.body_json().await?;
 
     let state = req.state().clone();
@@ -192,7 +198,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
         //? Get this crate's ID.
         let crate_id = crates::table
             .select(crates::id)
-            .filter(crates::name.eq(name.as_str()))
+            .filter(crates::canon_name.eq(name.as_str()))
             .first::<i64>(conn)
             .optional()?;
         let crate_id = match crate_id {
@@ -210,7 +216,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
             .inner_join(authors::table)
             .inner_join(crates::table)
             .select(authors::id)
-            .filter(crates::name.eq(name.as_str()))
+            .filter(crates::id.eq(crate_id))
             .load::<i64>(conn)?;
 
         //? Check if user is one of these authors.

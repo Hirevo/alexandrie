@@ -19,6 +19,8 @@ table! {
         id -> Bigint,
         /// The crate's name.
         name -> Varchar,
+        /// The crate's canonical name ('-' are all replaced with '_').
+        canon_name -> Varchar,
         /// The crate's descripton.
         description -> Nullable<Varchar>,
         /// The crate's creation date.

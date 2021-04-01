@@ -21,6 +21,8 @@ pub struct Crate {
     pub id: i64,
     /// The crate's name.
     pub name: String,
+    /// The crate's canonical name ('-' are all replaced with '_').
+    pub canon_name: String,
     /// The crate's description.
     pub description: Option<String>,
     /// The crate's creation date.
@@ -42,6 +44,8 @@ pub struct Crate {
 pub struct NewCrate<'a> {
     /// The crate's name.
     pub name: &'a str,
+    /// The crate's canonical name ('-' are all replaced with '_').
+    pub canon_name: &'a str,
     /// The crate's description.
     pub description: Option<&'a str>,
     /// The crate's creation date.

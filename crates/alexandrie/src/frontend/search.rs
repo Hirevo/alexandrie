@@ -25,8 +25,12 @@ struct SearchParams {
 
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let params = req.query::<SearchParams>()?;
-    let searched_text = params.q.clone();
-    let q = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
+    let searched_text = utils::canonical_name(params.q.as_str());
+    let q = format!(
+        "%{0}%",
+        searched_text.replace('\\', "\\\\").replace('%', "\\%")
+    );
+
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
     let user = req.get_author();
@@ -39,12 +43,12 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         //? Get the total count of search results.
         let total_results = crates::table
             .select(sql::count(crates::id))
-            .filter(crates::name.like(q.as_str()))
+            .filter(crates::canon_name.like(q.as_str()))
             .first::<i64>(conn)?;
 
         //? Get the search results for the given page number.
         let results: Vec<Crate> = crates::table
-            .filter(crates::name.like(q.as_str()))
+            .filter(crates::canon_name.like(q.as_str()))
             .limit(15)
             .offset(15 * i64::from(page_number - 1))
             .load(conn)?;
@@ -88,7 +92,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         let context = json!({
             "user": user,
             "instance": &state.frontend.config,
-            "searched_text": searched_text,
+            "searched_text": params.q,
             "total_results": total_results,
             "pagination": {
                 "current": page_number,

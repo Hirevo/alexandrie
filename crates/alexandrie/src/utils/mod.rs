@@ -15,3 +15,12 @@ pub mod cookies;
 /// Utilities for using flash cookies.
 #[cfg(feature = "frontend")]
 pub mod flash;
+
+/// Transforms a crate name to its canonical form.
+///
+/// A canonical crate name means that all dashes ('-') have
+/// been replaced by underscores ('_') for consistency, because
+/// they are considered to be equivalent.
+pub fn canonical_name(name: impl AsRef<str>) -> String {
+    name.as_ref().to_ascii_lowercase().replace("-", "_")
+}

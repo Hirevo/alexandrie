@@ -9,6 +9,7 @@ use alexandrie_storage::Store;
 
 use crate::db::schema::*;
 use crate::error::{AlexError, Error};
+use crate::utils;
 use crate::State;
 
 /// Route to download a crate's tarball (used by `cargo build`).
@@ -17,6 +18,8 @@ use crate::State;
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = req.param("name")?.to_string();
     let version: Version = req.param("version")?.parse()?;
+
+    let name = utils::canonical_name(name);
 
     let state = req.state().clone();
     let repo = &state.repo;
@@ -27,13 +30,13 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         let state = req.state();
 
         //? Fetch the download count for this crate.
-        let downloads = crates::table
-            .select(crates::downloads)
-            .filter(crates::name.eq(name.as_str()))
-            .first::<i64>(conn)
+        let crate_info = crates::table
+            .select((crates::name, crates::downloads))
+            .filter(crates::canon_name.eq(name.as_str()))
+            .first::<(String, i64)>(conn)
             .optional()?;
 
-        if let Some(downloads) = downloads {
+        if let Some((name, downloads)) = crate_info {
             //? Increment this crate's download count.
             diesel::update(crates::table.filter(crates::name.eq(name.as_str())))
                 .set(crates::downloads.eq(downloads + 1))

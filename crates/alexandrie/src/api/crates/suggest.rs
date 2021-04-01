@@ -43,8 +43,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     //? Fetch the latest index changes.
     // state.index.refresh()?;
 
+    let name = utils::canonical_name(params.q);
+
     //? Build the search pattern.
-    let name_pattern = format!("%{0}%", params.q.replace('\\', "\\\\").replace('%', "\\%"));
+    let name_pattern = format!("%{0}%", name.replace('\\', "\\\\").replace('%', "\\%"));
 
     //? Limit the result count depending on parameters.
     let limit = params.limit.map_or(10, |limit| i64::from(limit.get()));
@@ -53,7 +55,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let results = repo
         .run(move |conn| {
             crates::table
-                .filter(crates::name.like(name_pattern.as_str()))
+                .filter(crates::canon_name.like(name_pattern.as_str()))
                 .limit(limit)
                 .load::<Crate>(conn)
         })

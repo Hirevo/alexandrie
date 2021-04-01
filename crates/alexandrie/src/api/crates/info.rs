@@ -34,6 +34,8 @@ pub struct ResponseBody {
 pub async fn get(req: Request<State>) -> tide::Result {
     let name = req.param("name")?.to_string();
 
+    let name = utils::canonical_name(name);
+
     let state = req.state().clone();
     let repo = &state.repo;
 
@@ -41,7 +43,7 @@ pub async fn get(req: Request<State>) -> tide::Result {
     let krate = repo
         .run(move |conn| {
             crates::table
-                .filter(crates::name.eq(name.as_str()))
+                .filter(crates::canon_name.eq(name.as_str()))
                 .first::<Crate>(conn)
                 .optional()
         })
