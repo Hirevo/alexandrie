@@ -1,0 +1,17 @@
+[package]
+name = "readme-render"
+version = "0.1.0"
+edition = "2018"
+authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
+description = "A simple helper to generate syntect's binary dumps for Alexandrie"
+repository = "https://github.com/Hirevo/alexandrie"
+documentation = "https://crates.polomack.eu/docs/alexandrie"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+alexandrie-rendering = { path = "../../crates/alexandrie-rendering", version = "0.1.0" }
+serde = { version = "1.0.124", features = ["derive"] }
+toml = "0.5.8"
+
+[features]
