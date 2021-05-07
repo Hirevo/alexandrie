@@ -28,12 +28,12 @@ pub async fn get(req: Request<State>) -> tide::Result {
     let name = req.param("name")?.to_string();
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     //? Is the author logged in ?
     let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
         let header = headers.last().to_string();
-        repo.run(move |conn| utils::checks::get_author(conn, header))
+        db.run(move |conn| utils::checks::get_author(conn, header))
             .await
     } else {
         None
@@ -49,7 +49,7 @@ pub async fn get(req: Request<State>) -> tide::Result {
     };
 
     //? Fetch the token from the database.
-    let token = repo
+    let token = db
         .run(move |conn| {
             author_tokens::table
                 .filter(author_tokens::name.eq(name.as_str()))
@@ -81,12 +81,12 @@ pub async fn get(req: Request<State>) -> tide::Result {
 /// Route to get information about a registry token.
 pub async fn post(mut req: Request<State>) -> tide::Result {
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     //? Is the author logged in ?
     let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
         let header = headers.last().to_string();
-        repo.run(move |conn| utils::checks::get_author(conn, header))
+        db.run(move |conn| utils::checks::get_author(conn, header))
             .await
     } else {
         None
@@ -105,7 +105,7 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
     let body: RequestBody = req.body_json().await?;
 
     //? Fetch the token from the database.
-    let token = repo
+    let token = db
         .run(move |conn| {
             author_tokens::table
                 .filter(author_tokens::token.eq(body.token.as_str()))

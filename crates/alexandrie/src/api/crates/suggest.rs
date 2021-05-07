@@ -38,7 +38,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             missing_params: &["q"],
         })?;
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     //? Fetch the latest index changes.
     // state.index.refresh()?;
@@ -52,7 +52,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let limit = params.limit.map_or(10, |limit| i64::from(limit.get()));
 
     //? Fetch results.
-    let results = repo
+    let results = db
         .run(move |conn| {
             crates::table
                 .filter(crates::canon_name.like(name_pattern.as_str()))

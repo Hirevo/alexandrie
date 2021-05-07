@@ -11,6 +11,10 @@ links = [
     { name = "User documentation", href = "https://hirevo.github.io/alexandrie" },
 ]
 
+[frontend.sessions]
+cookie_name = "alexandrie.sid"
+secret = "YOU_REALLY_SHOULD_CHANGE_THIS_BEFORE_DEPLOYING"
+
 [frontend.assets]
 path = "assets"
 

@@ -27,13 +27,12 @@ use std::sync::Arc;
 
 #[cfg(feature = "frontend")]
 use std::io;
-#[cfg(feature = "frontend")]
-use std::path::PathBuf;
 
 use async_std::fs;
 
 use clap::{App, Arg};
 use tide::http::mime;
+use tide::sessions::SessionMiddleware;
 use tide::utils::After;
 use tide::{Body, Response, Server};
 
@@ -54,7 +53,7 @@ pub mod utils;
 #[cfg(feature = "frontend")]
 pub mod frontend;
 
-use crate::config::Config;
+use crate::config::{Config, FrontendConfig};
 use crate::error::Error;
 use crate::utils::build;
 use crate::utils::request_log::RequestLogger;
@@ -62,10 +61,7 @@ use crate::utils::request_log::RequestLogger;
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
 #[cfg(feature = "frontend")]
-use crate::utils::cookies::CookiesMiddleware;
-
-/// The instantiated [`crate::db::Repo`] type alias.
-pub type Repo = db::Repo<db::Connection>;
+use crate::utils::sessions::SqlStore;
 
 /// The application state type used for the web server.
 pub type State = Arc<config::State>;
@@ -78,11 +74,16 @@ embed_migrations!("../../migrations/sqlite");
 embed_migrations!("../../migrations/postgres");
 
 #[cfg(feature = "frontend")]
-fn frontend_routes(state: State, assets_path: PathBuf) -> io::Result<Server<State>> {
+fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<Server<State>> {
     let mut app = tide::with_state(Arc::clone(&state));
 
-    log::info!("setting up cookie middleware");
-    app.with(CookiesMiddleware::new());
+    let store = SqlStore::new(state.db.clone());
+
+    log::info!("setting up session middleware");
+    app.with(
+        SessionMiddleware::new(store, frontend_config.sessions.secret.as_bytes())
+            .with_cookie_name(frontend_config.sessions.cookie_name.as_str()),
+    );
     log::info!("setting up authentication middleware");
     app.with(AuthMiddleware::new());
 
@@ -125,7 +126,7 @@ fn frontend_routes(state: State, assets_path: PathBuf) -> io::Result<Server<Stat
         .get(frontend::account::manage::tokens::revoke::get);
 
     log::info!("mounting '/assets/*path'");
-    app.at("/assets").serve_dir(assets_path)?;
+    app.at("/assets").serve_dir(frontend_config.assets.path)?;
 
     Ok(app)
 }
@@ -210,14 +211,15 @@ async fn run() -> Result<(), Error> {
     let addr = config.general.bind_address.clone();
 
     #[cfg(feature = "frontend")]
-    let frontend_enabled = config.frontend.enabled;
-    #[cfg(feature = "frontend")]
-    let assets_path = config.frontend.assets.path.clone();
+    let frontend_config = config.frontend.clone();
+
     let state: Arc<config::State> = Arc::new(config.into());
+
+    log::info!("starting Alexandrie (version: {})", build::short());
 
     log::info!("running database migrations");
     #[rustfmt::skip]
-    state.repo.run(|conn| embedded_migrations::run(conn)).await
+    state.db.run(|conn| embedded_migrations::run(conn)).await
         .expect("migration execution error");
 
     let mut app = tide::with_state(Arc::clone(&state));
@@ -226,8 +228,8 @@ async fn run() -> Result<(), Error> {
     app.with(RequestLogger::new());
 
     #[cfg(feature = "frontend")]
-    if frontend_enabled {
-        let frontend = frontend_routes(Arc::clone(&state), assets_path)?;
+    if frontend_config.enabled {
+        let frontend = frontend_routes(Arc::clone(&state), frontend_config)?;
         app.at("/").nest(frontend);
     }
     app.at("/api/v1").nest(api_routes(state));

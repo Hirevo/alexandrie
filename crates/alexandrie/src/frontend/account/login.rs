@@ -1,21 +1,26 @@
 use std::num::NonZeroU32;
+use std::time::Duration;
 
-use cookie::Cookie;
 use diesel::prelude::*;
 use json::json;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
 use tide::{Request, StatusCode};
 
-use crate::db::models::NewSession;
 use crate::db::schema::*;
-use crate::db::DATETIME_FORMAT;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::utils::cookies::CookiesExt;
-use crate::utils::flash::{FlashExt, FlashMessage};
 use crate::utils::response::common;
 use crate::State;
+
+const LOGIN_FLASH: &'static str = "login.flash";
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+enum LoginFlashMessage {
+    Error { message: String },
+    Success { message: String },
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -31,14 +36,16 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         return common::already_logged_in(state, author);
     }
 
-    let error_msg = req
-        .get_flash_message()
-        .and_then(|msg| msg.parse_json::<String>().ok());
+    let flash_message: Option<LoginFlashMessage> = req.session().get(LOGIN_FLASH);
+    if flash_message.is_some() {
+        req.session_mut().remove(LOGIN_FLASH);
+    }
+
     let state = req.state();
     let engine = &state.frontend.handlebars;
     let context = json!({
         "instance": &state.frontend.config,
-        "error_msg": error_msg,
+        "flash": flash_message,
     });
     Ok(utils::response::html(
         engine.render("account/login", &context)?,
@@ -64,9 +71,9 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     };
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         //? Get the users' salt and expected hash.
         let results = salts::table
             .inner_join(authors::table)
@@ -79,8 +86,9 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         let (author_id, encoded_salt, encoded_expected_hash) = match results {
             Some(results) => results,
             None => {
-                let error_msg = String::from("invalid email/password combination.");
-                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                let message = String::from("invalid email/password combination.");
+                let flash_message = LoginFlashMessage::Error { message };
+                req.session_mut().insert(LOGIN_FLASH, &flash_message)?;
                 return Ok(utils::response::redirect("/account/login"));
             }
         };
@@ -95,8 +103,9 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         let (decoded_salt, decoded_password, decoded_expected_hash) = match decode_results {
             Ok(results) => results,
             Err(_) => {
-                let error_msg = String::from("password/salt decoding issue.");
-                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                let message = String::from("password/salt decoding issue.");
+                let flash_message = LoginFlashMessage::Error { message };
+                req.session_mut().insert(LOGIN_FLASH, &flash_message)?;
                 return Ok(utils::response::redirect("/account/login"));
             }
         };
@@ -115,41 +124,21 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         };
 
         if !password_match {
-            let error_msg = String::from("invalid email/password combination.");
-            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            let message = String::from("invalid email/password combination.");
+            let flash_message = LoginFlashMessage::Error { message };
+            req.session_mut().insert(LOGIN_FLASH, &flash_message)?;
             return Ok(utils::response::redirect("/account/login"));
         }
 
-        //? Generate a new session token.
-        let session_token = utils::auth::generate_token();
-
         //? Get the maximum duration of the session.
-        let (max_age, max_age_cookie) = match form.remember.as_deref() {
-            Some("on") => (chrono::Duration::days(30), time::Duration::days(30)),
-            _ => (chrono::Duration::days(1), time::Duration::days(1)),
+        let expiry = match form.remember.as_deref() {
+            Some("on") => Duration::from_secs(2_592_000), // 30 days
+            _ => Duration::from_secs(86_400),             // 1 day / 24 hours
         };
 
-        //? Insert the newly-created session.
-        diesel::insert_into(sessions::table)
-            .values(NewSession {
-                author_id,
-                token: session_token.as_str(),
-                expires: (chrono::Utc::now() + max_age)
-                    .naive_utc()
-                    .format(DATETIME_FORMAT)
-                    .to_string(),
-            })
-            .execute(conn)?;
-
-        //? Build the user's cookie.
-        let cookie = Cookie::build(utils::auth::COOKIE_NAME, session_token)
-            .path("/")
-            .http_only(true)
-            .max_age(max_age_cookie)
-            .finish();
-
-        //? Set the user's cookie.
-        req.set_cookie(cookie).unwrap();
+        //? Set the user's session.
+        req.session_mut().insert("author.id", author_id)?;
+        req.session_mut().expire_in(expiry);
 
         Ok(utils::response::redirect("/"))
     });

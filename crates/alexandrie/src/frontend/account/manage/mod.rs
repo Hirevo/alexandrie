@@ -14,24 +14,25 @@ use crate::db::schema::*;
 use crate::frontend::helpers;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::utils::flash::FlashExt;
 use crate::utils::response::common;
 use crate::State;
 
+const ACCOUNT_MANAGE_FLASH: &'static str = "account_manage.flash";
+
 /// The flash message type used to communicate between the `/account/manage/...` pages.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case", tag = "type", content = "data")]
-pub enum ManageFlashError {
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+enum ManageFlashMessage {
     /// Successful password change message.
-    PasswordChangeSuccess(String),
+    PasswordChangeSuccess { message: String },
     /// Failed password change message.
-    PasswordChangeError(String),
+    PasswordChangeError { message: String },
     /// Successful token generation message.
-    TokenGenerationSuccess(String),
+    TokenGenerationSuccess { message: String },
     /// Successful token revocation message.
-    TokenRevocationSuccess(String),
+    TokenRevocationSuccess { message: String },
     /// Failed token revocation message.
-    TokenRevocationError(String),
+    TokenRevocationError { message: String },
 }
 
 pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
@@ -44,9 +45,9 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     };
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         //? Get the number of crates owned by this author.
         let owned_crates_count = crate_authors::table
             .select(sql::count(crate_authors::id))
@@ -64,25 +65,10 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
             .filter(author_tokens::author_id.eq(author.id))
             .load::<AuthorToken>(conn)?;
 
-        let error_msg = req
-            .get_flash_message()
-            .and_then(|msg| msg.parse_json::<ManageFlashError>().ok());
-
-        #[rustfmt::skip]
-        let (
-            passwd_change_success_msg,
-            passwd_change_error_msg,
-            token_gen_success_msg,
-            token_revoke_success_msg,
-            token_revoke_error_msg,
-        ) = match error_msg {
-            Some(ManageFlashError::PasswordChangeSuccess(msg)) => (Some(msg), None, None, None, None),
-            Some(ManageFlashError::PasswordChangeError(msg)) => (None, Some(msg), None, None, None),
-            Some(ManageFlashError::TokenGenerationSuccess(msg)) => (None, None, Some(msg), None, None),
-            Some(ManageFlashError::TokenRevocationSuccess(msg)) => (None, None, None, Some(msg), None),
-            Some(ManageFlashError::TokenRevocationError(msg)) => (None, None, None, None, Some(msg)),
-            None => (None, None, None, None, None),
-        };
+        let flash_message: Option<ManageFlashMessage> = req.session().get(ACCOUNT_MANAGE_FLASH);
+        if flash_message.is_some() {
+            req.session_mut().remove(ACCOUNT_MANAGE_FLASH);
+        }
 
         let state = req.state();
         let engine = &state.frontend.handlebars;
@@ -93,11 +79,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
             "owned_crates_count": helpers::humanize_number(owned_crates_count),
             "open_sessions_count": helpers::humanize_number(open_sessions_count),
             "tokens": tokens,
-            "passwd_change_success_msg": passwd_change_success_msg,
-            "passwd_change_error_msg": passwd_change_error_msg,
-            "token_generation_success_msg": token_gen_success_msg,
-            "token_revocation_success_msg": token_revoke_success_msg,
-            "token_revocation_error_msg": token_revoke_error_msg,
+            "flash": flash_message,
         });
         Ok(utils::response::html(
             engine.render("account/manage", &context)?,

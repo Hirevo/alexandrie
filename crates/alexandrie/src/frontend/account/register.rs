@@ -1,6 +1,6 @@
 use std::num::NonZeroU32;
+use std::time::Duration;
 
-use cookie::Cookie;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
@@ -10,15 +10,21 @@ use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
 use tide::{Request, StatusCode};
 
-use crate::db::models::{NewAuthor, NewSalt, NewSession};
+use crate::db::models::{NewAuthor, NewSalt};
 use crate::db::schema::*;
-use crate::db::DATETIME_FORMAT;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::utils::cookies::CookiesExt;
-use crate::utils::flash::{FlashExt, FlashMessage};
 use crate::utils::response::common;
 use crate::State;
+
+const REGISTER_FLASH: &'static str = "register.flash";
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+enum RegisterFlashMessage {
+    Error { message: String },
+    Success { message: String },
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -36,14 +42,16 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         return common::already_logged_in(state, author);
     }
 
-    let error_msg = req
-        .get_flash_message()
-        .and_then(|msg| msg.parse_json::<String>().ok());
+    let flash_message: Option<RegisterFlashMessage> = req.session().get(REGISTER_FLASH);
+    if flash_message.is_some() {
+        req.session_mut().remove(REGISTER_FLASH);
+    }
+
     let state = req.state();
     let engine = &state.frontend.handlebars;
     let context = json!({
         "instance": &state.frontend.config,
-        "error_msg": error_msg,
+        "flash": flash_message,
     });
     Ok(utils::response::html(
         engine.render("account/register", &context)?,
@@ -69,24 +77,26 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     };
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         //? Are all fields filled-in ?
         if form.email.is_empty()
             || form.name.is_empty()
             || form.password.is_empty()
             || form.confirm_password.is_empty()
         {
-            let error_msg = String::from("some fields were left empty.");
-            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            let message = String::from("some fields were left empty.");
+            let flash_message = RegisterFlashMessage::Error { message };
+            req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
             return Ok(utils::response::redirect("/account/register"));
         }
 
         //? Does the two passwords match (consistency check) ?
         if form.password != form.confirm_password {
-            let error_msg = String::from("the two passwords did not match.");
-            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            let message = String::from("the two passwords did not match.");
+            let flash_message = RegisterFlashMessage::Error { message };
+            req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
             return Ok(utils::response::redirect("/account/register"));
         }
 
@@ -96,8 +106,9 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         ))
         .get_result(conn)?;
         if already_exists {
-            let error_msg = String::from("an author already exists for this email.");
-            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            let message = String::from("an author already exists for this email.");
+            let flash_message = RegisterFlashMessage::Error { message };
+            req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
             return Ok(utils::response::redirect("/account/register"));
         }
 
@@ -105,8 +116,9 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         let decoded_password = match hex::decode(form.password.as_bytes()) {
             Ok(passwd) => passwd,
             Err(_) => {
-                let error_msg = String::from("password/salt decoding issue.");
-                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                let message = String::from("password/salt decoding issue.");
+                let flash_message = RegisterFlashMessage::Error { message };
+                req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
                 return Ok(utils::response::redirect("/account/register"));
             }
         };
@@ -159,37 +171,15 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
             .values(new_salt)
             .execute(conn)?;
 
-        //? Generate a new session token.
-        let session_token = utils::auth::generate_token();
-
         //? Get the maximum duration of the session.
-        let (max_age, max_age_cookie) = match form.remember.as_deref() {
-            Some("on") => (chrono::Duration::days(30), time::Duration::days(30)),
-            _ => (chrono::Duration::days(1), time::Duration::days(1)),
+        let expiry = match form.remember.as_deref() {
+            Some("on") => Duration::from_secs(2_592_000), // 30 days
+            _ => Duration::from_secs(86_400),             // 1 day / 24 hours
         };
 
-        //? Insert the newly-created session.
-        let new_session = NewSession {
-            author_id,
-            token: session_token.as_str(),
-            expires: (chrono::Utc::now() + max_age)
-                .naive_utc()
-                .format(DATETIME_FORMAT)
-                .to_string(),
-        };
-        diesel::insert_into(sessions::table)
-            .values(new_session)
-            .execute(conn)?;
-
-        //? Build the user's cookie.
-        let cookie = Cookie::build(utils::auth::COOKIE_NAME, session_token)
-            .path("/")
-            .http_only(true)
-            .max_age(max_age_cookie)
-            .finish();
-
-        //? Set the user's cookie.
-        req.set_cookie(cookie).unwrap();
+        //? Set the user's session.
+        req.session_mut().insert("author.id", author_id)?;
+        req.session_mut().expire_in(expiry);
 
         Ok(utils::response::redirect("/"))
     });

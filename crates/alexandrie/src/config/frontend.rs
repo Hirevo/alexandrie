@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 
+use crate::frontend::helpers;
+
 fn enabled_def() -> bool {
     true
 }
@@ -30,6 +32,15 @@ pub struct TemplatesConfig {
     pub path: PathBuf,
 }
 
+/// The session-handling configuration struct.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SessionsConfig {
+    /// The name of the session's cookie.
+    pub cookie_name: String,
+    /// The secret to use to sign cookies with.
+    pub secret: String,
+}
+
 /// The frontend configuration struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FrontendConfig {
@@ -48,6 +59,8 @@ pub struct FrontendConfig {
     pub assets: AssetsConfig,
     /// Templates configuration options.
     pub templates: TemplatesConfig,
+    /// The session-handling configuration.
+    pub sessions: SessionsConfig,
 }
 
 /// The frontend state struct, created from [FrontendConfig].
@@ -63,7 +76,9 @@ impl From<FrontendConfig> for FrontendState {
         let mut engine = Handlebars::new();
         engine
             .register_templates_directory(".hbs", &config.templates.path)
-            .expect("handlebars configuration error");
+            .expect("could not register templates directory to Handlebars");
+
+        engine.register_helper("equal", Box::new(helpers::hbs_equal));
 
         FrontendState {
             config,

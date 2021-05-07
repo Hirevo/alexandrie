@@ -39,9 +39,9 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = utils::canonical_name(name);
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         //? Does this crate exists?
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {
@@ -86,9 +86,9 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     let OwnerAddBody { users: new_authors } = req.body_json().await?;
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let headers = req
             .header(utils::auth::AUTHORIZATION_HEADER)
             .ok_or(AlexError::InvalidToken)?;
@@ -187,9 +187,9 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
     let OwnerDeleteBody { users: old_authors } = req.body_json().await?;
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let headers = req
             .header(utils::auth::AUTHORIZATION_HEADER)
             .ok_or(AlexError::InvalidToken)?;

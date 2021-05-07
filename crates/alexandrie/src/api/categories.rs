@@ -38,9 +38,9 @@ struct CategoriesMeta {
 /// Route to list categories.
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let state = req.state();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let categories = repo
+    let categories = db
         .run(|conn| categories::table.load::<Category>(conn))
         .await?;
 

@@ -174,13 +174,13 @@ fn link_badges(
 /// Route to publish a new crate (used by `cargo publish`).
 pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     let headers = req
         .header(utils::auth::AUTHORIZATION_HEADER)
         .ok_or(AlexError::InvalidToken)?;
     let header = headers.last().to_string();
-    let author = repo
+    let author = db
         .run(move |conn| utils::checks::get_author(conn, header))
         .await
         .ok_or(AlexError::InvalidToken)?;
@@ -199,11 +199,11 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     cursor.read_exact(&mut crate_bytes)?;
     let hash = hex::encode(hasher::digest(&hasher::SHA256, &crate_bytes).as_ref());
 
-    let repo = &state.repo;
+    let db = &state.db;
 
     // state.index.refresh()?;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let state = req.state();
 
         let canon_name = utils::canonical_name(metadata.name.as_str());

@@ -128,13 +128,13 @@ table! {
     /// The user sessions table.
     sessions (id) {
         /// The session's ID.
-        id -> Bigint,
-        /// The session's token.
-        token -> Varchar,
+        id -> Varchar,
         /// The session's related author ID.
-        author_id -> Bigint,
-        /// The session's expire date.
-        expires -> Varchar,
+        author_id -> Nullable<Bigint>,
+        /// The session's expiry date.
+        expiry -> Varchar,
+        /// The session's associated data.
+        data -> Text,
     }
 }
 
