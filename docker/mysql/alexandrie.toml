@@ -13,6 +13,10 @@ enabled = true
 title = "Alexandrie"
 description = "An alternative crate registry for Cargo, the Rust package manager."
 
+[frontend.sessions]
+cookie_name = "alexandrie.sid"
+secret = "YOU_REALLY_SHOULD_CHANGE_THIS_BEFORE_DEPLOYING"
+
 [frontend.assets]
 path = "assets"
 

@@ -13,12 +13,12 @@ use alexandrie_rendering::config::{SyntectConfig, SyntectState};
 use alexandrie_storage::config::StorageConfig;
 use alexandrie_storage::Storage;
 
-use crate::Repo;
-
-use crate::config::database::DatabaseConfig;
+use crate::db::Database;
 
 #[cfg(feature = "frontend")]
 pub use crate::config::frontend::*;
+
+use self::database::DatabaseConfig;
 
 /// The general configuration options struct.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -52,7 +52,7 @@ pub struct State {
     /// The current crate storage strategy used.
     pub storage: Storage,
     /// The current database connection pool.
-    pub repo: Repo,
+    pub db: Database,
     /// The syntect configuration.
     pub syntect: SyntectState,
     /// The frontend configured state.
@@ -65,7 +65,7 @@ impl From<Config> for State {
         State {
             index: config.index.into(),
             storage: config.storage.into(),
-            repo: Repo::new(&config.database),
+            db: Database::new(&config.database),
             syntect: config.syntect.into(),
             #[cfg(feature = "frontend")]
             frontend: config.frontend.into(),

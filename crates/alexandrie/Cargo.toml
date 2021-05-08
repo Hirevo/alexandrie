@@ -21,16 +21,19 @@ alexandrie-storage = { path = "../alexandrie-storage", version = "0.1.0" }
 alexandrie-rendering = { path = "../alexandrie-rendering", version = "0.1.0" }
 
 # core
-tide = "0.16.0"
+tide = { version = "0.16.0", default-features = false, features = ["h1-server", "sessions"] }
 clap = "2.33.3"
 
+# session handling
+async-session = "2.0.1"
+
 # data types
-url = "2.2.1"
+url = "2.2.2"
 semver = { version = "0.11.0", features = ["serde"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.124", features = ["derive"] }
+serde = { version = "1.0.125", features = ["derive"] }
 json = { package = "serde_json", version = "1.0.64" }
 toml = "0.5.8"
 
@@ -40,7 +43,6 @@ byteorder = "1.4.3"
 # (en|de)coding / hashing
 ring = "0.16.20"
 hex = "0.4.3"
-base64 = "0.13.0"
 percent-encoding = "2.1.0"
 
 # database
@@ -49,7 +51,7 @@ diesel_migrations = "1.4.0"
 
 # async primitives
 async-std = { version = "1.9.0", features = ["attributes"] }
-futures = "0.3.13"
+futures = "0.3.14"
 
 # error handling
 thiserror = "1.0.24"
@@ -59,11 +61,10 @@ flate2 = "1.0.20"
 tar = "0.4.33"
 
 # build-tme debug information
-shadow-rs = "0.5.24"
+shadow-rs = "0.5.25"
 
 # frontend
-handlebars = { version = "3.5.3", features = ["dir_source"], optional = true }
-cookie = { version = "0.15.0", features = ["percent-encode"], optional = true }
+handlebars = { version = "3.5.5", features = ["dir_source"], optional = true }
 time = { version = "0.2.26", optional = true }
 num-format = { version = "0.4.0", optional = true }
 bigdecimal = { version = "0.1.2", features = ["serde"], optional = true }
@@ -80,7 +81,7 @@ slog-async = "2.6.0"
 default = ["frontend", "sqlite"]
 # default = ["frontend", "mysql"]
 # default = ["frontend", "postgres"]
-frontend = ["handlebars", "num-format", "bigdecimal", "cookie", "time", "diesel/numeric"]
+frontend = ["handlebars", "num-format", "bigdecimal", "time", "diesel/numeric"]
 mysql = ["diesel/mysql", "diesel_migrations/mysql"]
 sqlite = ["diesel/sqlite", "diesel_migrations/sqlite"]
 postgres = ["diesel/postgres", "diesel_migrations/postgres"]
@@ -88,4 +89,4 @@ git2 = ["alexandrie-index/git2"]
 s3 = ["alexandrie-storage/s3"]
 
 [build-dependencies]
-shadow-rs = "0.5.24"
+shadow-rs = "0.5.25"

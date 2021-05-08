@@ -37,10 +37,10 @@ pub async fn get(req: Request<State>) -> tide::Result {
     let name = utils::canonical_name(name);
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     //? Fetch the crate data from the database.
-    let krate = repo
+    let krate = db
         .run(move |conn| {
             crates::table
                 .filter(crates::canon_name.eq(name.as_str()))
@@ -62,7 +62,7 @@ pub async fn get(req: Request<State>) -> tide::Result {
 
     //? Fetch the crate's keywords
     let crate_id = krate.id;
-    let keywords = repo
+    let keywords = db
         .run(move |conn| {
             crate_keywords::table
                 .inner_join(keywords::table)
@@ -74,7 +74,7 @@ pub async fn get(req: Request<State>) -> tide::Result {
 
     //? Fetch the crate's categories
     let crate_id = krate.id;
-    let categories = repo
+    let categories = db
         .run(move |conn| {
             crate_categories::table
                 .inner_join(categories::table)

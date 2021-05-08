@@ -409,14 +409,14 @@
                             <label class="manage-passwd-label" for="confirm-password">Confirm new password:</label>
                             <input class="manage-passwd-input" type="password" name="confirm-password" id="confirm-password" placeholder="Confirm new password..." autocomplete="off" required>
                         </div>
-                        {{#if passwd_change_success_msg}}
+                        {{#if (equal flash.kind "password-change-success")}}
                         <div class="manage-passwd-field manage-passwd-success-msg">
-                            Success: {{ passwd_change_success_msg }}
+                            Success: {{ flash.message }}
                         </div>
                         {{/if}}
-                        {{#if passwd_change_error_msg}}
+                        {{#if (equal flash.kind "password-change-error")}}
                         <div class="manage-passwd-field manage-passwd-error-msg">
-                            Error: {{ passwd_change_error_msg }}
+                            Error: {{ flash.message }}
                         </div>
                         {{/if}}
                     </div>
@@ -441,19 +441,19 @@
                             <label class="manage-tokens-label" for="token-name">New token name:</label>
                             <input class="manage-tokens-input" type="text" name="token-name" id="token-name" placeholder="Enter token name..." required>
                         </div>
-                        {{#if token_generation_success_msg}}
+                        {{#if (equal flash.kind "token-generation-success")}}
                         <div class="manage-tokens-field manage-tokens-success-msg">
-                            Created token: {{ token_generation_success_msg }}
+                            Created token: {{ flash.message }}
                         </div>
                         {{/if}}
-                        {{#if token_revocation_success_msg}}
+                        {{#if (equal flash.kind "token-revocation-success")}}
                         <div class="manage-tokens-field manage-tokens-success-msg">
-                            Success: {{ token_revocation_success_msg }}
+                            Success: {{ flash.message }}
                         </div>
                         {{/if}}
-                        {{#if token_revocation_error_msg}}
+                        {{#if (equal flash.kind "token-revocation-error")}}
                         <div class="manage-tokens-field manage-tokens-error-msg">
-                            Error: {{ token_revocation_error_msg }}
+                            Error: {{ flash.message }}
                         </div>
                         {{/if}}
                         <input class="manage-tokens-button" type="submit" value="Create token">

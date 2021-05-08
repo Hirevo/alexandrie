@@ -17,8 +17,8 @@ pub(crate) async fn put(req: Request<State>) -> tide::Result {
     let name = utils::canonical_name(name);
 
     let state = req.state().clone();
-    let repo = &state.repo;
-    let transaction = repo.transaction(move |conn| {
+    let db = &state.db;
+    let transaction = db.transaction(move |conn| {
         let state = req.state();
 
         let headers = req

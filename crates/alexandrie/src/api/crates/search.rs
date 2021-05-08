@@ -53,7 +53,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             missing_params: &["q"],
         })?;
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     //? Fetch the latest index changes.
     // state.index.refresh()?;
@@ -63,7 +63,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     //? Build the search pattern.
     let name_pattern = format!("%{0}%", name.replace('\\', "\\\\").replace('%', "\\%"));
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let state = req.state();
 
         //? Limit the result count depending on parameters.

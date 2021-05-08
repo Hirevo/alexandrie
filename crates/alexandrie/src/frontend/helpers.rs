@@ -76,3 +76,22 @@ pub fn humanize_date(date: NaiveDate) -> String {
 pub fn humanize_number(num: impl ToFormattedString) -> String {
     num.to_formatted_string(&Locale::en)
 }
+
+#[allow(unused)]
+pub(crate) fn hbs_equal(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> HelperResult {
+    let maybe_params = h.param(0).zip(h.param(1));
+    let (p1, p2) =
+        maybe_params.ok_or_else(|| RenderError::new("humanize_number: missing parameter"))?;
+
+    if p1.value() == p2.value() {
+        out.write("true")?;
+    }
+
+    Ok(())
+}

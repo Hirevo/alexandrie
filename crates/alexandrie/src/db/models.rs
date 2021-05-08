@@ -353,26 +353,26 @@ pub struct NewBadge {
 /// Represents a session in the database.
 pub struct Session {
     /// The session's ID.
-    pub id: i64,
-    /// The session's token.
-    pub token: String,
+    pub id: String,
     /// The session's related author ID.
-    pub author_id: i64,
+    pub author_id: Option<i64>,
     /// The session's expiry date.
-    pub expires: String,
+    pub expiry: String,
+    /// The session's associated data.
+    pub data: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "sessions"]
 /// Represents a session in the database,
 /// suitable to create an entry while letting the database assign it an ID.
-pub struct NewSession<'a> {
-    /// The session's token.
-    pub token: &'a str,
+pub struct NewSession {
     /// The session's related author ID.
     pub author_id: i64,
     /// The session's expiry date.
-    pub expires: String,
+    pub expiry: String,
+    /// The session's associated data.
+    pub data: String,
 }
 
 #[derive(

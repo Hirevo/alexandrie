@@ -8,13 +8,8 @@ pub mod checks;
 pub mod request_log;
 /// Various utilities to assist building HTTP responses.
 pub mod response;
-
-/// Utilities for using cookies.
-#[cfg(feature = "frontend")]
-pub mod cookies;
-/// Utilities for using flash cookies.
-#[cfg(feature = "frontend")]
-pub mod flash;
+/// Various session-related utilities.
+pub mod sessions;
 
 /// Transforms a crate name to its canonical form.
 ///

@@ -9,10 +9,9 @@ use tide::{Request, StatusCode};
 use crate::db::schema::*;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::utils::flash::{FlashExt, FlashMessage};
 use crate::State;
 
-use super::ManageFlashError;
+use super::{ManageFlashMessage, ACCOUNT_MANAGE_FLASH};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -44,25 +43,27 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     };
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         //? Are all fields filled-in?
         if form.password.is_empty()
             || form.new_password.is_empty()
             || form.confirm_password.is_empty()
         {
-            let error_msg = String::from("some fields were left empty.");
-            let error_msg = ManageFlashError::PasswordChangeError(error_msg);
-            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            let message = String::from("some fields were left empty.");
+            let flash_message = ManageFlashMessage::PasswordChangeError { message };
+            req.session_mut()
+                .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
             return Ok(utils::response::redirect("/account/manage"));
         }
 
         //? Does the two passwords match (consistency check)?
         if form.new_password != form.confirm_password {
-            let error_msg = String::from("the two passwords did not match.");
-            let error_msg = ManageFlashError::PasswordChangeError(error_msg);
-            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            let message = String::from("the two passwords did not match.");
+            let flash_message = ManageFlashMessage::PasswordChangeError { message };
+            req.session_mut()
+                .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
             return Ok(utils::response::redirect("/account/manage"));
         }
 
@@ -91,9 +92,10 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         ) = match decode_results {
             Ok(results) => results,
             Err(_) => {
-                let error_msg = String::from("password/salt decoding issue.");
-                let error_msg = ManageFlashError::PasswordChangeError(error_msg);
-                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                let message = String::from("password/salt decoding issue.");
+                let flash_message = ManageFlashMessage::PasswordChangeError { message };
+                req.session_mut()
+                    .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
                 return Ok(utils::response::redirect("/account/manage"));
             }
         };
@@ -112,9 +114,10 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         };
 
         if !password_match {
-            let error_msg =
-                ManageFlashError::PasswordChangeError(String::from("invalid current password."));
-            req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+            let message = String::from("invalid current password.");
+            let flash_message = ManageFlashMessage::PasswordChangeError { message };
+            req.session_mut()
+                .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
             return Ok(utils::response::redirect("/account/manage"));
         }
 
@@ -136,10 +139,10 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
             .set(authors::passwd.eq(encoded_derived_hash.as_str()))
             .execute(conn)?;
 
-        let success_msg = ManageFlashError::PasswordChangeSuccess(String::from(
-            "the password was successfully changed.",
-        ));
-        req.set_flash_message(FlashMessage::from_json(&success_msg)?);
+        let message = String::from("the password was successfully changed.");
+        let flash_message = ManageFlashMessage::PasswordChangeSuccess { message };
+        req.session_mut()
+            .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
         Ok(utils::response::redirect("/account/manage"))
     });
 

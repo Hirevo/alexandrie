@@ -242,9 +242,9 @@
                     Remember me for 30 days
                 </label>
             </div>
-            {{#if error_msg}}
+            {{#if (equal flash.kind "error")}}
             <div class="register-field register-error-msg">
-                Error: {{ error_msg }}
+                Error: {{ flash.message }}
             </div>
             {{/if}}
             <div class="register-buttons">

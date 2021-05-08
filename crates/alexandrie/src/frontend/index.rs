@@ -14,9 +14,9 @@ use crate::State;
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let user = req.get_author();
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let state = req.state();
 
         //? Get total number of crates.

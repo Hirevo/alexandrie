@@ -4,8 +4,6 @@ use tide::{Middleware, Next, Request};
 
 use crate::db::models::Author;
 use crate::db::schema::*;
-use crate::db::DATETIME_FORMAT;
-use crate::utils::cookies::CookiesExt;
 use crate::State;
 
 /// Session cookie's name.
@@ -30,35 +28,19 @@ impl AuthMiddleware {
 #[async_trait]
 impl Middleware<State> for AuthMiddleware {
     async fn handle(&self, mut req: Request<State>, next: Next<'_, State>) -> tide::Result {
-        let now = chrono::Utc::now().naive_utc();
-        let cookie = req.get_cookie(COOKIE_NAME);
+        let author_id: Option<i64> = req.session().get("author.id");
 
-        if let Some(cookie) = cookie {
-            let state = req.state().clone();
-            let repo = &state.repo;
-            let query = repo.run(move |conn| {
+        if let Some(author_id) = author_id {
+            let query = req.state().db.run(move |conn| {
                 //? Get the session matching the user-provided token.
-                sessions::table
-                    .inner_join(authors::table)
-                    .select((sessions::expires, authors::all_columns))
-                    .filter(sessions::token.eq(cookie.value()))
-                    .first::<(String, Author)>(conn)
+                authors::table
+                    .find(author_id)
+                    .first::<Author>(conn)
                     .optional()
             });
 
-            let results = match query.await {
-                Ok(results) => results,
-                Err(err) => return Err(tide::Error::from(err)),
-            };
-
-            if let Some((expires, author)) = results {
-                let expires =
-                    chrono::NaiveDateTime::parse_from_str(expires.as_str(), DATETIME_FORMAT)
-                        .unwrap();
-
-                if expires > now {
-                    req.set_ext(author);
-                }
+            if let Some(author) = query.await? {
+                req.set_ext(author);
             }
         }
 
@@ -68,7 +50,7 @@ impl Middleware<State> for AuthMiddleware {
     }
 }
 
-/// A trait to extend `Context` with authentication-related helper methods.
+/// A trait to extend `tide::Request` with authentication-related helper methods.
 pub trait AuthExt {
     /// Get the currently-authenticated [`Author`] (returns `None` if not authenticated).
     fn get_author(&self) -> Option<Author>;

@@ -4,10 +4,9 @@ use tide::Request;
 use crate::db::schema::*;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::utils::flash::{FlashExt, FlashMessage};
 use crate::State;
 
-use super::ManageFlashError;
+use super::{ManageFlashMessage, ACCOUNT_MANAGE_FLASH};
 
 pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     let author = match req.get_author() {
@@ -20,9 +19,9 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
     let id: i64 = req.param("token-id")?.parse()?;
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let token_author_id = author_tokens::table
             .select(author_tokens::author_id)
             .filter(author_tokens::id.eq(id))
@@ -38,15 +37,17 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
                 )
                 .execute(conn)?;
 
-                let error_msg = String::from("the token has successfully been revoked.");
-                let error_msg = ManageFlashError::TokenRevocationSuccess(error_msg);
-                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                let message = String::from("the token has successfully been revoked.");
+                let flash_message = ManageFlashMessage::TokenRevocationSuccess { message };
+                req.session_mut()
+                    .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
                 Ok(utils::response::redirect("/account/manage"))
             }
             Some(_) | None => {
-                let error_msg = String::from("invalid token to revoke.");
-                let error_msg = ManageFlashError::TokenRevocationError(error_msg);
-                req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+                let message = String::from("invalid token to revoke.");
+                let flash_message = ManageFlashMessage::TokenRevocationError { message };
+                req.session_mut()
+                    .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
                 Ok(utils::response::redirect("/account/manage"))
             }
         }
