@@ -73,7 +73,6 @@ dependencies = [
  "byteorder",
  "chrono",
  "clap",
- "cookie 0.15.0",
  "diesel",
  "diesel_migrations",
  "flate2",
@@ -669,17 +668,6 @@ dependencies = [
  "percent-encoding 2.1.0",
  "rand 0.8.3",
  "sha2",
- "time 0.2.26",
- "version_check",
-]
-
-[[package]]
-name = "cookie"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffdf8865bac3d9a3bde5bde9088ca431b11f5d37c7a578b8086af77248b76627"
-dependencies = [
- "percent-encoding 2.1.0",
  "time 0.2.26",
  "version_check",
 ]
@@ -1303,7 +1291,7 @@ dependencies = [
  "async-channel",
  "async-std",
  "base64 0.13.0",
- "cookie 0.14.4",
+ "cookie",
  "futures-lite",
  "infer",
  "pin-project-lite 0.2.6",

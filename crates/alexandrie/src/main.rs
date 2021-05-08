@@ -31,6 +31,7 @@ use std::io;
 use async_std::fs;
 
 use clap::{App, Arg};
+use tide::http::cookies::SameSite;
 use tide::http::mime;
 use tide::sessions::SessionMiddleware;
 use tide::utils::After;
@@ -82,7 +83,8 @@ fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<
     log::info!("setting up session middleware");
     app.with(
         SessionMiddleware::new(store, frontend_config.sessions.secret.as_bytes())
-            .with_cookie_name(frontend_config.sessions.cookie_name.as_str()),
+            .with_cookie_name(frontend_config.sessions.cookie_name.as_str())
+            .with_same_site_policy(SameSite::Lax),
     );
     log::info!("setting up authentication middleware");
     app.with(AuthMiddleware::new());

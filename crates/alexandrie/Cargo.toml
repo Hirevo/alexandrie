@@ -65,7 +65,6 @@ shadow-rs = "0.5.25"
 
 # frontend
 handlebars = { version = "3.5.5", features = ["dir_source"], optional = true }
-cookie = { version = "0.15.0", features = ["percent-encode"], optional = true }
 time = { version = "0.2.26", optional = true }
 num-format = { version = "0.4.0", optional = true }
 bigdecimal = { version = "0.1.2", features = ["serde"], optional = true }
@@ -82,7 +81,7 @@ slog-async = "2.6.0"
 default = ["frontend", "sqlite"]
 # default = ["frontend", "mysql"]
 # default = ["frontend", "postgres"]
-frontend = ["handlebars", "num-format", "bigdecimal", "cookie", "time", "diesel/numeric"]
+frontend = ["handlebars", "num-format", "bigdecimal", "time", "diesel/numeric"]
 mysql = ["diesel/mysql", "diesel_migrations/mysql"]
 sqlite = ["diesel/sqlite", "diesel_migrations/sqlite"]
 postgres = ["diesel/postgres", "diesel_migrations/postgres"]
