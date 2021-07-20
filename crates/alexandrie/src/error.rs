@@ -69,7 +69,7 @@ pub enum AlexError {
         author: Author,
     },
     /// The published crate version is lower than the current hosted version.
-    #[error("the published version is too low (hosted version is {hosted}, and thus {published} <= {hosted})")]
+    #[error("the published version already exists (hosted version is {hosted}, and thus {published} == {hosted})")]
     VersionTooLow {
         /// The krate's name.
         krate: String,

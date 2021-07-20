@@ -78,7 +78,7 @@ impl Tree {
                 .into_iter()
                 .max_by(|k1, k2| k1.vers.cmp(&k2.vers))
                 .expect("at least one record should exist");
-            if record.vers <= latest.vers {
+            if record.vers == latest.vers {
                 return Err(Error::from(IndexError::VersionTooLow {
                     krate: record.name,
                     hosted: latest.vers,
