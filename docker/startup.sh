@@ -24,17 +24,24 @@ function get_hostname {
 
     ## Remove the rest of the URL (pathname, query params, hash fragments, etc...)
     URL=${URL%%/*}
-    URL=${URL%%:}
+    URL=${URL%%:*}
 
     # Show the hostname
     echo "${URL}"
 }
 
+if [[ "${CRATE_INDEX}" =~ ^ssh://[-._0-9a-zA-Z]+(:[^@]+)?@[-.0-9a-z]+:([0-9]+)/ ]]
+then
+    SSH_PORT=${BASH_REMATCH[2]}
+else
+    SSH_PORT=22
+fi
+
 # store the hostname of the crate index URL
 HOSTNAME="$(get_hostname "${CRATE_INDEX}")"
 
 # add the keys from that host
-ssh-keyscan -t rsa "${HOSTNAME}" >> "${HOME}/.ssh/known_hosts"
+ssh-keyscan -t rsa -p ${SSH_PORT} "${HOSTNAME}" >> "${HOME}/.ssh/known_hosts"
 
 # configure git with user metadata
 git config --global user.name "${GIT_NAME}" && git config --global user.email "${GIT_EMAIL}"
