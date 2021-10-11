@@ -1,5 +1,5 @@
-drop table sessions;
-create table sessions (
+drop table `sessions`;
+create table `sessions` (
     `id` bigint not null auto_increment unique primary key,
     `token` varchar(255) not null unique,
     `author_id` bigint not null,
