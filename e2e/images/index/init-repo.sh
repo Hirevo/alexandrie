@@ -16,6 +16,7 @@ cat > config.json << EOF
 EOF
 
 git init --shared=true
+git branch -M master
 git add config.json
 git commit -m 'Added first files'
 
