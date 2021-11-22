@@ -9,10 +9,9 @@ use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::utils::flash::{FlashExt, FlashMessage};
 use crate::State;
 
-use super::ManageFlashError;
+use super::{ManageFlashMessage, ACCOUNT_MANAGE_FLASH};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -42,9 +41,9 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     };
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         //? Generate new registry token.
         let token = utils::auth::generate_token();
         let (token, _) = token.split_at(25);
@@ -58,8 +57,10 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
             .values(new_author_token)
             .execute(conn)?;
 
-        let error_msg = ManageFlashError::TokenGenerationSuccess(String::from(token));
-        req.set_flash_message(FlashMessage::from_json(&error_msg)?);
+        let message = String::from(token);
+        let flash_message = ManageFlashMessage::TokenGenerationSuccess { message };
+        req.session_mut()
+            .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
         Ok(utils::response::redirect("/account/manage"))
     });
 

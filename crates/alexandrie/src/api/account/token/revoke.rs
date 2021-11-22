@@ -24,12 +24,12 @@ pub struct ResponseBody {
 /// Route to revoke a registry token.
 pub async fn delete(mut req: Request<State>) -> tide::Result {
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     //? Is the author logged in ?
     let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
         let header = headers.last().to_string();
-        repo.run(move |conn| utils::checks::get_author(conn, header))
+        db.run(move |conn| utils::checks::get_author(conn, header))
             .await
     } else {
         None
@@ -47,7 +47,7 @@ pub async fn delete(mut req: Request<State>) -> tide::Result {
     //? Parse request body.
     let body: RequestBody = req.body_json().await?;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         //? Fetch the token from the database.
         let token = author_tokens::table
             .filter(author_tokens::token.eq(body.token.as_str()))

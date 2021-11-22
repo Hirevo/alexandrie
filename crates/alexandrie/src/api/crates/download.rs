@@ -22,11 +22,11 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let name = utils::canonical_name(name);
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
     // state.index.refresh()?;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let state = req.state();
 
         //? Fetch the download count for this crate.

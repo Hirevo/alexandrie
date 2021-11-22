@@ -17,9 +17,9 @@ pub(crate) async fn delete(req: Request<State>) -> tide::Result {
     let name = utils::canonical_name(name);
 
     let state = req.state().clone();
-    let repo = &state.repo;
+    let db = &state.db;
 
-    let transaction = repo.transaction(move |conn| {
+    let transaction = db.transaction(move |conn| {
         let state = req.state();
 
         let headers = req

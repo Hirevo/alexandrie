@@ -1,1 +1,1 @@
-drop table crate_badges;
+drop table `crate_badges`;
