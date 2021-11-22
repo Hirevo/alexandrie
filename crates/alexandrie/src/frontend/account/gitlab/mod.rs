@@ -2,10 +2,10 @@ use oauth2::{CsrfToken, Scope};
 use serde::{Deserialize, Serialize};
 use tide::{Request, StatusCode};
 
-/// Callback endpoint for the "gitlab" authentication strategy.
-pub mod callback;
 /// Endpoint to attach to an existing Alexandrie account.
 pub mod attach;
+/// Callback endpoint for the "gitlab" authentication strategy.
+pub mod callback;
 /// Endpoint to detach from an existing Alexandrie account.
 pub mod detach;
 
@@ -46,7 +46,10 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         .add_scope(Scope::new("read_api".to_string()))
         .url();
 
-    let data = GitlabLoginState { state, attach: false };
+    let data = GitlabLoginState {
+        state,
+        attach: false,
+    };
     req.session_mut().insert(GITLAB_LOGIN_STATE_KEY, &data)?;
 
     return Ok(utils::response::redirect(url.as_str()));

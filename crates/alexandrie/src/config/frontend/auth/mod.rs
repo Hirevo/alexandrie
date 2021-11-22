@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Types for the "github" authentication strategy.
 pub mod github;
@@ -7,9 +7,9 @@ pub mod gitlab;
 /// Types for the "local" authentication strategy.
 pub mod local;
 
-use crate::config::frontend::auth::github::{GithubAuthState, GithubAuthConfig};
-use crate::config::frontend::auth::gitlab::{GitlabAuthState, GitlabAuthConfig};
-use crate::config::frontend::auth::local::{LocalAuthState, LocalAuthConfig};
+use crate::config::frontend::auth::github::{GithubAuthConfig, GithubAuthState};
+use crate::config::frontend::auth::gitlab::{GitlabAuthConfig, GitlabAuthState};
+use crate::config::frontend::auth::local::{LocalAuthConfig, LocalAuthState};
 use crate::error::Error;
 
 /// The configuration struct for authentication strategies.
@@ -27,7 +27,6 @@ pub struct AuthConfig {
     #[serde(default)]
     pub gitlab: GitlabAuthConfig,
 }
-
 
 /// The authentication state, having things like OAuth clients for external authentication.
 pub struct AuthState {

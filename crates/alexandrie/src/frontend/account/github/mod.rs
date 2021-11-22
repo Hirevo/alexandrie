@@ -2,10 +2,10 @@ use oauth2::{CsrfToken, Scope};
 use serde::{Deserialize, Serialize};
 use tide::{Request, StatusCode};
 
-/// Callback endpoint for the "github" authentication strategy.
-pub mod callback;
 /// Endpoint to attach to an existing Alexandrie account.
 pub mod attach;
+/// Callback endpoint for the "github" authentication strategy.
+pub mod callback;
 /// Endpoint to detach from an existing Alexandrie account.
 pub mod detach;
 
@@ -55,7 +55,10 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         .add_extra_param("allow_signup", github_config.allow_registration.to_string())
         .url();
 
-    let data = GithubLoginState { state, attach: false };
+    let data = GithubLoginState {
+        state,
+        attach: false,
+    };
     req.session_mut().insert(GITHUB_LOGIN_STATE_KEY, &data)?;
 
     return Ok(utils::response::redirect(url.as_str()));

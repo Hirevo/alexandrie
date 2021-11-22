@@ -1,10 +1,9 @@
 use oauth2::basic::BasicClient;
 use oauth2::{AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
-use url::Url;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::error::Error;
-
 
 /// The configuration struct for the "github" authentication strategy.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -41,7 +40,6 @@ impl Default for GithubAuthConfig {
         }
     }
 }
-
 
 /// The authentication state for the "github" strategy.
 pub struct GithubAuthState {

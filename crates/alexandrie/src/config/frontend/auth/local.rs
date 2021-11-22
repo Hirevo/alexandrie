@@ -20,7 +20,6 @@ impl Default for LocalAuthConfig {
     }
 }
 
-
 /// The authentication state for the "local" strategy.
 pub struct LocalAuthState {}
 

@@ -100,17 +100,16 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
                 Ok((fst, snd))
             })();
 
-            let (decoded_current_password, decoded_expected_hash) =
-                match decode_results {
-                    Ok(results) => results,
-                    Err(_) => {
-                        let message = String::from("password/salt decoding issue.");
-                        let flash_message = ManageFlashMessage::PasswordChangeError { message };
-                        req.session_mut()
-                            .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
-                        return Ok(utils::response::redirect("/account/manage"));
-                    }
-                };
+            let (decoded_current_password, decoded_expected_hash) = match decode_results {
+                Ok(results) => results,
+                Err(_) => {
+                    let message = String::from("password/salt decoding issue.");
+                    let flash_message = ManageFlashMessage::PasswordChangeError { message };
+                    req.session_mut()
+                        .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+                    return Ok(utils::response::redirect("/account/manage"));
+                }
+            };
 
             //? Verify client password against the expected hash (through PBKDF2).
             let password_match = {
