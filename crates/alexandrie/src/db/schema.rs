@@ -8,7 +8,11 @@ table! {
         /// The author's displayable name.
         name -> Varchar,
         /// The author's SHA512-hashed password.
-        passwd -> Varchar,
+        passwd -> Nullable<Varchar>,
+        /// The author's GitHub user ID.
+        github_id -> Nullable<Varchar>,
+        /// The author's GitLab user ID.
+        gitlab_id -> Nullable<Varchar>,
     }
 }
 

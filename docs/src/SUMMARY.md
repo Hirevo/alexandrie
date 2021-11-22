@@ -11,6 +11,7 @@ Summary
   - [Index management strategies](./whats-available/index-management-strategies.md)
   - [Crate stores](./whats-available/crate-stores.md)
   - [Docker](./whats-available/docker.md)
+  - [Authentication Strategies](./whats-available/authentication-strategies.md)
 - [Programmatic API](./programmatic-api/mod.md)
   - [Authentication](./programmatic-api/authentication.md)
   - [Account Management section](./programmatic-api/account/mod.md)

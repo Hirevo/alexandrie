@@ -3,6 +3,11 @@ use std::path::PathBuf;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 
+use crate::config::frontend::auth::{AuthConfig, AuthState};
+
+/// The frontend authentication configuration module.
+pub mod auth;
+
 use crate::frontend::helpers;
 
 fn enabled_def() -> bool {
@@ -61,10 +66,14 @@ pub struct FrontendConfig {
     pub templates: TemplatesConfig,
     /// The session-handling configuration.
     pub sessions: SessionsConfig,
+    /// The authentication configuration.
+    pub auth: AuthConfig,
 }
 
 /// The frontend state struct, created from [FrontendConfig].
 pub struct FrontendState {
+    /// The authentication state (like OAuth clients).
+    pub auth: AuthState,
     /// The Handlebars rendering struct.
     pub handlebars: Handlebars<'static>,
     /// The frontend configuration.
@@ -73,16 +82,19 @@ pub struct FrontendState {
 
 impl From<FrontendConfig> for FrontendState {
     fn from(config: FrontendConfig) -> FrontendState {
-        let mut engine = Handlebars::new();
-        engine
+        let auth = AuthState::new(&config.auth).expect("could not initialize authentication state");
+
+        let mut handlebars = Handlebars::new();
+        handlebars
             .register_templates_directory(".hbs", &config.templates.path)
             .expect("could not register templates directory to Handlebars");
 
-        engine.register_helper("equal", Box::new(helpers::hbs_equal));
+        handlebars.register_helper("equal", Box::new(helpers::hbs_equal));
 
         FrontendState {
+            auth,
+            handlebars,
             config,
-            handlebars: { engine },
         }
     }
 }

@@ -42,54 +42,43 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         }
     };
 
+    //? Are all fields filled-in?
+    if form.password.is_empty() || form.new_password.is_empty() || form.confirm_password.is_empty()
+    {
+        let message = String::from("some fields were left empty.");
+        let flash_message = ManageFlashMessage::PasswordChangeError { message };
+        req.session_mut()
+            .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+        return Ok(utils::response::redirect("/account/manage"));
+    }
+
+    //? Does the two passwords match (consistency check)?
+    if form.new_password != form.confirm_password {
+        let message = String::from("the two passwords did not match.");
+        let flash_message = ManageFlashMessage::PasswordChangeError { message };
+        req.session_mut()
+            .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+        return Ok(utils::response::redirect("/account/manage"));
+    }
+
     let state = req.state().clone();
     let db = &state.db;
 
     let transaction = db.transaction(move |conn| {
-        //? Are all fields filled-in?
-        if form.password.is_empty()
-            || form.new_password.is_empty()
-            || form.confirm_password.is_empty()
-        {
-            let message = String::from("some fields were left empty.");
-            let flash_message = ManageFlashMessage::PasswordChangeError { message };
-            req.session_mut()
-                .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
-            return Ok(utils::response::redirect("/account/manage"));
-        }
-
-        //? Does the two passwords match (consistency check)?
-        if form.new_password != form.confirm_password {
-            let message = String::from("the two passwords did not match.");
-            let flash_message = ManageFlashMessage::PasswordChangeError { message };
-            req.session_mut()
-                .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
-            return Ok(utils::response::redirect("/account/manage"));
-        }
-
-        //? Get the users' salt and expected hash.
+        //? Get the users' salt.
         let encoded_salt = salts::table
             .inner_join(authors::table)
             .select(salts::salt)
             .filter(authors::id.eq(author.id))
             .first::<String>(conn)?;
 
-        //? Decode hex-encoded hashes.
-        let decode_results: Result<_, hex::FromHexError> = hex::decode(encoded_salt.as_str())
-            .and_then(|fst| hex::decode(form.password.as_str()).map(move |snd| (fst, snd)))
-            .and_then(|(fst, snd)| {
-                hex::decode(form.new_password.as_str()).map(move |trd| (fst, snd, trd))
-            })
-            .and_then(|(fst, snd, trd)| {
-                hex::decode(author.passwd.as_str()).map(move |frth| (fst, snd, trd, frth))
-            });
+        let decode_results: Result<_, hex::FromHexError> = (|| {
+            let fst = hex::decode(encoded_salt.as_str())?;
+            let snd = hex::decode(form.new_password.as_str())?;
+            Ok((fst, snd))
+        })();
 
-        let (
-            decoded_salt,
-            decoded_current_password,
-            decoded_desired_password,
-            decoded_expected_hash,
-        ) = match decode_results {
+        let (decoded_salt, decoded_desired_password) = match decode_results {
             Ok(results) => results,
             Err(_) => {
                 let message = String::from("password/salt decoding issue.");
@@ -100,25 +89,49 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
             }
         };
 
-        //? Verify client password against the expected hash (through PBKDF2).
-        let password_match = {
-            let iteration_count = unsafe { NonZeroU32::new_unchecked(100_000) };
-            let outcome = pbkdf2::verify(
-                pbkdf2::PBKDF2_HMAC_SHA512,
-                iteration_count,
-                decoded_salt.as_slice(),
-                decoded_current_password.as_slice(),
-                decoded_expected_hash.as_slice(),
-            );
-            outcome.is_ok()
-        };
+        //? If the user has a password, check that the actual current password matches the one the user submitted.
+        //? (a user may not have a password if they registered using an external mean of authentication, like GitHub or GitLab)
+        //? (if the user does not have a password, "changing" a password just sets the password to the provided value)
+        if let Some(encoded_expected_hash) = author.passwd.as_deref() {
+            //? Decode hex-encoded hashes.
+            let decode_results: Result<_, hex::FromHexError> = (|| {
+                let fst = hex::decode(form.password.as_str())?;
+                let snd = hex::decode(encoded_expected_hash)?;
+                Ok((fst, snd))
+            })();
 
-        if !password_match {
-            let message = String::from("invalid current password.");
-            let flash_message = ManageFlashMessage::PasswordChangeError { message };
-            req.session_mut()
-                .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
-            return Ok(utils::response::redirect("/account/manage"));
+            let (decoded_current_password, decoded_expected_hash) =
+                match decode_results {
+                    Ok(results) => results,
+                    Err(_) => {
+                        let message = String::from("password/salt decoding issue.");
+                        let flash_message = ManageFlashMessage::PasswordChangeError { message };
+                        req.session_mut()
+                            .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+                        return Ok(utils::response::redirect("/account/manage"));
+                    }
+                };
+
+            //? Verify client password against the expected hash (through PBKDF2).
+            let password_match = {
+                let iteration_count = unsafe { NonZeroU32::new_unchecked(100_000) };
+                let outcome = pbkdf2::verify(
+                    pbkdf2::PBKDF2_HMAC_SHA512,
+                    iteration_count,
+                    decoded_salt.as_slice(),
+                    decoded_current_password.as_slice(),
+                    decoded_expected_hash.as_slice(),
+                );
+                outcome.is_ok()
+            };
+
+            if !password_match {
+                let message = String::from("invalid current password.");
+                let flash_message = ManageFlashMessage::PasswordChangeError { message };
+                req.session_mut()
+                    .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+                return Ok(utils::response::redirect("/account/manage"));
+            }
         }
 
         //? Derive the hashed password data with PBKDF2 (100'000 rounds).

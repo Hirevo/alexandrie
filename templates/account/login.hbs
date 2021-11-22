@@ -53,22 +53,32 @@
             border-bottom: 2px solid var(--fg-color);
         }
 
-        .login-container {
+        .page-container {
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px;
             font-size: 17px;
+            width: 100%;
+            max-width: 450px;
         }
 
         .login-content {
             width: 100%;
-            max-width: 430px;
             display: flex;
             align-items: center;
             justify-content: flex-start;
             flex-direction: column;
-            padding: 10px;
+            gap: 10px;
         }
 
         @media (max-width: 1400px) {
@@ -85,11 +95,6 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            padding: 5px 0;
-        }
-
-        .login-field:first-child {
-            padding-top: 0;
         }
 
         .login-checkbox-field {
@@ -102,7 +107,7 @@
         }
 
         .login-checkbox-label {
-            padding: 5px 0;
+            font-weight: bold;
         }
 
         .login-input {
@@ -113,12 +118,13 @@
             padding: 7px 10px;
             color: var(--fg-color);
             background: transparent;
+            font: inherit;
             font-size: 16px;
             font-weight: 600;
-            font-family: "Fira Sans", sans-serif;
             border-radius: 5px;
             border: solid 2px var(--darker-bg-color);
             transition: border-color 0.15s;
+            margin: 0;
         }
 
         .login-input:focus {
@@ -134,15 +140,6 @@
             position: relative;
             vertical-align: middle;
             bottom: 1px;
-        }
-
-        .login-buttons {
-            display: grid;
-            grid-template-rows: 1fr 1fr;
-            grid-template-columns: 1fr;
-            grid-gap: 10px;
-            width: 100%;
-            padding-top: 5px;
         }
 
         .login-button {
@@ -163,6 +160,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0;
+            width: 100%;
         }
 
         .login-button:hover,
@@ -177,6 +176,10 @@
             cursor: default;
         }
 
+        .login-link {
+            width: 100%;
+        }
+
         .login-error-msg {
             padding: 10px;
             background-color: var(--danger-bg-color);
@@ -184,6 +187,26 @@
             border-radius: 5px;
             margin: 5px 0;
             font-weight: bold;
+        }
+
+        .form-separator-container {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-rows: 1fr;
+            grid-template-columns: 1fr min-content 1fr;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-separator {
+            height: 2px;
+            width: 100%;
+            background-color: var(--fg-color);
+        }
+
+        .form-separator-text {
+            font-weight: 800;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -218,32 +241,55 @@
             <div class="separator"></div>
         </div>
     </div>
-    <div class="login-container">
-        <form class="login-content" method="POST" action="/account/login">
-            <div class="login-field">
-                <label class="login-label" for="email">Email:</label>
-                <input class="login-input" type="email" name="email" id="email" placeholder="Enter email..." autocomplete="email" required>
-            </div>
-            <div class="login-field">
-                <label class="login-label" for="password">Password:</label>
-                <input class="login-input" type="password" name="password" id="password" placeholder="Enter password..." autocomplete="current-password" required>
-            </div>
-            <div class="login-field login-checkbox-field">
-                <label class="login-label login-checkbox-label">
-                    <input class="login-checkbox" type="checkbox" name="remember">
-                    Remember me for 30 days
-                </label>
-            </div>
-            {{#if (equal flash.kind "error")}}
-            <div class="login-field login-error-msg">
-                Error: {{ flash.message }}
+    <div class="page-container">
+        <div class="login-container">
+            {{#if (equal local_enabled true)}}
+            <form class="login-content" method="POST" action="/account/login">
+                <div class="login-field">
+                    <label class="login-label" for="email">Email:</label>
+                    <input class="login-input" type="email" name="email" id="email" placeholder="Enter email..." autocomplete="email" required>
+                </div>
+                <div class="login-field">
+                    <label class="login-label" for="password">Password:</label>
+                    <input class="login-input" type="password" name="password" id="password" placeholder="Enter password..." autocomplete="current-password" required>
+                </div>
+                <div class="login-field login-checkbox-field">
+                    <label class="login-checkbox-label">
+                        <input class="login-checkbox" type="checkbox" name="remember">
+                        Remember me for 30 days
+                    </label>
+                </div>
+                {{#if (equal flash.kind "error")}}
+                <div class="login-field login-error-msg">
+                    Error: {{ flash.message }}
+                </div>
+                {{/if}}
+                <input type="submit" value="Log in" class="login-button">
+                {{#if (equal local_allowed_registration "true")}}
+                <a class="login-link" href="/account/register">
+                    <div class="login-button">Need to create an account ?</div>
+                </a>
+                {{/if}}
+            </form>
+            {{/if}}
+            {{#if (equal has_separator true)}}
+            <div class="form-separator-container">
+                <div class="form-separator"></div>
+                <div class="form-separator-text">OR</div>
+                <div class="form-separator"></div>
             </div>
             {{/if}}
-            <div class="login-buttons">
-                <input type="submit" value="Log in" class="login-button">
-                <a href="/account/register" class="login-button">Need to create an account ?</a>
-            </div>
-        </form>
+            {{#if (equal github_enabled true)}}
+            <a class="login-link" href="/account/github">
+                <div class="login-button">Log in with GitHub</div>
+            </a>
+            {{/if}}
+            {{#if (equal gitlab_enabled true)}}
+            <a class="login-link" href="/account/gitlab">
+                <div class="login-button">Log in with GitLab</div>
+            </a>
+            {{/if}}
+        </div>
     </div>
     <script type="module">
         import init, * as Rust from "/assets/wasm/wasm_pbkdf2.js";

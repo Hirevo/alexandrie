@@ -21,6 +21,35 @@ path = "assets"
 [frontend.templates]
 path = "templates"
 
+[frontend.auth.local]
+enabled = true
+allow_registration = true
+
+[frontend.auth.github]
+enabled = false
+client_id = "GITHUB_OAUTH_CLIENT_ID"
+client_secret = "GITHUB_OAUTH_CLIENT_SECRET"
+# Omit `allowed_organizations` to not require any organization membership.
+allowed_organizations = [
+    # Using this organization does not requires any specific team membership.
+    { name = "ORG_NAME_1" },
+    # But using this one does requires membership in one of specified teams.
+    { name = "ORG_NAME_2", allowed_teams = ["TEAM_NAME"] },
+]
+allow_registration = true
+
+[frontend.auth.gitlab]
+enabled = false
+origin = "https://gitlab.com"
+client_id = "GITLAB_OAUTH_CLIENT_ID"
+client_secret = "GITLAB_OAUTH_CLIENT_SECRET"
+# Omit `allowed_groups` to not require any organization membership.
+allowed_groups = [
+    "GROUP_1",
+    "GROUP_2",
+]
+allow_registration = true
+
 [database]
 # url = "mysql://root:root@127.0.0.1:3306/alexandrie"
 # url = "postgresql://root:root@127.0.0.1:5432/alexandrie"

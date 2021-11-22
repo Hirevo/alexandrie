@@ -71,7 +71,7 @@
             padding: 10px;
             display: grid;
             grid-template-rows: 1fr;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr 2px 1fr 2px 1fr;
             align-items: center;
             justify-content: center;
         }
@@ -108,16 +108,9 @@
             padding: 10px 20px;
         }
 
-        .manage-passwd {
-            border-right: 1px solid var(--fg-color);
-        }
-
-        .manage-tokens {
-            border-left: 1px solid var(--fg-color);
-        }
-
         .manage-passwd-title,
-        .manage-tokens-title {
+        .manage-tokens-title,
+        .manage-accounts-title {
             width: 100%;
             text-align: center;
             font-size: 21px;
@@ -230,60 +223,12 @@
 
         .manage-tokens-entries {
             width: 100%;
-            counter-reset: rank;
             display: flex;
             flex-direction: column;
-            padding: 10px 0;
-        }
-
-        .manage-tokens-entry {
-            font-weight: bold;
-            display: grid;
-            grid-template-columns: min-content min-content;
-            grid-template-rows: min-content;
-            margin-top: 5px;
-        }
-
-        .manage-tokens-entry:first-child {
-            margin-top: 0;
-        }
-
-        .manage-tokens-entry-name {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: flex-start;
-            white-space: nowrap;
-            padding: 5px 10px;
-            border-radius: 5px 0 0 5px;
-            border: 2px solid var(--darker-bg-color);
-            border-right: none;
-            background-color: var(--dark-bg-color);
-        }
-
-        .manage-tokens-entry-revoke {
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-            padding: 3px 10px;
-            transition: background-color 0.15s, border-color 0.15s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0 5px 5px 0;
-            border: 2px solid var(--darker-bg-color);
-        }
-
-        .manage-tokens-entry-revoke:hover,
-        .manage-tokens-entry-revoke:focus {
-            border: 2px solid var(--fg-color);
-            background-color: var(--dark-bg-color);
-        }
-
-        .manage-tokens-entry-revoke::before {
-            font-family: alexicons;
-            /* content: "\e901"; */
+            gap: 5px;
+            padding: 10px 0;
         }
 
         .manage-tokens-empty {
@@ -321,9 +266,105 @@
             font-weight: bold;
         }
 
+        .separator-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .separator {
+            background-color: var(--fg-color);
+            width: 90vw;
+            height: 100%;
+        }
+
+        .manage-accounts {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            padding: 10px 20px;
+        }
+
+        .manage-accounts-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .manage-accounts-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .manage-accounts-section-title {
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .grouped {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .grouped > * {
+            padding: 5px 10px;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grouped > *:first-child {
+            border-radius: 5px 0 0 5px;
+        }
+
+        .grouped > *:last-child {
+            border-radius: 0 5px 5px 0;
+        }
+
+        .grouped > *:not(:last-child) {
+            margin-right: -2px;
+        }
+
+        .grouped-label {
+            color: var(--fg-color);
+            border-color: var(--darker-bg-color);
+            background-color: var(--dark-bg-color);
+        }
+
+        .grouped-button {
+            cursor: pointer;
+            transition: background-color 0.15s, border-color 0.15s;
+            border-color: var(--darker-bg-color);
+        }
+
+        .grouped-button:hover,
+        .grouped-button:focus {
+            z-index: 2;
+            border-color: var(--fg-color);
+            background-color: var(--dark-bg-color);
+        }
+
         @media (max-width: 1000px) {
             .manage-grid {
-                grid-template-rows: repeat(2, min-content);
+                grid-template-rows: min-content 2px min-content 2px min-content;
                 grid-template-columns: 1fr;
             }
 
@@ -359,7 +400,6 @@
             .manage-tokens-entry-revoke {
                 border-color: var(--darker-fg-color);
             }
-
 
             .manage-passwd-button:disabled,
             .manage-tokens-button:disabled,
@@ -422,14 +462,39 @@
                     </div>
                     <input class="manage-passwd-button" type="submit" value="Change password">
                 </form>
+                <div class="separator-container">
+                    <div class="separator"></div>
+                </div>
+                <div class="manage-accounts">
+                    <div class="manage-accounts-title">External Accounts</div>
+                    <div class="manage-accounts-content">
+                        <div class="manage-accounts-section">
+                            <div class="manage-accounts-section-title">Currently attached services:</div>
+                            <div class="grouped">
+                                <div class="grouped-label">GitHub</div>
+                                <a class="grouped-button" href="/account/github/detach">Detach</a>
+                            </div>
+                        </div>
+                        <div class="manage-accounts-section">
+                            <div class="manage-accounts-section-title">Services available to attach:</div>
+                            <div class="grouped">
+                                <div class="grouped-label">GitLab</div>
+                                <a class="grouped-button" href="/account/github/attach">Attach</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="separator-container">
+                    <div class="separator"></div>
+                </div>
                 <div class="manage-tokens">
                     <div class="manage-tokens-title">Tokens</div>
                     <div class="manage-tokens-entries">
                         {{#if tokens}}
                         {{#each tokens}}
-                        <div class="manage-tokens-entry">
-                            <div class="manage-tokens-entry-name">{{ this.name }}</div>
-                            <a class="manage-tokens-entry-revoke" href="/account/manage/tokens/{{ this.id }}/revoke">Revoke</a>
+                        <div class="grouped">
+                            <div class="grouped-label">{{ this.name }}</div>
+                            <a class="grouped-button" href="/account/manage/tokens/{{ this.id }}/revoke">Revoke</a>
                         </div>
                         {{/each}}
                         {{else}}

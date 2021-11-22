@@ -43,9 +43,22 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 
     let state = req.state();
     let engine = &state.frontend.handlebars;
+    let auth = &state.frontend.config.auth;
+
+    let local_enabled = auth.local.enabled;
+    let github_enabled = auth.github.enabled;
+    let gitlab_enabled = auth.gitlab.enabled;
+    let local_registration_enabled = auth.local.allow_registration;
+    let has_separator = local_enabled && (github_enabled || gitlab_enabled);
+
     let context = json!({
         "instance": &state.frontend.config,
         "flash": flash_message,
+        "local_enabled": local_enabled,
+        "github_enabled": github_enabled,
+        "gitlab_enabled": gitlab_enabled,
+        "local_registration_enabled": local_registration_enabled,
+        "has_separator": has_separator,
     });
     Ok(utils::response::html(
         engine.render("account/login", &context)?,
@@ -55,6 +68,15 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     if req.is_authenticated() {
         return Ok(utils::response::redirect("/"));
+    }
+
+    if !req.state().frontend.config.auth.local.enabled {
+        return utils::response::error_html(
+            req.state(),
+            None,
+            StatusCode::BadRequest,
+            "local authentication is not allowed on this instance",
+        );
     }
 
     //? Deserialize form data.
@@ -79,13 +101,13 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
             .inner_join(authors::table)
             .select((authors::id, salts::salt, authors::passwd))
             .filter(authors::email.eq(form.email.as_str()))
-            .first::<(i64, String, String)>(conn)
+            .first::<(i64, String, Option<String>)>(conn)
             .optional()?;
 
         //? Does the user exist?
         let (author_id, encoded_salt, encoded_expected_hash) = match results {
-            Some(results) => results,
-            None => {
+            Some((id, salt, Some(passwd))) => (id, salt, passwd),
+            _ => {
                 let message = String::from("invalid email/password combination.");
                 let flash_message = LoginFlashMessage::Error { message };
                 req.session_mut().insert(LOGIN_FLASH, &flash_message)?;

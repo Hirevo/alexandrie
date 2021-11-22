@@ -56,13 +56,13 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
             .inner_join(authors::table)
             .select((authors::id, salts::salt, authors::passwd))
             .filter(authors::email.eq(body.email.as_str()))
-            .first::<(i64, String, String)>(conn)
+            .first::<(i64, String, Option<String>)>(conn)
             .optional()?;
 
         //? Does the user exist?
         let (author_id, encoded_salt, encoded_expected_hash) = match results {
-            Some(results) => results,
-            None => {
+            Some((author_id, salt, Some(passwd))) => (author_id, salt, passwd),
+            _ => {
                 return Ok(utils::response::error(
                     StatusCode::Forbidden,
                     "invalid email/password combination.",

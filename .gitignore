@@ -1,11 +1,33 @@
-/.vscode
-/target
+# macOS hidden metadata file
+.DS_Store
+
+# dotenv folder
+/.env
+
+# Backup files from some editors
 **/*.rs.bk
+
+# Rust compilation folder
+/target
+
+# hidden folders from code editors
+/.vscode
+/.nova
+/.idea
+
+# daemon folder for `persist`
+/.persist
+
+# file for saving processes from `persist`
+/persist-dump.json
+
+# alexandrie local testing folders
+/app-data
 /crate-index
 /crate-storage
-.DS_Store
-.idea
-alexandrie.db
-crate-index.txt
-.env
+
+# SQLite database testing file
+/alexandrie.db
+
+# Password for Alexandrie's Docker setup
 docker/*/rootpass.txt
