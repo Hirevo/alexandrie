@@ -23,6 +23,13 @@ path = "assets"
 [frontend.templates]
 path = "templates"
 
+[frontend.auth]
+origin = "http://localhost:3000"
+
+[frontend.auth.local]
+enabled = true
+allow_registration = true
+
 [database]
 url = "appdata/sqlite/alexandrie.db"
 
