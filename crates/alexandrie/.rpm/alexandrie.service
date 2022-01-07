@@ -1,0 +1,13 @@
+[Unit]
+Description=An alternative crate registry, implemented in Rust.
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/alexandrie --config /etc/alexandrie.conf
+KillMode=process
+Restart=on-failure
+User=alexandrie
+
+[Install]
+WantedBy=multi-user.target
