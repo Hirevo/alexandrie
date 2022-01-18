@@ -13,7 +13,7 @@ use crate::utils::auth::AuthExt;
 use crate::utils::response::common;
 use crate::State;
 
-const LOGIN_FLASH: &'static str = "login.flash";
+const LOGIN_FLASH: &str = "login.flash";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]

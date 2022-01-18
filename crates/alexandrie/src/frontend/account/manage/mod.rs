@@ -17,7 +17,7 @@ use crate::utils::auth::AuthExt;
 use crate::utils::response::common;
 use crate::State;
 
-const ACCOUNT_MANAGE_FLASH: &'static str = "account_manage.flash";
+const ACCOUNT_MANAGE_FLASH: &str = "account_manage.flash";
 
 /// The flash message type used to communicate between the `/account/manage/...` pages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

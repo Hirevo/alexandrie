@@ -64,6 +64,8 @@ where
             url.to_string()
         };
 
+        // this borrow is needless for sqlite, but required for mysql and postgres
+        #[allow(clippy::needless_borrow)]
         Self::from_pool_builder(&database_url, builder)
     }
 
