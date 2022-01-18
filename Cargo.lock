@@ -87,7 +87,6 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "flate2",
- "futures",
  "handlebars",
  "hex",
  "log",
@@ -132,10 +131,8 @@ version = "0.1.0"
 dependencies = [
  "ammonia",
  "pulldown-cmark",
- "semver 0.11.0",
  "serde",
  "syntect",
- "thiserror",
 ]
 
 [[package]]
