@@ -1,4 +1,4 @@
-FROM rust:1.50
+FROM rust:1.46
 
 # install a few system dependencies
 RUN apt update
