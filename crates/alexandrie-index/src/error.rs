@@ -1,4 +1,3 @@
-use semver::Version;
 use thiserror::Error;
 
 /// The Error type for the registry.
@@ -29,15 +28,5 @@ pub enum IndexError {
     CrateNotFound {
         /// The requested crate's name.
         name: String,
-    },
-    /// The published crate version is lower than the current hosted version.
-    #[error("the published version is too low (hosted version is {hosted}, and thus {published} <= {hosted})")]
-    VersionTooLow {
-        /// The krate's name.
-        krate: String,
-        /// The available hosted version.
-        hosted: Version,
-        /// The proposed version to be published.
-        published: Version,
     },
 }
