@@ -26,6 +26,6 @@ thiserror = "1.0.24"
 # README rendering
 syntect = "4.5.0"
 cmark = { package = "pulldown-cmark", version = "0.8.0" }
-ammonia = "3.1.1"
+ammonia = "3.1.3"
 
 [features]
