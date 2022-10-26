@@ -26,10 +26,7 @@ pub enum Error {
 pub enum IndexError {
     /// No file matching crate
     #[error("file matching crate named '{name}', {path}, not found")]
-    CrateFileNotFound{
-        name: String,
-        path: String,
-    },
+    CrateFileNotFound { name: String, path: String },
     /// The requested crate cannot be found.
     #[error("no crate named '{name}' with version {version} found")]
     CrateNotFound {

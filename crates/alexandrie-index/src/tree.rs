@@ -102,8 +102,8 @@ impl Tree {
     }
 
     pub fn alter_record<F>(&self, name: &str, version: Version, func: F) -> Result<(), Error>
-        where
-            F: FnOnce(&mut CrateVersion),
+    where
+        F: FnOnce(&mut CrateVersion),
     {
         let path = self.compute_record_path(name);
         let file = fs::File::open(path.as_path()).map_err(|err| match err.kind() {

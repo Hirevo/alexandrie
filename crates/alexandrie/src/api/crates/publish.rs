@@ -284,7 +284,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
                     .filter(crate_authors::crate_id.eq(&krate.id))
                     .filter(crate_authors::author_id.eq(&author.id)),
             ))
-                .get_result(conn)?;
+            .get_result(conn)?;
             if !owned {
                 return Err(Error::from(AlexError::CrateNotOwned {
                     author,
@@ -413,8 +413,8 @@ mod tests {
         requirement: &VersionReq,
         versions: I,
     ) -> Option<&'a Version>
-        where
-            I: IntoIterator<Item=&'a Version>,
+    where
+        I: IntoIterator<Item = &'a Version>,
     {
         versions
             .into_iter()
@@ -428,7 +428,6 @@ mod tests {
             .map(|version_string| Version::parse(version_string).unwrap())
             .collect()
     }
-
 
     #[test]
     fn major_zero_with_match() {
