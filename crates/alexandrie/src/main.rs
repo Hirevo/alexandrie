@@ -189,6 +189,8 @@ fn api_routes(state: State) -> Server<State> {
     app.at("/crates/:name/:version/download")
         .get(api::crates::download::get);
 
+    log::debug!("Test debug");
+
     app
 }
 

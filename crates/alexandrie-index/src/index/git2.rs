@@ -113,6 +113,18 @@ impl Indexer for Git2Index {
         }
     }
 
+    fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
+        self.tree.all_records(name)
+    }
+
+    fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
+        self.tree.latest_record(name)
+    }
+
+    fn match_record(&self, name: &str, req: VersionReq) -> Result<Option<CrateVersion>, Error> {
+        self.tree.match_record(name, req)
+    }
+
     fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
         let repo = self.repo.lock().unwrap();
         let oid = {
@@ -133,18 +145,6 @@ impl Indexer for Git2Index {
         remote.push::<&'static str>(&[], None)?;
 
         Ok(())
-    }
-
-    fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
-        self.tree.match_record(name, req)
-    }
-
-    fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error> {
-        self.tree.all_records(name)
-    }
-
-    fn latest_record(&self, name: &str) -> Result<CrateVersion, Error> {
-        self.tree.latest_record(name)
     }
 
     fn add_record(&self, record: CrateVersion) -> Result<(), Error> {

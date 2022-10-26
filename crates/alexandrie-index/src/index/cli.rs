@@ -39,7 +39,7 @@ impl Indexer for CommandLineIndex {
         self.repo.commit_and_push(msg)
     }
 
-    fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
+    fn match_record(&self, name: &str, req: VersionReq) -> Result<Option<CrateVersion>, Error> {
         self.tree.match_record(name, req)
     }
 

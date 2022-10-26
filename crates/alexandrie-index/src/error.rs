@@ -24,11 +24,18 @@ pub enum Error {
 /// The Error type for Alexandrie's own errors.
 #[derive(Error, Debug)]
 pub enum IndexError {
+    /// No file matching crate
+    #[error("file matching crate named '{name}', {path}, not found")]
+    CrateFileNotFound{
+        name: String,
+        path: String,
+    },
     /// The requested crate cannot be found.
-    #[error("no crate named '{name}' found")]
+    #[error("no crate named '{name}' with version {version} found")]
     CrateNotFound {
         /// The requested crate's name.
         name: String,
+        version: String,
     },
     /// The published crate version is lower than the current hosted version.
     #[error("the published version is too low (hosted version is {hosted}, and thus {published} <= {hosted})")]
