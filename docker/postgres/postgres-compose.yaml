@@ -15,7 +15,7 @@ services:
       - postgresqldb
   # add database container
   postgresqldb:
-    image: postgres
+    image: postgres:13.8
     restart: always
     # MYSQL_DATABASE creates the database on the first run of the container
     environment:
