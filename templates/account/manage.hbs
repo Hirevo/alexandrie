@@ -408,7 +408,7 @@
                 background-color: var(--dark-fg-color);
                 color: var(--bg-color);
             }
-            
+
             .grouped-label, .grouped-button {
                 border-color: var(--darker-fg-color);
             }
@@ -474,17 +474,33 @@
                     <div class="manage-accounts-content">
                         <div class="manage-accounts-section">
                             <div class="manage-accounts-section-title">Currently attached services:</div>
+                            {{#if author.github_id}}
                             <div class="grouped">
                                 <div class="grouped-label">GitHub</div>
                                 <a class="grouped-button" href="/account/github/detach">Detach</a>
                             </div>
+                            {{/if}}
+                            {{#if author.gitlab_id}}
+                            <div class="grouped">
+                                <div class="grouped-label">GitLab</div>
+                                <a class="grouped-button" href="/account/gitlab/detach">Detach</a>
+                            </div>
+                            {{/if}}
                         </div>
                         <div class="manage-accounts-section">
                             <div class="manage-accounts-section-title">Services available to attach:</div>
+                            {{#unless author.github_id}}
                             <div class="grouped">
-                                <div class="grouped-label">GitLab</div>
+                                <div class="grouped-label">GitHub</div>
                                 <a class="grouped-button" href="/account/github/attach">Attach</a>
                             </div>
+                            {{/unless}}
+                            {{#unless author.gitlab_id}}
+                            <div class="grouped">
+                                <div class="grouped-label">GitLab</div>
+                                <a class="grouped-button" href="/account/gitlab/attach">Attach</a>
+                            </div>
+                            {{/unless}}
                         </div>
                     </div>
                 </div>
