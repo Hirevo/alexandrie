@@ -114,6 +114,30 @@ fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<
     app.at("/account/register")
         .get(frontend::account::register::get)
         .post(frontend::account::register::post);
+    log::info!("mounting '/account/github'");
+    app.at("/account/github")
+        .get(frontend::account::github::get);
+    log::info!("mounting '/account/github/attach'");
+    app.at("/account/github/attach")
+        .get(frontend::account::github::attach::get);
+    log::info!("mounting '/account/github/detach'");
+    app.at("/account/github/detach")
+        .get(frontend::account::github::detach::get);
+    log::info!("mounting '/account/github/callback'");
+    app.at("/account/github/callback")
+        .get(frontend::account::github::callback::get);
+    log::info!("mounting '/account/gitlab'");
+    app.at("/account/gitlab")
+        .get(frontend::account::gitlab::get);
+    log::info!("mounting '/account/gitlab/attach'");
+    app.at("/account/gitlab/attach")
+        .get(frontend::account::gitlab::attach::get);
+    log::info!("mounting '/account/gitlab/detach'");
+    app.at("/account/gitlab/detach")
+        .get(frontend::account::gitlab::detach::get);
+    log::info!("mounting '/account/gitlab/callback'");
+    app.at("/account/gitlab/callback")
+        .get(frontend::account::gitlab::callback::get);
     log::info!("mounting '/account/manage'");
     app.at("/account/manage")
         .get(frontend::account::manage::get);

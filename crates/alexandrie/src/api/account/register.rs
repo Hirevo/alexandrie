@@ -107,7 +107,9 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
         let new_author = NewAuthor {
             email: body.email.as_str(),
             name: body.name.as_str(),
-            passwd: encoded_derived_hash.as_str(),
+            passwd: Some(encoded_derived_hash.as_str()),
+            github_id: None,
+            gitlab_id: None,
         };
         diesel::insert_into(authors::table)
             .values(new_author)

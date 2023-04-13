@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 /// Database configuration (`[database]` section).
 pub mod database;
-
 /// Frontend configuration (`[frontend]` section).
 #[cfg(feature = "frontend")]
 pub mod frontend;

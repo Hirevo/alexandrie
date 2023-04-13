@@ -22,6 +22,9 @@ pub enum Error {
     /// An IO error (file not found, access forbidden, etc...).
     #[error("IO error: {0}")]
     IOError(#[from] IOError),
+    /// An error while parsing a URL.
+    #[error("URL parse error: {0}")]
+    UrlParseError(#[from] url::ParseError),
     /// JSON (de)serialization error (invalid JSON parsed, etc...).
     #[error("JSON error: {0}")]
     JSONError(#[from] JSONError),

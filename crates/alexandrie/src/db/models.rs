@@ -80,7 +80,11 @@ pub struct Author {
     /// The author's displayable name.
     pub name: String,
     /// The author's SHA512-hashed password.
-    pub passwd: String,
+    pub passwd: Option<String>,
+    /// The author's GitHub user ID.
+    pub github_id: Option<String>,
+    /// The author's GitLab user ID.
+    pub gitlab_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
@@ -93,7 +97,11 @@ pub struct NewAuthor<'a> {
     /// The author's displayable name.
     pub name: &'a str,
     /// The author's SHA512-hashed password.
-    pub passwd: &'a str,
+    pub passwd: Option<&'a str>,
+    /// The author's GitHub user ID.
+    pub github_id: Option<&'a str>,
+    /// The author's GitLab user ID.
+    pub gitlab_id: Option<&'a str>,
 }
 
 #[derive(

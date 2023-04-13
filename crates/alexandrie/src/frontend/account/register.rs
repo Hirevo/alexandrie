@@ -49,9 +49,24 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 
     let state = req.state();
     let engine = &state.frontend.handlebars;
+
+    let auth = &state.frontend.config.auth;
+
+    let local_enabled = auth.local.enabled && auth.local.allow_registration;
+    let github_enabled = auth.github.enabled && auth.github.allow_registration;
+    let gitlab_enabled = auth.gitlab.enabled && auth.gitlab.allow_registration;
+    let has_separator = local_enabled && (github_enabled || gitlab_enabled);
+
+    let none_enabled = !local_enabled && !github_enabled && !gitlab_enabled;
+
     let context = json!({
         "instance": &state.frontend.config,
         "flash": flash_message,
+        "local_enabled": local_enabled,
+        "github_enabled": github_enabled,
+        "gitlab_enabled": gitlab_enabled,
+        "has_separator": has_separator,
+        "none_enabled": none_enabled,
     });
     Ok(utils::response::html(
         engine.render("account/register", &context)?,
@@ -61,6 +76,26 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     if req.is_authenticated() {
         return Ok(utils::response::redirect("/account/register"));
+    }
+
+    let local = &req.state().frontend.config.auth.local;
+
+    if !local.enabled {
+        return utils::response::error_html(
+            req.state(),
+            None,
+            StatusCode::BadRequest,
+            "local authentication is not allowed on this instance",
+        );
+    }
+
+    if !local.allow_registration {
+        return utils::response::error_html(
+            req.state(),
+            None,
+            StatusCode::BadRequest,
+            "local registration is not allowed on this instance",
+        );
     }
 
     //? Deserialize form data.
@@ -76,30 +111,30 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         }
     };
 
+    //? Are all fields filled-in ?
+    if form.email.is_empty()
+        || form.name.is_empty()
+        || form.password.is_empty()
+        || form.confirm_password.is_empty()
+    {
+        let message = String::from("some fields were left empty.");
+        let flash_message = RegisterFlashMessage::Error { message };
+        req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
+        return Ok(utils::response::redirect("/account/register"));
+    }
+
+    //? Does the two passwords match (consistency check) ?
+    if form.password != form.confirm_password {
+        let message = String::from("the two passwords did not match.");
+        let flash_message = RegisterFlashMessage::Error { message };
+        req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
+        return Ok(utils::response::redirect("/account/register"));
+    }
+
     let state = req.state().clone();
     let db = &state.db;
 
     let transaction = db.transaction(move |conn| {
-        //? Are all fields filled-in ?
-        if form.email.is_empty()
-            || form.name.is_empty()
-            || form.password.is_empty()
-            || form.confirm_password.is_empty()
-        {
-            let message = String::from("some fields were left empty.");
-            let flash_message = RegisterFlashMessage::Error { message };
-            req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
-            return Ok(utils::response::redirect("/account/register"));
-        }
-
-        //? Does the two passwords match (consistency check) ?
-        if form.password != form.confirm_password {
-            let message = String::from("the two passwords did not match.");
-            let flash_message = RegisterFlashMessage::Error { message };
-            req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
-            return Ok(utils::response::redirect("/account/register"));
-        }
-
         //? Does the user already exist ?
         let already_exists = sql::select(sql::exists(
             authors::table.filter(authors::email.eq(form.email.as_str())),
@@ -149,7 +184,9 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         let new_author = NewAuthor {
             email: form.email.as_str(),
             name: form.name.as_str(),
-            passwd: encoded_derived_hash.as_str(),
+            passwd: Some(encoded_derived_hash.as_str()),
+            github_id: None,
+            gitlab_id: None,
         };
         diesel::insert_into(authors::table)
             .values(new_author)
