@@ -10,3 +10,5 @@ pub mod logout;
 pub mod manage;
 /// Account registration pages (eg. "/account/register").
 pub mod register;
+/// Various auth-related utility functions.
+pub mod utils;
