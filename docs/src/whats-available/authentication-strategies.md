@@ -29,7 +29,19 @@ GitHub
 ------
 
 This strategy uses OAuth 2 to authenticate the user using its GitHub account.  
-Filters on who gets authorized can be added based on organization or team membership.  
+Filters on who gets authorized can be added based on organization or team membership.
+
+You'll need to create a GitHub OAuth App in order to get the required OAuth client credentials (the replacements for `GITHUB_OAUTH_CLIENT_ID` and `GITHUB_OAUTH_CLIENT_SECRET` in the example below) necessary for Alexandrie to authenticate users.
+
+You can create a new GitHub OAuth App by [**clicking here (for github.com)**](https://github.com/settings/applications/new).  
+You can also simply find it in your account settings, under `Developer Settings` > `OAuth Apps` and clicking on the `New OAuth App` button.
+
+The homepage URL to use is simply the URL to your Alexandrie instance's homepage.  
+The authorization callback URL to use is the homepage URL with `/account/github/callback` added.
+
+For example, in the case of the Alexandrie instance hosted at **<https://crates.polomack.eu>**:
+- the homepage URL is `https://crates.polomack.eu`.
+- the authorization callback URL is `https://crates.polomack.eu/account/github/callback`.
 
 Configuration:
 
@@ -60,6 +72,18 @@ GitLab
 This uses OAuth 2 to authenticate the user using its GitLab account.  
 The remote instance can either be the [public one](https://gitlab.com) or a private instance.  
 Filters on who gets authorized can be added based on group membership.  
+
+You'll need to create a GitLab Application in order to get the required OAuth client credentials (the replacements for `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` in the example below) necessary for Alexandrie to authenticate users.
+
+You can create a new GitLab Application by [**clicking here (for gitlab.com)**](https://gitlab.com/-/profile/applications).  
+You can also simply find this page within your account settings, under section `Applications`.  
+
+The authorization callback URL to use is the homepage URL with `/account/gitlab/callback` added.
+
+For example, in the case of the Alexandrie instance hosted at **<https://crates.polomack.eu>**:
+- the authorization callback URL is `https://crates.polomack.eu/account/gitlab/callback`.
+
+The only OAuth scope needed to be granted for Alexandrie's usage is `read_api`.
 
 Configuration:
 
