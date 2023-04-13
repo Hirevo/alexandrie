@@ -4,6 +4,8 @@ Getting started
 How to build
 ------------
 
+Before anything, keep in mind that the current minimum supported Rust version for Alexandrie is `1.68` (on stable), make sure to check if your local Rust version is adequate by running `rustc -V`.  
+
 Alexandrie offers multiple options to be used as its database, so before building Alexandrie, you'll need to pick which supported database vendor you wish to use.  
 The currently supported vendors are:
 
