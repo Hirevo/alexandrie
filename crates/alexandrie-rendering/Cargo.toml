@@ -14,14 +14,8 @@ license = "MIT OR Apache-2.0"
 # codecov = { repository = "Hirevo/alexandrie"}
 
 [dependencies]
-# data types
-semver = { version = "0.11.0", features = ["serde"] }
-
 # file formats
 serde = { version = "1.0.125", features = ["derive"] }
-
-# error handling
-thiserror = "1.0.24"
 
 # README rendering
 syntect = "4.5.0"
