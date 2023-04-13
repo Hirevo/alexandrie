@@ -68,24 +68,7 @@ impl Tree {
     pub fn add_record(&self, record: CrateVersion) -> Result<(), Error> {
         let path = self.compute_record_path(record.name.as_str());
 
-        if let Ok(file) = fs::File::open(&path) {
-            let reader = io::BufReader::new(file);
-            let records = reader
-                .lines()
-                .map(|line| Ok(json::from_str::<CrateVersion>(line?.as_str())?))
-                .collect::<Result<Vec<CrateVersion>, Error>>()?;
-            let latest = records
-                .into_iter()
-                .max_by(|k1, k2| k1.vers.cmp(&k2.vers))
-                .expect("at least one record should exist");
-            if record.vers <= latest.vers {
-                return Err(Error::from(IndexError::VersionTooLow {
-                    krate: record.name,
-                    hosted: latest.vers,
-                    published: record.vers,
-                }));
-            }
-        } else {
+        if !path.exists() {
             let parent = path.parent().unwrap();
             fs::create_dir_all(parent)?;
         }

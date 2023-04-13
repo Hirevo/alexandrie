@@ -292,13 +292,14 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
                 }));
             }
 
-            //? Is the attempted publication version higher than the latest version for that release?
-            let requirement = VersionReq::parse(&format!("^{}.0.0", crate_desc.vers.major))?;
-            let latest = state.index.match_record(krate.name.as_str(), requirement)?;
-            if crate_desc.vers <= latest.vers {
+            //? Is there a compatible, higher version available than the attempted publication version?
+            let requirement = VersionReq::parse(&format!("^{}", crate_desc.vers))?;
+            if let Ok(latest_compatible) =
+                state.index.match_record(krate.name.as_str(), requirement)
+            {
                 return Err(Error::from(AlexError::VersionTooLow {
                     krate: krate.name,
-                    hosted: latest.vers,
+                    hosted: latest_compatible.vers,
                     published: crate_desc.vers,
                 }));
             }
