@@ -17,7 +17,15 @@ path = "crate-storage"  # required: path of the directory in which to store the 
 's3': AWS S3 object storage
 ---------------------------
 
-This strategy stores crate archives and READMEs as objects within an AWS S3 bucket.
+This strategy stores crate archives and READMEs as objects within an AWS S3 bucket.  
+
+In order to use this storage strategy, the `s3` feature needs to be enabled when compiling Alexandrie.  
+
+When using Cargo to build, simply add the `s3` in the list of enabled features, like so:
+
+```
+cargo build --release --features 's3'
+```
 
 Here is an example of configuration to use this storage strategy:
 
