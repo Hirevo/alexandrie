@@ -2,8 +2,8 @@
 //!
 //! This is an alternative crate registry for use with Cargo, written in Rust.
 //!
-//! This repository implements the Cargo APIs and interacts with a crate index as specified in the [Cargo's Alternative Registries RFC].  
-//! This allows to have a private registry to host crates that are specific to what your doing and not suitable for publication on [crates.io] while maintaining the same build experience as with crates from [crates.io].  
+//! This repository implements the Cargo APIs and interacts with a crate index as specified in the [Cargo's Alternative Registries RFC].
+//! This allows to have a private registry to host crates that are specific to what your doing and not suitable for publication on [crates.io] while maintaining the same build experience as with crates from [crates.io].
 //!
 //! [crates.io]: https://crates.io
 //! [Cargo's Alternative Registries RFC]: https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification
@@ -31,11 +31,13 @@ use std::io;
 use async_std::fs;
 
 use clap::{App, Arg};
-use tide::http::cookies::SameSite;
 use tide::http::mime;
 use tide::sessions::SessionMiddleware;
 use tide::utils::After;
 use tide::{Body, Response, Server};
+
+#[cfg(feature = "frontend")]
+use tide::http::cookies::SameSite;
 
 /// API endpoints definitions.
 pub mod api;
@@ -54,11 +56,13 @@ pub mod utils;
 #[cfg(feature = "frontend")]
 pub mod frontend;
 
-use crate::config::{Config, FrontendConfig};
+use crate::config::Config;
 use crate::error::Error;
 use crate::utils::build;
 use crate::utils::request_log::RequestLogger;
 
+#[cfg(feature = "frontend")]
+use crate::config::FrontendConfig;
 #[cfg(feature = "frontend")]
 use crate::utils::auth::AuthMiddleware;
 #[cfg(feature = "frontend")]
