@@ -104,3 +104,20 @@ frontend = [
 
 [build-dependencies]
 shadow-rs = "0.5.25"
+
+[package.metadata.rpm]
+package = "alexandrie"
+
+[package.metadata.rpm.cargo]
+buildflags = ["--release"]
+
+[package.metadata.rpm.targets]
+alexandrie = { path = "/usr/bin/alexandrie" }
+
+[package.metadata.rpm.files]
+"alexandrie.service" = { path = "/usr/lib/systemd/system/alexandrie.service" }
+"alexandrie.toml" = { path = "/etc/alexandrie.conf" }
+"crate-index-config.json" = { path = "/var/db/alexandrie/crate-index/config.json" }
+"../../../assets/" = { path = "/usr/share/alexandrie/assets/" }
+"../../../templates/" = { path = "/usr/share/alexandrie/templates/" }
+"../../../syntect/dumps/" = { path = "/usr/share/alexandrie/syntect/dumps/" }

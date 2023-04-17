@@ -1,0 +1,44 @@
+[general]
+bind_address = "127.0.0.1:3000"
+
+[frontend]
+enabled = true
+title = "Alexandrie"
+description = "An alternative crate registry for Cargo, the Rust package manager."
+# favicon = ""
+links = [
+    { name = "Github repository", href = "https://github.com/Hirevo/alexandrie" },
+    { name = "User documentation", href = "https://hirevo.github.io/alexandrie" },
+]
+
+[frontend.sessions]
+cookie_name = "alexandrie.sid"
+secret = "YOU_REALLY_SHOULD_CHANGE_THIS_BEFORE_DEPLOYING"
+
+[frontend.assets]
+path = "/usr/share/alexandrie/assets"
+
+[frontend.templates]
+path = "/usr/share/alexandrie/templates"
+
+[database]
+# url = "mysql://root:root@127.0.0.1:3306/alexandrie"
+# url = "postgresql://root:root@127.0.0.1:5432/alexandrie"
+url = "/var/db/alexandrie/alexandrie.db"
+
+[index]
+type = "command-line"
+path = "/var/db/alexandrie/crate-index"
+
+[storage]
+type = "disk"
+path = "/var/db/alexandrie/crate-storage"
+
+[syntect.syntaxes]
+type = "dump"
+path = "/usr/share/alexandrie/syntect/dumps/syntaxes.dump"
+
+[syntect.themes]
+type = "dump"
+path = "/usr/share/alexandrie/syntect/dumps/themes.dump"
+theme_name = "frontier-contrast"
