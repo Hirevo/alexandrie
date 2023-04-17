@@ -31,5 +31,5 @@ rusoto_core = { version = "0.46.0", optional = true }
 rusoto_s3 = { version = "0.46.0", optional = true }
 
 [features]
-default = ["s3"]
+default = []
 s3 = ["async-std", "rusoto_core", "rusoto_s3"]
