@@ -13,7 +13,7 @@ pub mod s3;
 use crate::disk::DiskStorage;
 use crate::error::Error;
 
-/// The crate storage strategy enum type.  
+/// The crate storage strategy enum type.
 ///
 /// It represents which storage strategy is currently used.
 #[derive(Debug, Clone)]
@@ -34,19 +34,9 @@ pub trait Store {
     fn get_crate(&self, name: &str, version: Version) -> Result<Vec<u8>, Error>;
     /// Reads a crate tarball from the store.
     fn read_crate(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
-        struct Reader {
-            source: Vec<u8>,
-        }
-
-        impl Read for Reader {
-            fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-                self.source.as_slice().read(buf)
-            }
-        }
-
-        Ok(Box::new(Reader {
-            source: self.get_crate(name, version)?,
-        }))
+        let contents = self.get_crate(name, version)?;
+        let reader = io::Cursor::new(contents);
+        Ok(Box::new(reader))
     }
     /// Save a new crate tarball into the store.
     fn store_crate(&self, name: &str, version: Version, data: Vec<u8>) -> Result<(), Error>;
@@ -55,19 +45,9 @@ pub trait Store {
     fn get_readme(&self, name: &str, version: Version) -> Result<String, Error>;
     /// Reads a rendered README from the store.
     fn read_readme(&self, name: &str, version: Version) -> Result<Box<dyn Read>, Error> {
-        struct Reader {
-            source: Vec<u8>,
-        }
-
-        impl Read for Reader {
-            fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-                self.source.as_slice().read(buf)
-            }
-        }
-
-        Ok(Box::new(Reader {
-            source: self.get_readme(name, version)?.into_bytes(),
-        }))
+        let contents = self.get_readme(name, version)?.into_bytes();
+        let reader = io::Cursor::new(contents);
+        Ok(Box::new(reader))
     }
     /// Stores a new rendered README into the store.
     fn store_readme(&self, name: &str, version: Version, data: String) -> Result<(), Error>;
