@@ -1,7 +1,7 @@
 [package]
 name = "alexandrie-index"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
 description = "The index management library for Alexandrie, an alternative crate registry."
 repository = "https://github.com/Hirevo/alexandrie"
@@ -28,3 +28,4 @@ thiserror = "1.0.24"
 git2 = { version = "0.13.18", optional = true }
 
 [features]
+git2 = ["dep:git2"]

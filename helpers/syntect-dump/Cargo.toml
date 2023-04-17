@@ -1,7 +1,7 @@
 [package]
 name = "syntect-dump"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
 description = "A simple helper to generate syntect's binary dumps for Alexandrie"
 repository = "https://github.com/Hirevo/alexandrie"
