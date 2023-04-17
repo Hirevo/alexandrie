@@ -1,9 +1,21 @@
+use diesel_migrations::EmbeddedMigrations;
+
 /// The database connection pool implementation.
 pub mod database;
 /// The database models (struct representations of tables).
 pub mod models;
 /// The database schema definitions (in SQL types).
 pub mod schema;
+
+/// The SQL migrations (for MySQL/MariaDB).
+#[cfg(feature = "mysql")]
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations/mysql");
+/// The SQL migrations (for SQLite).
+#[cfg(feature = "sqlite")]
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations/sqlite");
+/// The SQL migrations (for PostgreSQL).
+#[cfg(feature = "postgres")]
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations/postgres");
 
 /// The format in which datetime records are saved in the database.
 pub static DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";

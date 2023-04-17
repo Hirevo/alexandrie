@@ -276,7 +276,6 @@
     <div class="search-results-container">
         {{> partials/pagination pagination}}
         <div class="search-results">
-            {{#if results}}
             {{#each results}}
             <a class="search-result elevated" href="/crates/{{ this.name }}">
                 <div class="search-result-infos">
@@ -301,10 +300,9 @@
                     <div class="search-result-stats-entry">Last updated on <b>{{ this.updated_at }}</b></div>
                 </div>
             </a>
-            {{/each}}
             {{else}}
             <div class="search-results-empty">No search results...</div>
-            {{/if}}
+            {{/each}}
         </div>
         {{> partials/pagination pagination}}
     </div>

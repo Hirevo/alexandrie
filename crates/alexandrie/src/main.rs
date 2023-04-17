@@ -30,14 +30,16 @@ use std::io;
 
 use async_std::fs;
 
-use clap::{App, Arg};
+use clap::{Arg, Command};
+use diesel_migrations::MigrationHarness;
 use tide::http::mime;
-use tide::sessions::SessionMiddleware;
 use tide::utils::After;
 use tide::{Body, Response, Server};
 
 #[cfg(feature = "frontend")]
 use tide::http::cookies::SameSite;
+#[cfg(feature = "frontend")]
+use tide::sessions::SessionMiddleware;
 
 /// API endpoints definitions.
 pub mod api;
@@ -70,13 +72,6 @@ use crate::utils::sessions::SqlStore;
 
 /// The application state type used for the web server.
 pub type State = Arc<config::State>;
-
-#[cfg(feature = "mysql")]
-embed_migrations!("../../migrations/mysql");
-#[cfg(feature = "sqlite")]
-embed_migrations!("../../migrations/sqlite");
-#[cfg(feature = "postgres")]
-embed_migrations!("../../migrations/postgres");
 
 #[cfg(feature = "frontend")]
 fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<Server<State>> {
@@ -221,23 +216,26 @@ fn api_routes(state: State) -> Server<State> {
 }
 
 async fn run() -> Result<(), Error> {
-    let matches = App::new("alexandrie")
-        .version(build::short().as_str())
-        .long_version(build::long().as_str())
+    let matches = Command::new("alexandrie")
+        .version(build::short())
+        .long_version(build::long())
         .arg(
-            Arg::with_name("config")
-                .short("c")
+            Arg::new("config")
+                .short('c')
                 .long("config")
                 .value_name("CONFIG_FILE")
                 .help("Path to the configuration file")
-                .default_value("alexandrie.toml")
-                .takes_value(true),
+                .default_value("alexandrie.toml"),
         )
         .get_matches();
-    let config = matches.value_of("config").unwrap_or("alexandrie.toml");
 
-    let contents = fs::read(config).await?;
-    let config: Config = toml::from_slice(contents.as_slice())?;
+    let config = matches
+        .get_one::<String>("config")
+        .map(|value| value.as_str())
+        .unwrap_or("alexandrie.toml");
+
+    let contents = fs::read_to_string(config).await?;
+    let config: Config = toml::from_str(contents.as_str())?;
     let addr = config.general.bind_address.clone();
 
     #[cfg(feature = "frontend")]
@@ -249,7 +247,7 @@ async fn run() -> Result<(), Error> {
 
     log::info!("running database migrations");
     #[rustfmt::skip]
-    state.db.run(|conn| embedded_migrations::run(conn)).await
+    state.db.run(|conn| conn.run_pending_migrations(db::MIGRATIONS).map(|_| ())).await
         .expect("migration execution error");
 
     let mut app = tide::with_state(Arc::clone(&state));

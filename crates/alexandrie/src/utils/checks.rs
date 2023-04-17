@@ -7,7 +7,7 @@ use crate::db::Connection;
 use crate::error::Error;
 
 /// Checks if a crate exists in the database given a connection and the crate's name.
-pub fn crate_exists(conn: &Connection, canon_name: &str) -> Result<bool, Error> {
+pub fn crate_exists(conn: &mut Connection, canon_name: &str) -> Result<bool, Error> {
     let exists: bool = sql::select(sql::exists(
         crates::table.filter(crates::canon_name.eq(canon_name)),
     ))
@@ -18,7 +18,7 @@ pub fn crate_exists(conn: &Connection, canon_name: &str) -> Result<bool, Error> 
 
 /// Checks if a user is an author of the named crate.
 pub fn is_crate_author(
-    conn: &Connection,
+    conn: &mut Connection,
     canon_crate_name: &str,
     author_id: i64,
 ) -> Result<bool, Error> {
@@ -35,7 +35,7 @@ pub fn is_crate_author(
 }
 
 /// Determines the author from the request's headers.
-pub fn get_author(conn: &Connection, token: String) -> Option<Author> {
+pub fn get_author(conn: &mut Connection, token: String) -> Option<Author> {
     //? Get the author associated to this token.
     author_tokens::table
         .inner_join(authors::table)

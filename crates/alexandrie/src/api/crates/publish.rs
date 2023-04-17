@@ -67,7 +67,7 @@ struct CrateMetaDependency {
 }
 
 fn link_keywords(
-    conn: &Connection,
+    conn: &mut Connection,
     crate_id: i64,
     keywords: Option<Vec<String>>,
 ) -> Result<(), Error> {
@@ -113,7 +113,7 @@ fn link_keywords(
 }
 
 fn link_categories(
-    conn: &Connection,
+    conn: &mut Connection,
     crate_id: i64,
     categories: Option<Vec<String>>,
 ) -> Result<(), Error> {
@@ -143,7 +143,7 @@ fn link_categories(
 }
 
 fn link_badges(
-    conn: &Connection,
+    conn: &mut Connection,
     crate_id: i64,
     badges: Option<HashMap<String, HashMap<String, String>>>,
 ) -> Result<(), Error> {

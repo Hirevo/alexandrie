@@ -5,7 +5,7 @@ use diesel::result::Error as SQLError;
 use hex::FromHexError as HexError;
 use io::Error as IOError;
 use json::Error as JSONError;
-use semver::{ReqParseError, SemVerError as SemverError, Version};
+use semver::{Error as SemverError, Version};
 use thiserror::Error;
 use toml::de::Error as TOMLError;
 
@@ -34,12 +34,9 @@ pub enum Error {
     /// SQL error (invalid queries, database disconnections, etc...).
     #[error("SQL error: {0}")]
     SQLError(#[from] SQLError),
-    /// Version parsing errors (invalid version format parsed, etc...).
+    /// Version parsing/requirement errors (invalid version format parsed, etc...).
     #[error("semver error: {0}")]
     SemverError(#[from] SemverError),
-    /// Version requirement parsing errors (invalid version requirement format parsed, etc...).
-    #[error("semver req parse error: {0}")]
-    SemverReqParseError(#[from] ReqParseError),
     /// Hexadecimal decoding errors (odd length, etc...).
     #[error("hex error: {0}")]
     HexError(#[from] HexError),
