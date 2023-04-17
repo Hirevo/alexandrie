@@ -91,14 +91,14 @@ postgres = ["diesel/postgres", "diesel_migrations/postgres"]
 git2 = ["alexandrie-index/git2"]
 s3 = ["alexandrie-storage/s3"]
 frontend = [
-    "handlebars",
-    "oauth2",
-    "once_cell",
-    "regex",
-    "reqwest",
-    "num-format",
-    "bigdecimal",
-    "time",
+    "dep:handlebars",
+    "dep:oauth2",
+    "dep:once_cell",
+    "dep:regex",
+    "dep:reqwest",
+    "dep:num-format",
+    "dep:bigdecimal",
+    "dep:time",
     "diesel/numeric",
 ]
 

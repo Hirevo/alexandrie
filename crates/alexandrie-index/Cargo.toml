@@ -28,3 +28,4 @@ thiserror = "1.0.24"
 git2 = { version = "0.13.18", optional = true }
 
 [features]
+git2 = ["dep:git2"]
