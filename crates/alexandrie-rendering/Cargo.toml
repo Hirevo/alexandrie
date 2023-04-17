@@ -1,7 +1,7 @@
 [package]
 name = "alexandrie-rendering"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
 description = "The markdown rendering library for Alexandrie, an alternative crate registry."
 repository = "https://github.com/Hirevo/alexandrie"

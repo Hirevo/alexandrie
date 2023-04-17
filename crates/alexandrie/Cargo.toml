@@ -1,7 +1,7 @@
 [package]
 name = "alexandrie"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 rust-version = "1.68.0"
 authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
 description = "An alternative crate registry, implemented in Rust."

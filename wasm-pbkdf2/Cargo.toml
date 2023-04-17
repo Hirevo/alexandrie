@@ -3,7 +3,7 @@ name = "wasm-pbkdf2"
 description = "WASM packaging of PBKDF2 utilities"
 version = "0.1.0"
 authors = ["Nicolas Polomack <nicolas@polomack.eu>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]
