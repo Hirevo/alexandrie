@@ -139,13 +139,12 @@ dependencies = [
 name = "alexandrie-storage"
 version = "0.1.0"
 dependencies = [
- "lazy_static",
+ "async-std",
  "rusoto_core",
  "rusoto_s3",
  "semver 0.11.0",
  "serde",
  "thiserror",
- "tokio",
 ]
 
 [[package]]

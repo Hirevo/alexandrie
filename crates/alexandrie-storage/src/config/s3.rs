@@ -1,6 +1,7 @@
-use crate::s3::S3Storage;
 use rusoto_core::Region;
 use serde::{Deserialize, Serialize};
+
+use crate::s3::S3Storage;
 
 /// The configuration struct for the 's3' storage strategy.
 ///
