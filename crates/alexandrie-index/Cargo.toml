@@ -15,17 +15,18 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 # data types
-semver = { version = "0.11.0", features = ["serde"] }
+semver = { version = "1.0.17", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.125", features = ["derive"] }
-json = { package = "serde_json", version = "1.0.64" }
+serde = { version = "1.0.160", features = ["derive"] }
+json = { package = "serde_json", version = "1.0.96" }
 
 # error handling
-thiserror = "1.0.24"
+thiserror = "1.0.40"
 
 # git2
-git2 = { version = "0.13.18", optional = true }
+git2 = { version = "0.16.0", optional = true }
 
 [features]
+default = []
 git2 = ["dep:git2"]

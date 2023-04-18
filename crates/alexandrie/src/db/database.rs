@@ -1,4 +1,4 @@
-use diesel::r2d2::{self, ConnectionManager, Pool, PooledConnection};
+use diesel::r2d2::{self, ConnectionManager, Pool};
 
 use crate::config::database::DatabaseConfig;
 
@@ -7,14 +7,14 @@ use crate::config::database::DatabaseConfig;
 #[derive(Debug)]
 pub struct Database<T>
 where
-    T: diesel::Connection + 'static,
+    T: diesel::Connection + diesel::r2d2::R2D2Connection + 'static,
 {
     connection_pool: Pool<ConnectionManager<T>>,
 }
 
 impl<T> Clone for Database<T>
 where
-    T: diesel::Connection + 'static,
+    T: diesel::Connection + diesel::r2d2::R2D2Connection + 'static,
 {
     fn clone(&self) -> Self {
         Self {
@@ -25,7 +25,7 @@ where
 
 impl<T> Database<T>
 where
-    T: diesel::Connection + 'static,
+    T: diesel::Connection + diesel::r2d2::R2D2Connection + 'static,
 {
     /// Constructs a `Database<T>` for the given database config (creates a connection pool).
     pub fn new(database_config: &DatabaseConfig) -> Self {
@@ -83,14 +83,14 @@ where
     /// The closure will be passed a `Connection` from the pool to use.
     pub async fn run<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(&PooledConnection<ConnectionManager<T>>) -> R + Send + 'static,
+        F: FnOnce(&mut T) -> R + Send + 'static,
         R: Send + 'static,
         T: Send,
     {
         let pool = self.connection_pool.clone();
         let future = async_std::task::spawn_blocking(move || {
-            let conn = pool.get().unwrap();
-            f(&conn)
+            let mut conn = pool.get().unwrap();
+            f(&mut *conn)
         });
 
         future.await
@@ -102,15 +102,15 @@ where
     /// If an error occurs, the database changes made in this closure will get rolled back to their original state.
     pub async fn transaction<F, R, E>(&self, f: F) -> Result<R, E>
     where
-        F: FnOnce(&PooledConnection<ConnectionManager<T>>) -> Result<R, E> + Send + 'static,
+        F: FnOnce(&mut T) -> Result<R, E> + Send + 'static,
         T: Send,
         R: Send + 'static,
         E: From<diesel::result::Error> + Send + 'static,
     {
         let pool = self.connection_pool.clone();
         let future = async_std::task::spawn_blocking(move || {
-            let conn = pool.get().unwrap();
-            conn.transaction(|| f(&conn))
+            let mut conn = pool.get().unwrap();
+            conn.transaction(|conn| f(conn))
         });
 
         future.await

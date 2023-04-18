@@ -510,16 +510,14 @@
                 <div class="manage-tokens">
                     <div class="manage-tokens-title">Tokens</div>
                     <div class="manage-tokens-entries">
-                        {{#if tokens}}
                         {{#each tokens}}
                         <div class="grouped">
                             <div class="grouped-label">{{ this.name }}</div>
                             <a class="grouped-button" href="/account/manage/tokens/{{ this.id }}/revoke">Revoke</a>
                         </div>
-                        {{/each}}
                         {{else}}
                         <div class="manage-tokens-empty">No tokens...</div>
-                        {{/if}}
+                        {{/each}}
                     </div>
                     <form class="manage-tokens-create" method="POST" action="/account/manage/tokens">
                         <div class="manage-tokens-field">

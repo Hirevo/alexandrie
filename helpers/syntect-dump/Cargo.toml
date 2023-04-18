@@ -10,6 +10,6 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
-syntect = "4.5.0"
+syntect = "5.0.0"
 
 [features]

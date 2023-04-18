@@ -13,8 +13,8 @@ use crate::db::schema::*;
     Identifiable,
     AsChangeset,
 )]
-#[table_name = "crates"]
-#[primary_key(id)]
+#[diesel(table_name = crates)]
+#[diesel(primary_key(id))]
 /// Represents a complete crate entry, as stored in the database.
 pub struct Crate {
     /// The crate's ID.
@@ -38,7 +38,7 @@ pub struct Crate {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "crates"]
+#[diesel(table_name = crates)]
 /// Represents a partial crate entry from the database,
 /// suitable to create an entry while letting the database assign it an ID.
 pub struct NewCrate<'a> {
@@ -69,8 +69,8 @@ pub struct NewCrate<'a> {
     Identifiable,
     AsChangeset,
 )]
-#[table_name = "authors"]
-#[primary_key(id)]
+#[diesel(table_name = authors)]
+#[diesel(primary_key(id))]
 /// Represents a complete author entry, as stored in the database.
 pub struct Author {
     /// The author's ID.
@@ -88,7 +88,7 @@ pub struct Author {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "authors"]
+#[diesel(table_name = authors)]
 /// Represents an author in the database,
 /// suitable to create an entry while letting the database assign an author ID.
 pub struct NewAuthor<'a> {
@@ -116,10 +116,10 @@ pub struct NewAuthor<'a> {
     Associations,
     AsChangeset,
 )]
-#[table_name = "crate_authors"]
-#[belongs_to(Author)]
-#[belongs_to(Crate, foreign_key = "crate_id")]
-#[primary_key(id)]
+#[diesel(table_name = crate_authors)]
+#[diesel(belongs_to(Author))]
+#[diesel(belongs_to(Crate, foreign_key = crate_id))]
+#[diesel(primary_key(id))]
 /// Represents a crate-to-author relationship in the database.
 pub struct CrateAuthor {
     /// The relationship's ID.
@@ -131,7 +131,7 @@ pub struct CrateAuthor {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "crate_authors"]
+#[diesel(table_name = crate_authors)]
 /// Represents a crate-to-author relationship in the database,
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateAuthor {
@@ -153,9 +153,9 @@ pub struct NewCrateAuthor {
     Associations,
     AsChangeset,
 )]
-#[table_name = "author_tokens"]
-#[belongs_to(Author)]
-#[primary_key(id)]
+#[diesel(table_name = author_tokens)]
+#[diesel(belongs_to(Author))]
+#[diesel(primary_key(id))]
 /// Represents a author-to-token relationship in the database.
 pub struct AuthorToken {
     /// The token's ID.
@@ -169,7 +169,7 @@ pub struct AuthorToken {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "author_tokens"]
+#[diesel(table_name = author_tokens)]
 /// Represents a author-to-token relationship in the database,
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewAuthorToken<'a> {
@@ -190,11 +190,10 @@ pub struct NewAuthorToken<'a> {
     Queryable,
     Insertable,
     Identifiable,
-    Associations,
     AsChangeset,
 )]
-#[table_name = "keywords"]
-#[primary_key(id)]
+#[diesel(table_name = keywords)]
+#[diesel(primary_key(id))]
 /// Represents a keyword entry in the database.
 pub struct Keyword {
     /// The keyword's ID.
@@ -215,10 +214,10 @@ pub struct Keyword {
     Associations,
     AsChangeset,
 )]
-#[table_name = "crate_keywords"]
-#[belongs_to(Keyword)]
-#[belongs_to(Crate, foreign_key = "crate_id")]
-#[primary_key(id)]
+#[diesel(table_name = crate_keywords)]
+#[diesel(belongs_to(Keyword))]
+#[diesel(belongs_to(Crate, foreign_key = crate_id))]
+#[diesel(primary_key(id))]
 /// Represents a crate-to-keyword relationship in the database.
 pub struct CrateKeyword {
     /// The relationship's ID.
@@ -230,7 +229,7 @@ pub struct CrateKeyword {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "crate_keywords"]
+#[diesel(table_name = crate_keywords)]
 /// Represents a crate-to-keyword relationship in the database,
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateKeyword {
@@ -249,11 +248,10 @@ pub struct NewCrateKeyword {
     Queryable,
     Insertable,
     Identifiable,
-    Associations,
     AsChangeset,
 )]
-#[table_name = "categories"]
-#[primary_key(id)]
+#[diesel(table_name = categories)]
+#[diesel(primary_key(id))]
 /// Represents a category entry in the database.
 pub struct Category {
     /// The category's ID.
@@ -278,10 +276,10 @@ pub struct Category {
     Associations,
     AsChangeset,
 )]
-#[table_name = "crate_categories"]
-#[belongs_to(Category)]
-#[belongs_to(Crate, foreign_key = "crate_id")]
-#[primary_key(id)]
+#[diesel(table_name = crate_categories)]
+#[diesel(belongs_to(Category))]
+#[diesel(belongs_to(Crate, foreign_key = crate_id))]
+#[diesel(primary_key(id))]
 /// Represents a crate-to-category relationship in the database.
 pub struct CrateCategory {
     /// The relationship's ID.
@@ -293,7 +291,7 @@ pub struct CrateCategory {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "crate_categories"]
+#[diesel(table_name = crate_categories)]
 /// Represents a crate-to-category relationship in the database,
 /// suitable to create an entry while letting the database assign a relationship ID.
 pub struct NewCrateCategory {
@@ -315,9 +313,9 @@ pub struct NewCrateCategory {
     Associations,
     AsChangeset,
 )]
-#[table_name = "crate_badges"]
-#[belongs_to(Crate, foreign_key = "crate_id")]
-#[primary_key(id)]
+#[diesel(table_name = crate_badges)]
+#[diesel(belongs_to(Crate, foreign_key = crate_id))]
+#[diesel(primary_key(id))]
 /// Represents a crate's badge in the database.
 pub struct Badge {
     /// The badge's ID.
@@ -331,7 +329,7 @@ pub struct Badge {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "crate_badges"]
+#[diesel(table_name = crate_badges)]
 /// Represents a crate's badge in the database.
 /// suitable to create an entry while letting the database assign it an ID.
 pub struct NewBadge {
@@ -355,9 +353,9 @@ pub struct NewBadge {
     Associations,
     AsChangeset,
 )]
-#[table_name = "sessions"]
-#[belongs_to(Author)]
-#[primary_key(id)]
+#[diesel(table_name = sessions)]
+#[diesel(belongs_to(Author))]
+#[diesel(primary_key(id))]
 /// Represents a session in the database.
 pub struct Session {
     /// The session's ID.
@@ -371,7 +369,7 @@ pub struct Session {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "sessions"]
+#[diesel(table_name = sessions)]
 /// Represents a session in the database,
 /// suitable to create an entry while letting the database assign it an ID.
 pub struct NewSession {
@@ -395,9 +393,9 @@ pub struct NewSession {
     Associations,
     AsChangeset,
 )]
-#[table_name = "salts"]
-#[belongs_to(Author)]
-#[primary_key(id)]
+#[diesel(table_name = salts)]
+#[diesel(belongs_to(Author))]
+#[diesel(primary_key(id))]
 /// Represents a salt in the database.
 pub struct Salt {
     /// The salt's ID.
@@ -409,7 +407,7 @@ pub struct Salt {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "salts"]
+#[diesel(table_name = salts)]
 /// Represents a salt in the database,
 /// suitable to create an entry while letting the database assign it an ID.
 pub struct NewSalt<'a> {

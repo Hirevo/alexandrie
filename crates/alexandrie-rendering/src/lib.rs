@@ -1,4 +1,4 @@
-use cmark::{CodeBlockKind, Event, Options, Parser, Tag};
+use cmark::{CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag};
 use syntect::easy::HighlightLines;
 use syntect::html::{
     start_highlighted_html_snippet, styled_line_to_highlighted_html, IncludeBackground,
@@ -12,7 +12,7 @@ use crate::config::SyntectState;
 #[derive(Debug, Clone, PartialEq)]
 pub struct HeaderRef {
     /// The header tag's level (1 to 6).
-    pub level: u32,
+    pub level: HeadingLevel,
     /// The header tag's start index in the event list.
     pub start: usize,
     /// The header tag's end index in the event list.
@@ -26,16 +26,14 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
     let mut events = events
         .into_iter()
         .map(|event| match event {
-            Event::Text(text) => {
-                if let Some(ref mut highlighter) = highlighter {
-                    let highlighted = highlighter.highlight(&text, &config.syntaxes);
-                    let html =
-                        styled_line_to_highlighted_html(&highlighted, IncludeBackground::Yes);
-                    Event::Html(html.into())
-                } else {
-                    Event::Text(text)
-                }
-            }
+            Event::Text(text) => highlighter
+                .as_mut()
+                .and_then(|highlighter| highlighter.highlight_line(&text, &config.syntaxes).ok())
+                .and_then(|highlighted| {
+                    styled_line_to_highlighted_html(&highlighted, IncludeBackground::Yes).ok()
+                })
+                .map(|html| Event::Html(html.into()))
+                .unwrap_or_else(|| Event::Text(text)),
             Event::Start(Tag::CodeBlock(info)) => {
                 let theme = &config.themes.themes[&config.theme_name];
 
@@ -63,7 +61,7 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
         .collect::<Vec<_>>();
 
     let header_count = events.iter().fold(0usize, |acc, event| match event {
-        Event::Start(Tag::Heading(_)) => acc + 1,
+        Event::Start(Tag::Heading(_, _, _)) => acc + 1,
         _ => acc,
     });
     let mut header_refs = Vec::with_capacity(header_count);
@@ -72,14 +70,14 @@ pub fn render_readme(config: &SyntectState, contents: &str) -> String {
         .iter()
         .enumerate()
         .for_each(|(idx, event)| match event {
-            Event::Start(Tag::Heading(level)) => {
+            Event::Start(Tag::Heading(level, _, _)) => {
                 header_refs.push(HeaderRef {
                     level: *level,
                     start: idx,
                     end: 0,
                 });
             }
-            Event::End(Tag::Heading(_)) => {
+            Event::End(Tag::Heading(_, _, _)) => {
                 header_refs.last_mut().unwrap().end = idx;
             }
             _ => {}

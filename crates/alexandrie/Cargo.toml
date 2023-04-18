@@ -23,20 +23,20 @@ alexandrie-rendering = { path = "../alexandrie-rendering", version = "0.1.0" }
 
 # core
 tide = { version = "0.16.0", default-features = false, features = ["h1-server", "sessions"] }
-clap = "2.33.3"
+clap = { version = "4.2.2", features = ["string"] }
 
 # session handling
-async-session = "2.0.1"
+async-session = "3.0.0"
 
 # data types
-url = "2.2.2"
-semver = { version = "0.11.0", features = ["serde"] }
-chrono = { version = "0.4.19", features = ["serde"] }
+url = "2.3.1"
+semver = { version = "1.0.17", features = ["serde"] }
+chrono = { version = "0.4.24", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.125", features = ["derive"] }
-json = { package = "serde_json", version = "1.0.64" }
-toml = "0.5.8"
+serde = { version = "1.0.160", features = ["derive"] }
+json = { package = "serde_json", version = "1.0.96" }
+toml = "0.7.3"
 
 # binary parsing
 byteorder = "1.4.3"
@@ -44,42 +44,42 @@ byteorder = "1.4.3"
 # (en|de)coding / hashing
 ring = "0.16.20"
 hex = "0.4.3"
-percent-encoding = "2.1.0"
+percent-encoding = "2.2.0"
 
 # database
-diesel = { version = "1.4.6", features = ["r2d2", "chrono"] }
-diesel_migrations = "1.4.0"
+diesel = { version = "2.0.3", features = ["r2d2", "chrono"] }
+diesel_migrations = "2.0.0"
 
 # async primitives
-async-std = { version = "1.9.0", features = ["attributes", "tokio1"] }
+async-std = { version = "1.12.0", features = ["attributes", "tokio1"] }
 
 # error handling
-thiserror = "1.0.24"
+thiserror = "1.0.40"
 
 # README rendering
-flate2 = "1.0.20"
-tar = "0.4.33"
+flate2 = "1.0.25"
+tar = "0.4.38"
 
 # build-tme debug information
-shadow-rs = "0.5.25"
+shadow-rs = "0.21.0"
 
 # frontend
-handlebars = { version = "3.5.5", features = ["dir_source"], optional = true }
-time = { version = "0.2.26", optional = true }
-num-format = { version = "0.4.0", optional = true }
-bigdecimal = { version = "0.1.2", features = ["serde"], optional = true }
-oauth2 = { version = "4.1.0", optional = true }
-reqwest = { version = "0.11.5", optional = true, features = ["json"] }
-once_cell = { version = "1.8.0", optional = true }
-regex = { version = "1.5.5", optional = true }
+handlebars = { version = "4.3.6", features = ["dir_source"], optional = true }
+time = { version = "0.3.20", optional = true }
+num-format = { version = "0.4.4", optional = true }
+bigdecimal = { version = "0.3.0", features = ["serde"], optional = true }
+oauth2 = { version = "4.3.0", optional = true }
+reqwest = { version = "0.11.16", optional = true, features = ["json"] }
+once_cell = { version = "1.17.1", optional = true }
+regex = { version = "1.7.3", optional = true }
 
 # logs
-log = "0.4.14"
+log = "0.4.17"
 slog = "2.7.0"
-slog-stdlog = "4.1.0"
+slog-stdlog = "4.1.1"
 slog-scope = "4.4.0"
-slog-term = "2.8.0"
-slog-async = "2.6.0"
+slog-term = "2.9.0"
+slog-async = "2.7.0"
 
 [features]
 default = ["frontend", "sqlite"]
@@ -103,4 +103,4 @@ frontend = [
 ]
 
 [build-dependencies]
-shadow-rs = "0.5.25"
+shadow-rs = "0.21.0"

@@ -158,7 +158,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         //? Insert the new authors.
         diesel::insert_into(crate_authors::table)
             .values(new_authors)
-            .execute(&**conn)?;
+            .execute(conn)?;
 
         let authors_list = match new_authors_names.as_slice() {
             [] => String::new(),

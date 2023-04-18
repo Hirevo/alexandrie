@@ -269,15 +269,13 @@
             <div class="most-downloaded">
                 <div class="most-downloaded-title">Most downloaded</div>
                 <div class="most-downloaded-entries">
-                    {{#if most_downloaded}}
                     {{#each most_downloaded}}
                     <a class="most-downloaded-entry elevated" href="/crates/{{ this.name }}">
                         <b>{{ this.name }}</b>: {{ this.downloads }} downloads
                     </a>
-                    {{/each}}
                     {{else}}
                     <div class="most-downloaded-empty">Empty list.</div>
-                    {{/if}}
+                    {{/each}}
                 </div>
                 <div class="card-footer">
                     <a class="card-footer-button elevated" href="/most-downloaded">See more...</a>
@@ -286,15 +284,13 @@
             <div class="last-updated">
                 <div class="last-updated-title">Last updated</div>
                 <div class="last-updated-entries">
-                    {{#if last_updated}}
                     {{#each last_updated}}
                     <a class="last-updated-entry elevated" href="/crates/{{ this.name }}">
                         <b>{{ this.name }}</b>: {{ this.updated_at }}
                     </a>
-                    {{/each}}
                     {{else}}
                     <div class="last-updated-empty">Empty list.</div>
-                    {{/if}}
+                    {{/each}}
                 </div>
                 <div class="card-footer">
                     <a class="card-footer-button elevated" href="/last-updated">See more...</a>
