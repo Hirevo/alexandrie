@@ -20,7 +20,7 @@ Configuration:
 # Omitting this entire section from the configuration counts as being disabled.
 [frontend.auth.local]
 # Whether to enable the use of this strategy.
-enable = true
+enabled = true
 # Whether to allow the registration of new users using this strategy.
 allow_registration = true
 ```
@@ -49,7 +49,7 @@ Configuration:
 # Omitting this entire section from the configuration counts as being disabled.
 [frontend.auth.github]
 # Whether to enable the use of this strategy.
-enable = true
+enabled = true
 # The client ID of the GitHub OAuth App to use.
 client_id = "GITHUB_OAUTH_CLIENT_ID"
 # The client secret of the GitHub OAuth App to use.
@@ -91,7 +91,8 @@ Configuration:
 # Omitting this entire section from the configuration counts as being disabled.
 [frontend.auth.gitlab]
 # Whether to enable the use of this strategy.
-enable = true
+enabled = true
+origin = "https://gitlab.com"
 # The client ID of the GitLab OAuth App to use.
 client_id = "GITLAB_OAUTH_CLIENT_ID"
 # The client secret of the GitLab OAuth App to use.
