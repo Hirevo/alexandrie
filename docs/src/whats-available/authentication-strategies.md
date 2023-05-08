@@ -20,7 +20,7 @@ Configuration:
 # Omitting this entire section from the configuration counts as being disabled.
 [frontend.auth.local]
 # Whether to enable the use of this strategy.
-enable = true
+enabled = true
 # Whether to allow the registration of new users using this strategy.
 allow_registration = true
 ```
