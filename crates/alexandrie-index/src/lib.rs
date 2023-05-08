@@ -1,4 +1,5 @@
 use semver::{Version, VersionReq};
+use serde::{Deserialize, Serialize};
 
 pub mod config;
 pub mod error;
@@ -7,8 +8,8 @@ mod index;
 mod models;
 mod tree;
 
-pub use index::*;
-pub use models::{CrateDependency, CrateDependencyKind, CrateVersion};
+pub use crate::index::*;
+pub use crate::models::{CrateDependency, CrateDependencyKind, CrateVersion};
 
 use crate::cli::CommandLineIndex;
 use crate::error::Error;
@@ -28,20 +29,34 @@ pub enum Index {
     Git2(Git2Index),
 }
 
+/// Represents the index's configuration file.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct ConfigFile {
+    /// The download link format for crates.
+    pub dl: String,
+    /// The base URL where the API for this index's registry can be found.
+    pub api: String,
+    /// The URLs to the other registries that crates in this index are allowed to have dependencies on.
+    pub allowed_registries: Vec<String>,
+}
+
 /// The required trait that any crate index management type must implement.
 pub trait Indexer {
     /// Gives back the URL of the managed crate index.
     fn url(&self) -> Result<String, Error>;
     /// Refreshes the managed crate index (in case another instance made modification to it).
     fn refresh(&self) -> Result<(), Error>;
+    /// Commits and pushes changes upstream.
+    fn commit_and_push(&self, msg: &str) -> Result<(), Error>;
+    /// Retrieves the index's current configuration file.
+    fn configuration(&self) -> Result<ConfigFile, Error>;
     /// Retrieves all the version records of a crate.
     fn all_records(&self, name: &str) -> Result<Vec<CrateVersion>, Error>;
     /// Retrieves the latest version record of a crate.
     fn latest_record(&self, name: &str) -> Result<CrateVersion, Error>;
     /// Retrieves the latest crate version record that matches the given name and version requirement.
     fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error>;
-    /// Commits and pushes changes upstream.
-    fn commit_and_push(&self, msg: &str) -> Result<(), Error>;
     /// Adds a new crate record into the index.
     fn add_record(&self, record: CrateVersion) -> Result<(), Error>;
     /// Alters an index's crate version record with the passed-in function.
@@ -80,6 +95,14 @@ impl Indexer for Index {
             Index::CommandLine(idx) => idx.commit_and_push(msg),
             #[cfg(feature = "git2")]
             Index::Git2(idx) => idx.commit_and_push(msg),
+        }
+    }
+
+    fn configuration(&self) -> Result<ConfigFile, Error> {
+        match self {
+            Index::CommandLine(idx) => idx.configuration(),
+            #[cfg(feature = "git2")]
+            Index::Git2(idx) => idx.configuration(),
         }
     }
 

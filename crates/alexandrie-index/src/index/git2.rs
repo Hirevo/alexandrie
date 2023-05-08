@@ -135,6 +135,10 @@ impl Indexer for Git2Index {
         Ok(())
     }
 
+    fn configuration(&self) -> Result<ConfigFile, Error> {
+        self.tree.configuration()
+    }
+
     fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
         self.tree.match_record(name, req)
     }

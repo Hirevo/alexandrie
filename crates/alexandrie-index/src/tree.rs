@@ -7,7 +7,7 @@ use semver::{Version, VersionReq};
 
 use crate::error::IndexError;
 use crate::models::CrateVersion;
-use crate::Error;
+use crate::{ConfigFile, Error};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
@@ -26,6 +26,13 @@ impl Tree {
             3 => self.path.join("3").join(&name[..1]).join(&name),
             _ => self.path.join(&name[0..2]).join(&name[2..4]).join(&name),
         }
+    }
+
+    pub fn configuration(&self) -> Result<ConfigFile, Error> {
+        let path = self.path.join("config.json");
+        let bytes = fs::read(&path)?;
+        let config = json::from_slice(&bytes)?;
+        Ok(config)
     }
 
     pub fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
@@ -96,14 +103,10 @@ impl Tree {
             }),
             _ => Error::from(err),
         })?;
-        let mut krates: Vec<CrateVersion> = {
-            let mut out = Vec::new();
-            for line in io::BufReader::new(file).lines() {
-                let krate = json::from_str(line?.as_str())?;
-                out.push(krate);
-            }
-            out
-        };
+        let mut krates: Vec<CrateVersion> = io::BufReader::new(file)
+            .lines()
+            .map(|line| Ok(json::from_str(line?.as_str())?))
+            .collect::<Result<_, Error>>()?;
         let found = krates
             .iter_mut()
             .find(|krate| krate.vers == version)
