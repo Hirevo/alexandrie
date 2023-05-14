@@ -57,6 +57,7 @@ pub mod utils;
 /// Frontend endpoints definitions.
 #[cfg(feature = "frontend")]
 pub mod frontend;
+mod fts;
 
 use crate::config::Config;
 use crate::error::Error;
@@ -149,6 +150,9 @@ fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<
     log::info!("mounting '/account/manage/tokens/:token-id/revoke'");
     app.at("/account/manage/tokens/:token-id/revoke")
         .get(frontend::account::manage::tokens::revoke::get);
+    log::info!("mounting '/indexer'");
+    app.at("/indexer")
+        .get(frontend::indexer::get);
 
     log::info!("mounting '/assets/*path'");
     app.at("/assets").serve_dir(frontend_config.assets.path)?;
@@ -241,7 +245,7 @@ async fn run() -> Result<(), Error> {
     #[cfg(feature = "frontend")]
     let frontend_config = config.frontend.clone();
 
-    let state: Arc<config::State> = Arc::new(config.into());
+    let state: Arc<config::State> = Arc::new(config.try_into()?);
 
     log::info!("starting Alexandrie (version: {})", build::short());
 

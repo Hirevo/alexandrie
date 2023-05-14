@@ -1,6 +1,5 @@
 use std::num::NonZeroU32;
 
-use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
@@ -8,14 +7,16 @@ use tide::Request;
 
 use alexandrie_index::Indexer;
 
+use crate::db::DATETIME_FORMAT;
 use crate::db::models::Crate;
 use crate::db::schema::*;
-use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::frontend::helpers;
+use crate::State;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::State;
+
+const RESULT_PER_PAGE: i64 = 15;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct SearchParams {
@@ -23,15 +24,13 @@ struct SearchParams {
     pub page: Option<NonZeroU32>,
 }
 
+/// Route to search through crates (used by `cargo search`) using tantivy index
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let params = req.query::<SearchParams>()?;
-    let searched_text = utils::canonical_name(params.q.as_str());
-    let q = format!(
-        "%{0}%",
-        searched_text.replace('\\', "\\\\").replace('%', "\\%")
-    );
-
+    let params = req.query::<SearchParams>().unwrap();
+    let searched_text = params.q.clone();
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
+
+    let offset = (page_number - 1) * RESULT_PER_PAGE as u32;
 
     let user = req.get_author();
     if req.state().is_login_required() && user.is_none() {
@@ -39,55 +38,65 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     }
 
     let state = req.state().clone();
-    let db = &state.db;
+    let repo = &state.db;
 
-    let transaction = db.transaction(move |conn| {
+    let (count, results) = {
+        let tantivy = (&state.search)
+            .read()
+            .map_err(|error| Error::PoisonedError(error.to_string()))?;
+        tantivy.search(
+            searched_text.clone(),
+            offset as usize,
+            RESULT_PER_PAGE as usize,
+        )?
+    };
+
+    let page_count = (count / RESULT_PER_PAGE as usize
+        + if count > 0 && count % RESULT_PER_PAGE as usize == 0 {
+        0
+    } else {
+        1
+    }) as u32;
+
+    let transaction = repo.transaction(move |conn| {
         let state = req.state();
 
-        //? Get the total count of search results.
-        let total_results = crates::table
-            .select(sql::count(crates::id))
-            .filter(crates::canon_name.like(q.as_str()))
-            .first::<i64>(conn)?;
-
-        //? Get the search results for the given page number.
-        let results: Vec<Crate> = crates::table
-            .filter(crates::canon_name.like(q.as_str()))
-            .limit(15)
-            .offset(15 * i64::from(page_number - 1))
-            .load(conn)?;
-
-        let results = results
+        let results: Vec<(Crate, Vec<String>)> = results
             .into_iter()
-            .map(|result| {
+            .map(|v| {
+                let krate = crates::table
+                    .filter(crates::id.eq(v))
+                    .first::<Crate>(conn)
+                    .unwrap();
                 let keywords = crate_keywords::table
                     .inner_join(keywords::table)
                     .select(keywords::name)
-                    .filter(crate_keywords::crate_id.eq(result.id))
-                    .load::<String>(conn)?;
-                Ok((result, keywords))
+                    .filter(crate_keywords::crate_id.eq(krate.id))
+                    .load::<String>(conn)
+                    .unwrap();
+                (krate, keywords)
             })
-            .collect::<Result<Vec<(Crate, Vec<String>)>, Error>>()?;
-
-        //? Make page number starts counting from 1 (instead of 0).
-        let page_count = (total_results / 15
-            + if total_results > 0 && total_results % 15 == 0 {
-                0
-            } else {
-                1
-            }) as u32;
+            .collect();
 
         let encoded_q = percent_encoding::percent_encode(
             params.q.as_bytes(),
             percent_encoding::NON_ALPHANUMERIC,
         );
         let next_page = if page_number < page_count {
-            Some(format!("/search?q={0}&page={1}", encoded_q, page_number + 1))
+            Some(format!(
+                "/search?q={0}&page={1}",
+                encoded_q,
+                page_number + 1
+            ))
         } else {
             None
         };
         let prev_page = if page_number > 1 {
-            Some(format!("/search?q={0}&page={1}", encoded_q, page_number - 1))
+            Some(format!(
+                "/search?q={0}&page={1}",
+                encoded_q,
+                page_number - 1
+            ))
         } else {
             None
         };
@@ -96,8 +105,8 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         let context = json!({
             "user": user,
             "instance": &state.frontend.config,
-            "searched_text": params.q,
-            "total_results": total_results,
+            "searched_text": searched_text,
+            "total_results": count,
             "pagination": {
                 "current": page_number,
                 "total_count": page_count,

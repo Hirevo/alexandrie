@@ -6,6 +6,8 @@ use hex::FromHexError as HexError;
 use io::Error as IOError;
 use json::Error as JSONError;
 use semver::{Error as SemverError, Version};
+use tantivy::directory::error::OpenDirectoryError;
+use tantivy::TantivyError;
 use thiserror::Error;
 use toml::de::Error as TOMLError;
 
@@ -49,6 +51,22 @@ pub enum Error {
     /// Storage-specific errors.
     #[error("{0}")]
     StorageError(#[from] StorageError),
+    /// Tantivy's errors.
+    #[error("{0}")]
+    TantivyError(#[from] TantivyError),
+    /// Open directory error
+    #[error("{0}")]
+    OpenDirectoryError(#[from] OpenDirectoryError),
+    /// Empty stop words.
+    #[error("Empty stop word filter")]
+    EmptyStopWord,
+    /// Tantivy's index is poisoned
+    #[error("Tantivy's index is poisoned: {0}")]
+    PoisonedError(String),
+    /// Missing id field or on of nae's field in index schema
+    /// Should never happen...
+    #[error("Missing {0} in Tantivy's schema")]
+    MissingField(&'static str),
 }
 
 /// The Error type for Alexandrie's own errors.
