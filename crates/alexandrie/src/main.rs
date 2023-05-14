@@ -151,8 +151,7 @@ fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<
     app.at("/account/manage/tokens/:token-id/revoke")
         .get(frontend::account::manage::tokens::revoke::get);
     log::info!("mounting '/indexer'");
-    app.at("/indexer")
-        .get(frontend::indexer::get);
+    app.at("/indexer").get(frontend::indexer::get);
 
     log::info!("mounting '/assets/*path'");
     app.at("/assets").serve_dir(frontend_config.assets.path)?;

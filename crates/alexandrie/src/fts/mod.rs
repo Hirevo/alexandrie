@@ -1,9 +1,9 @@
 //! Full-text search module
-mod index;
 mod document;
+mod index;
 
-pub(crate) use index::Tantivy;
 pub(crate) use document::TantivyDocument;
+pub(crate) use index::Tantivy;
 
 /// Database ID.
 const ID_FIELD_NAME: &str = "id";

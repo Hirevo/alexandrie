@@ -1,7 +1,7 @@
-use std::fmt::Formatter;
-use tantivy::Document;
-use tantivy::schema::Schema;
 use crate::error::Error;
+use std::fmt::Formatter;
+use tantivy::schema::Schema;
+use tantivy::Document;
 
 /// Represent a crate.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -25,7 +25,7 @@ impl std::fmt::Display for TantivyDocument<'_> {
         // log will be unreadable. Just say that it has
         // a README.
         if let Some(_) = &self.readme {
-            write!(f, ", crate has README", )?;
+            write!(f, ", crate has README",)?;
         }
 
         if self.keywords.is_empty() {
