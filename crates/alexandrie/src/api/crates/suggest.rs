@@ -1,17 +1,15 @@
 use std::num::NonZeroU32;
 
-use diesel::prelude::*;
+use log::info;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tide::Request;
 
 use alexandrie_index::Indexer;
 
-use crate::db::models::Crate;
-use crate::db::schema::*;
 use crate::error::{AlexError, Error};
-use crate::utils;
 use crate::State;
+use crate::utils;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct APIResponse {
@@ -37,37 +35,26 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         .map_err(|_| AlexError::MissingQueryParams {
             missing_params: &["q"],
         })?;
-    let state = req.state().clone();
-    let db = &state.db;
-
-    //? Fetch the latest index changes.
-    // state.index.refresh()?;
 
     let name = utils::canonical_name(params.q);
+    let limit = params.limit.map_or(10, |limit| limit.get() as usize);
 
-    //? Build the search pattern.
-    let name_pattern = format!("%{0}%", name.replace('\\', "\\\\").replace('%', "\\%"));
+    info!("Suggester : {} & {}", name, limit);
+    let state = req.state().clone();
+    let index = &state.index;
 
-    //? Limit the result count depending on parameters.
-    let limit = params.limit.map_or(10, |limit| i64::from(limit.get()));
-
-    //? Fetch results.
-    let results = db
-        .run(move |conn| {
-            crates::table
-                .filter(crates::canon_name.like(name_pattern.as_str()))
-                .limit(limit)
-                .load::<Crate>(conn)
-        })
-        .await?;
-
-    //? Fetch version information about these crates.
+    let results = {
+        let tantivy = (&state.search)
+            .read()
+            .map_err(|error| Error::PoisonedError(error.to_string()))?;
+        tantivy.suggest(name, limit)?
+    };
     let suggestions = results
         .into_iter()
         .map(|krate| {
-            let latest = state.index.latest_record(krate.name.as_str())?;
+            let latest = index.latest_record(krate.to_lowercase().as_str())?;
             Ok(Suggestion {
-                name: krate.name,
+                name: krate,
                 vers: latest.vers,
             })
         })

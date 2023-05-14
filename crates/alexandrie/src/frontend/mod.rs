@@ -14,3 +14,5 @@ pub mod me;
 pub mod most_downloaded;
 /// Search pages (eg. "/search?q=\<term\>").
 pub mod search;
+/// Index all crates into search index.
+pub mod indexer;

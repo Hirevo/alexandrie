@@ -1,3 +1,4 @@
+use std::sync::RwLock;
 use serde::{Deserialize, Serialize};
 
 /// Database configuration (`[database]` section).
@@ -16,6 +17,8 @@ use crate::db::Database;
 
 #[cfg(feature = "frontend")]
 pub use crate::config::frontend::*;
+use crate::error::Error;
+use crate::fts::Tantivy;
 
 use self::database::DatabaseConfig;
 
@@ -24,6 +27,13 @@ use self::database::DatabaseConfig;
 pub struct GeneralConfig {
     /// The address to bind the server on.
     pub bind_address: String,
+}
+
+/// Configuration for search index.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SearchConfig {
+    /// Path to the directory where Tantivy will store its index.
+    pub directory: String,
 }
 
 /// The application configuration struct.
@@ -39,6 +49,8 @@ pub struct Config {
     pub database: DatabaseConfig,
     /// The syntax-highlighting configuration.
     pub syntect: SyntectConfig,
+    /// Search config
+    pub search: SearchConfig,
     /// The frontend configuration.
     #[cfg(feature = "frontend")]
     pub frontend: FrontendConfig,
@@ -54,20 +66,25 @@ pub struct State {
     pub db: Database,
     /// The syntect configuration.
     pub syntect: SyntectState,
+    /// Search config
+    pub search: RwLock<Tantivy>,
     /// The frontend configured state.
     #[cfg(feature = "frontend")]
     pub frontend: FrontendState,
 }
 
-impl From<Config> for State {
-    fn from(config: Config) -> State {
-        State {
+impl TryFrom<Config> for State {
+    type Error = Error;
+
+    fn try_from(config: Config) -> Result<State, Self::Error> {
+        Ok(State {
             index: config.index.into(),
             storage: config.storage.into(),
             db: Database::new(&config.database),
             syntect: config.syntect.into(),
+            search: RwLock::new(config.search.try_into()?),
             #[cfg(feature = "frontend")]
             frontend: config.frontend.into(),
-        }
+        })
     }
 }
