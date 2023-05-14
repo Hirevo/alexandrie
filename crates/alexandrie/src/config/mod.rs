@@ -1,5 +1,5 @@
-use std::sync::RwLock;
 use serde::{Deserialize, Serialize};
+use std::sync::RwLock;
 
 /// Database configuration (`[database]` section).
 pub mod database;

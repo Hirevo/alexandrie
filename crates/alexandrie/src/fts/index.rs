@@ -2,12 +2,15 @@ use std::convert::TryFrom;
 use std::num::NonZeroUsize;
 
 use log::{error, info, warn};
-use tantivy::{Document, Index as TantivyIndex, IndexWriter, Opstamp, TantivyError, Term};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
 use tantivy::query::QueryParser;
 use tantivy::schema::{NumericOptions, Schema, TextFieldIndexing, TextOptions};
-use tantivy::tokenizer::{Language, LowerCaser, RawTokenizer, SimpleTokenizer, StopWordFilter, TextAnalyzer, TokenizerManager};
+use tantivy::tokenizer::{
+    Language, LowerCaser, RawTokenizer, SimpleTokenizer, StopWordFilter, TextAnalyzer,
+    TokenizerManager,
+};
+use tantivy::{Document, Index as TantivyIndex, IndexWriter, Opstamp, TantivyError, Term};
 use tantivy_analysis_contrib::commons::EdgeNgramTokenFilter;
 
 use crate::config::SearchConfig;
@@ -89,7 +92,8 @@ impl TryFrom<SearchConfig> for Tantivy {
         // Analysis a tokenizer that tokenizes on non-alphanumeric characters
         // A filter that removes common english words (the, a, ...etc)
         // A filter that lowercase words
-        let stop_words = StopWordFilter::new(Language::English).ok_or(Self::Error::EmptyStopWord)?;
+        let stop_words =
+            StopWordFilter::new(Language::English).ok_or(Self::Error::EmptyStopWord)?;
         let analyzer = TextAnalyzer::from(SimpleTokenizer)
             .filter(stop_words)
             .filter(LowerCaser);
@@ -165,7 +169,10 @@ impl Tantivy {
 
         let name = self.schema.get_field(super::NAME_FIELD_NAME).unwrap();
         let name_full = self.schema.get_field(super::NAME_FIELD_NAME_FULL).unwrap();
-        let name_prefix = self.schema.get_field(super::NAME_FIELD_PREFIX_NAME).unwrap();
+        let name_prefix = self
+            .schema
+            .get_field(super::NAME_FIELD_PREFIX_NAME)
+            .unwrap();
 
         let mut query_parser = QueryParser::new(
             self.schema.clone(),
@@ -216,7 +223,10 @@ impl Tantivy {
         let id = self.schema.get_field(super::ID_FIELD_NAME).unwrap();
         let name = self.schema.get_field(super::NAME_FIELD_NAME).unwrap();
         let name_full = self.schema.get_field(super::NAME_FIELD_NAME_FULL).unwrap();
-        let description = self.schema.get_field(super::DESCRIPTION_FIELD_NAME).unwrap();
+        let description = self
+            .schema
+            .get_field(super::DESCRIPTION_FIELD_NAME)
+            .unwrap();
         let readme = self.schema.get_field(super::README_FIELD_NAME).unwrap();
         let categories = self.schema.get_field(super::CATEGORY_FIELD_NAME).unwrap();
         let keywords = self.schema.get_field(super::KEYWORD_FIELD_NAME).unwrap();

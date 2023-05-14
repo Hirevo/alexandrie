@@ -10,7 +10,6 @@ use crate::State;
 
 const NUMBER_RESULT_PER_PAGE: i64 = 1000;
 
-
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let state = req.state().clone();
     let repo = &state.db;
@@ -98,7 +97,11 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                             tantivy.create_or_update(krate.id, document)?;
                         }
                         Err(error) => {
-                            warn!("Can't convert crate '{}' ({}) into Tantivy document : {error}", krate.id, krate.name.clone());
+                            warn!(
+                                "Can't convert crate '{}' ({}) into Tantivy document : {error}",
+                                krate.id,
+                                krate.name.clone()
+                            );
                         }
                     }
                     count_crate += 1;
