@@ -82,7 +82,7 @@ impl TryFrom<SearchConfig> for Tantivy {
         // after searching indices
         schema_builder.add_text_field(super::NAME_FIELD_NAME, options.clone());
         schema_builder.add_text_field(super::NAME_FIELD_NAME_FULL, options_full.clone());
-        schema_builder.add_text_field(super::NAME_FIELD_PREFIX_NAME, options_prefixes.clone());
+        schema_builder.add_text_field(super::NAME_FIELD_PREFIX_NAME, options_prefixes);
         schema_builder.add_text_field(super::DESCRIPTION_FIELD_NAME, options.clone());
         schema_builder.add_text_field(super::README_FIELD_NAME, options.clone());
         schema_builder.add_text_field(super::CATEGORY_FIELD_NAME, options_full);
@@ -203,9 +203,8 @@ impl Tantivy {
                 }
                 x.cloned()
             })
-            .map(|v| v.map(|i| i.as_text().map(|t| t.to_owned())).flatten())
-            .filter(|v| v.is_some())
-            .map(|v| v.unwrap())
+            .map(|v| v.and_then(|i| i.as_text().map(|t| t.to_owned())))
+            .flatten()
             .collect();
 
         Ok(results)
@@ -273,14 +272,13 @@ impl Tantivy {
 
                 let mut field = retrieve_doc.get_all(id);
                 if let Some(x) = field.next() {
-                    x.as_i64().clone()
+                    x.as_i64()
                 } else {
                     warn!("Could not find field id");
                     None
                 }
             })
-            .filter(|v| v.is_some())
-            .map(|v| v.unwrap())
+            .flatten()
             .collect();
 
         Ok((count, results))

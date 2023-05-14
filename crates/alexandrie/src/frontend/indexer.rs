@@ -39,7 +39,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                     .into_iter()
                     .map(|c| c.id)
                     .collect::<Vec<i64>>();
-                start = start + krates.len() as i64;
+                start += krates.len() as i64;
 
                 info!("Crates {:?}", ids);
 

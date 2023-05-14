@@ -1,7 +1,9 @@
-use crate::error::Error;
 use std::fmt::Formatter;
+
 use tantivy::schema::Schema;
 use tantivy::Document;
+
+use crate::error::Error;
 
 /// Represent a crate.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -24,7 +26,7 @@ impl std::fmt::Display for TantivyDocument<'_> {
         // Don't write the README, it might be big, and
         // log will be unreadable. Just say that it has
         // a README.
-        if let Some(_) = &self.readme {
+        if self.readme.is_some() {
             write!(f, ", crate has README",)?;
         }
 
@@ -86,39 +88,31 @@ impl TryFrom<TantivyDocument<'_>> for Document {
         // For the following fields we will not fail if they are not in schema
         // but TODO add warn
         if let Some(description) = &value.description {
-            match description_field {
-                Some(field) => document.add_text(field, description),
-                None => (),
+            if let Some(field) = description_field {
+                document.add_text(field, description)
             }
         }
 
         if let Some(readme) = &value.readme {
-            match readme_field {
-                Some(field) => document.add_text(field, readme),
-                None => (),
+            if let Some(field) = readme_field {
+                document.add_text(field, readme)
             }
         }
 
-        if !value.keywords.is_empty() {
-            match keyword_field {
-                Some(field) => value
-                    .keywords
-                    .clone()
-                    .into_iter()
-                    .for_each(|v| document.add_text(field, v)),
-                None => (),
-            }
+        if let Some(field) = keyword_field {
+            value
+                .keywords
+                .clone()
+                .into_iter()
+                .for_each(|v| document.add_text(field, v))
         }
 
-        if !value.categories.is_empty() {
-            match category_field {
-                Some(field) => value
-                    .categories
-                    .clone()
-                    .into_iter()
-                    .for_each(|v| document.add_text(field, v)),
-                None => (),
-            }
+        if let Some(field) = category_field {
+            value
+                .categories
+                .clone()
+                .into_iter()
+                .for_each(|v| document.add_text(field, v))
         }
 
         Ok(document)

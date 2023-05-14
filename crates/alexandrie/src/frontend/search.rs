@@ -37,7 +37,8 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let repo = &state.db;
 
     let (count, results) = {
-        let tantivy = (&state.search)
+        let tantivy = state
+            .search
             .read()
             .map_err(|error| Error::PoisonedError(error.to_string()))?;
         tantivy.search(
