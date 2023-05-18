@@ -4,8 +4,6 @@ pub mod account;
 pub mod helpers;
 /// The index page (eg. "/").
 pub mod index;
-/// Index all crates into search index.
-pub mod indexer;
 /// Crate-dedicated pages (eg. "/crates/\<name\>").
 pub mod krate;
 /// Last updated crates (eg. "/last-updated").
