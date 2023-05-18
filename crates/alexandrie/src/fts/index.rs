@@ -1,7 +1,9 @@
 use std::convert::TryFrom;
 use std::num::NonZeroUsize;
+use std::sync::RwLock;
 
 use log::{error, info, warn};
+use tantivy::{Document, Index as TantivyIndex, IndexWriter, Opstamp, TantivyError, Term};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
 use tantivy::query::QueryParser;
@@ -10,7 +12,6 @@ use tantivy::tokenizer::{
     Language, LowerCaser, RawTokenizer, SimpleTokenizer, StopWordFilter, TextAnalyzer,
     TokenizerManager,
 };
-use tantivy::{Document, Index as TantivyIndex, IndexWriter, Opstamp, TantivyError, Term};
 use tantivy_analysis_contrib::commons::EdgeNgramTokenFilter;
 
 use crate::config::SearchConfig;
@@ -21,7 +22,7 @@ pub struct Tantivy {
     index: TantivyIndex,
     /// There can only be one index writer at a time (see https://tantivy-search.github.io/examples/basic_search.html)
     /// so we keep only one here. It has its own pool.
-    index_writer: IndexWriter,
+    index_writer: RwLock<IndexWriter>,
     pub schema: Schema,
     /// Search tokenizer manager
     search_tokenizer_manager: TokenizerManager,
@@ -126,7 +127,7 @@ impl TryFrom<SearchConfig> for Tantivy {
         );
 
         // Get an index writer with 50MB of heap
-        let index_writer = index.writer(50_000_000)?;
+        let index_writer = RwLock::new(index.writer(50_000_000)?);
 
         Ok(Self {
             index,
@@ -143,8 +144,11 @@ impl Tantivy {
     pub fn create_or_update(&self, id: i64, document: Document) -> Result<(), Error> {
         if let Some(field) = self.schema.get_field(super::ID_FIELD_NAME) {
             let term = Term::from_field_i64(field, id);
-            self.index_writer.delete_term(term);
-            self.index_writer.add_document(document)?;
+            let index_writer = self.index_writer
+                .read()
+                .map_err(|error| Error::PoisonedError(error.to_string()))?;
+            index_writer.delete_term(term);
+            index_writer.add_document(document)?;
         } else {
             error!("There is no field {} in schema", super::ID_FIELD_NAME);
         }
@@ -152,13 +156,19 @@ impl Tantivy {
         Ok(())
     }
 
-    pub fn delete_all_documents(&mut self) -> Result<Opstamp, TantivyError> {
-        self.index_writer.delete_all_documents()
+    pub fn delete_all_documents(&self) -> Result<Opstamp, Error> {
+        let index_writer = self.index_writer
+            .read()
+            .map_err(|error| Error::PoisonedError(error.to_string()))?;
+        Ok(index_writer.delete_all_documents()?)
     }
 
     /// Commit all pending changes inside the index.
-    pub fn commit(&mut self) -> Result<Opstamp, TantivyError> {
-        self.index_writer.commit()
+    pub fn commit(&self) -> Result<Opstamp, Error> {
+        let mut index_writer = self.index_writer
+            .write()
+            .map_err(|error| Error::PoisonedError(error.to_string()))?;
+        Ok(index_writer.commit()?)
     }
 
     /// Search document by default through all crate's name index. This allows having search

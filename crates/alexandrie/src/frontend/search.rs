@@ -7,14 +7,14 @@ use tide::Request;
 
 use alexandrie_index::Indexer;
 
+use crate::db::DATETIME_FORMAT;
 use crate::db::models::Crate;
 use crate::db::schema::*;
-use crate::db::DATETIME_FORMAT;
 use crate::error::Error;
 use crate::frontend::helpers;
+use crate::State;
 use crate::utils;
 use crate::utils::auth::AuthExt;
-use crate::State;
 
 const RESULT_PER_PAGE: i64 = 15;
 
@@ -36,24 +36,18 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let state = req.state().clone();
     let repo = &state.db;
 
-    let (count, results) = {
-        let tantivy = state
-            .search
-            .read()
-            .map_err(|error| Error::PoisonedError(error.to_string()))?;
-        tantivy.search(
-            searched_text.clone(),
-            offset as usize,
-            RESULT_PER_PAGE as usize,
-        )?
-    };
+    let (count, results) = state.search.search(
+        searched_text.clone(),
+        offset as usize,
+        RESULT_PER_PAGE as usize,
+    )?;
 
     let page_count = (count / RESULT_PER_PAGE as usize
         + if count > 0 && count % RESULT_PER_PAGE as usize == 0 {
-            0
-        } else {
-            1
-        }) as u32;
+        0
+    } else {
+        1
+    }) as u32;
 
     let transaction = repo.transaction(move |conn| {
         let state = req.state();

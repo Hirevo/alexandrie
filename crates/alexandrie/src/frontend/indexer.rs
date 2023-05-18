@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use log::{info, warn, debug};
+use log::{debug, info, warn};
 use tide::{Request, Response};
 
 use crate::db::models::Crate;
@@ -17,7 +17,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let transaction: Result<(), Error> = repo
         .transaction(move |conn| {
             let state = req.state();
-            let mut tantivy = state.search.write().unwrap();
+            let tantivy = &state.search;
             tantivy.delete_all_documents()?;
             tantivy.commit()?;
             let mut start: i64 = 0;

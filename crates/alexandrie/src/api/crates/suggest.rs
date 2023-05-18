@@ -8,8 +8,8 @@ use tide::Request;
 use alexandrie_index::Indexer;
 
 use crate::error::{AlexError, Error};
-use crate::utils;
 use crate::State;
+use crate::utils;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct APIResponse {
@@ -43,12 +43,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let state = req.state().clone();
     let index = &state.index;
 
-    let results = {
-        let tantivy = (&state.search)
-            .read()
-            .map_err(|error| Error::PoisonedError(error.to_string()))?;
-        tantivy.suggest(name, limit)?
-    };
+    let results = state.search.suggest(name, limit)?;
     let suggestions = results
         .into_iter()
         .map(|krate| {
