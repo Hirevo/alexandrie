@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use std::sync::RwLock;
 
 use log::{error, info, warn};
-use tantivy::{Document, Index as TantivyIndex, IndexWriter, Opstamp, TantivyError, Term};
+use tantivy::{Index as TantivyIndex, IndexReader, IndexWriter, Opstamp, ReloadPolicy, TantivyError, Term};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
 use tantivy::query::QueryParser;
@@ -16,14 +16,16 @@ use tantivy_analysis_contrib::commons::EdgeNgramTokenFilter;
 
 use crate::config::SearchConfig;
 use crate::error::Error;
+use crate::fts::TantivyDocument;
 
 /// Helper for using Tantivy
 pub struct Tantivy {
-    index: TantivyIndex,
+    index_reader: IndexReader,
     /// There can only be one index writer at a time (see https://tantivy-search.github.io/examples/basic_search.html)
     /// so we keep only one here. It has its own pool.
     index_writer: RwLock<IndexWriter>,
-    pub schema: Schema,
+    /// Index schema
+    schema: Schema,
     /// Search tokenizer manager
     search_tokenizer_manager: TokenizerManager,
 }
@@ -129,8 +131,10 @@ impl TryFrom<SearchConfig> for Tantivy {
         // Get an index writer with 50MB of heap
         let index_writer = RwLock::new(index.writer(50_000_000)?);
 
+        let index_reader = index.reader_builder().reload_policy(ReloadPolicy::OnCommit).try_into()?;
+
         Ok(Self {
-            index,
+            index_reader,
             index_writer,
             schema,
             search_tokenizer_manager,
@@ -139,9 +143,14 @@ impl TryFrom<SearchConfig> for Tantivy {
 }
 
 impl Tantivy {
+    pub fn schema(&self) -> &Schema {
+        &self.schema
+    }
+
     /// Method that create or update a document in Tantivy index. As there is no update, we need
     /// to first delete the document then create a new document.
-    pub fn create_or_update(&self, id: i64, document: Document) -> Result<(), Error> {
+    pub fn create_or_update(&self, id: i64, document: TantivyDocument) -> Result<(), Error> {
+        let document = document.try_into(&self.schema)?;
         if let Some(field) = self.schema.get_field(super::ID_FIELD_NAME) {
             let term = Term::from_field_i64(field, id);
             let index_writer = self.index_writer
@@ -175,7 +184,7 @@ impl Tantivy {
     /// as you type (using prefixes) while increasing relevance when there's a matching word
     /// or if the whole text matches a crate's name (using the other crate's name indices).
     pub fn suggest(&self, query: String, limit: usize) -> Result<Vec<String>, TantivyError> {
-        let searcher = self.index.reader()?.searcher();
+        let searcher = self.index_reader.searcher();
 
         let name = self.schema.get_field(super::NAME_FIELD_NAME).unwrap();
         let name_full = self.schema.get_field(super::NAME_FIELD_NAME_FULL).unwrap();
@@ -227,7 +236,7 @@ impl Tantivy {
         offset: usize,
         limit: usize,
     ) -> Result<(usize, Vec<i64>), TantivyError> {
-        let searcher = self.index.reader()?.searcher();
+        let searcher = self.index_reader.searcher();
 
         let id = self.schema.get_field(super::ID_FIELD_NAME).unwrap();
         let name = self.schema.get_field(super::NAME_FIELD_NAME).unwrap();
@@ -241,7 +250,7 @@ impl Tantivy {
         let keywords = self.schema.get_field(super::KEYWORD_FIELD_NAME).unwrap();
 
         let mut query_parser = QueryParser::for_index(
-            &self.index,
+            searcher.index(),
             vec![name, name_full, description, readme, categories, keywords],
         );
 
