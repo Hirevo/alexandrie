@@ -150,8 +150,6 @@ fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<
     log::info!("mounting '/account/manage/tokens/:token-id/revoke'");
     app.at("/account/manage/tokens/:token-id/revoke")
         .get(frontend::account::manage::tokens::revoke::get);
-    log::info!("mounting '/indexer'");
-    app.at("/indexer").get(frontend::indexer::get);
 
     log::info!("mounting '/assets/*path'");
     app.at("/assets").serve_dir(frontend_config.assets.path)?;
@@ -244,7 +242,12 @@ async fn run() -> Result<(), Error> {
     #[cfg(feature = "frontend")]
     let frontend_config = config.frontend.clone();
 
-    let state: Arc<config::State> = Arc::new(config.try_into()?);
+    let state:config::State = config.try_into()?;
+
+    let database = &state.db;
+    state.search.index_all(database).await?;
+
+    let state = Arc::new(state);
 
     log::info!("starting Alexandrie (version: {})", build::short());
 

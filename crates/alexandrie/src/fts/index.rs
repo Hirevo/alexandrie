@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 use std::num::NonZeroUsize;
 use std::sync::RwLock;
 
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use tantivy::{Index as TantivyIndex, IndexReader, IndexWriter, Opstamp, ReloadPolicy, TantivyError, Term};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
@@ -15,8 +15,18 @@ use tantivy::tokenizer::{
 use tantivy_analysis_contrib::commons::EdgeNgramTokenFilter;
 
 use crate::config::SearchConfig;
+use crate::db::Database;
+use diesel::prelude::*;
+
+use crate::db::models::Crate;
+use crate::db::schema::*;
 use crate::error::Error;
 use crate::fts::TantivyDocument;
+
+
+const NUMBER_RESULT_PER_PAGE: i64 = 1000;
+
+type CrateKeywordCategory = (Vec<Crate>, Vec<(i64, String)>, Vec<(i64, String)>);
 
 /// Helper for using Tantivy
 pub struct Tantivy {
@@ -301,5 +311,115 @@ impl Tantivy {
             .collect();
 
         Ok((count, results))
+    }
+
+    pub async fn index_all(&self, repo:&Database) -> Result<(), Error> {
+        info!("Index all crates");
+        self.delete_all_documents()?;
+        self.commit()?;
+        let mut start: i64 = 0;
+        let mut count_crate = 0;
+
+        'indexing: loop {
+            let result: Result<Option<CrateKeywordCategory>, Error> = repo
+                .run(move |conn| {
+                    debug!("Querying crates from {start} to {}", start + NUMBER_RESULT_PER_PAGE);
+                    let krates = crates::table
+                        .order_by(crates::id.asc())
+                        .limit(NUMBER_RESULT_PER_PAGE)
+                        .offset(start)
+                        .load::<Crate>(conn)?;
+
+                    debug!("{} crates fetched", krates.len());
+
+                    if krates.is_empty() {
+                        return Ok(None);
+                    }
+
+                    let ids = krates
+                        .clone()
+                        .into_iter()
+                        .map(|c| c.id)
+                        .collect::<Vec<i64>>();
+
+                    debug!("Crates {:?}", ids);
+
+                    let keywords = keywords::table
+                        .inner_join(crate_keywords::table)
+                        .select((crate_keywords::crate_id, keywords::name))
+                        .filter(crate_keywords::crate_id.eq_any(&ids))
+                        .order_by(crate_keywords::crate_id.asc())
+                        .load::<(i64, String)>(conn)?;
+
+                    let categories = categories::table
+                        .inner_join(crate_categories::table)
+                        .select((crate_categories::crate_id, categories::name))
+                        .filter(crate_categories::crate_id.eq_any(&ids))
+                        .order_by(crate_categories::crate_id.asc())
+                        .load::<(i64, String)>(conn)?;
+
+                    Ok(Some((krates, keywords, categories)))
+                }).await;
+
+            let result = result?;
+
+            if let Some((krates, keywords, categories)) = result {
+                start = start + krates.len() as i64;
+                let mut keywords_iterator = keywords.into_iter();
+                let mut categories_iterator = categories.into_iter();
+
+                let mut current_keyword: Option<(i64, String)> = keywords_iterator.next();
+                let mut current_category: Option<(i64, String)> = categories_iterator.next();
+
+                for krate in krates.into_iter() {
+                    debug!("crate {:?}", krate);
+                    // Create a document with database ID and crate name
+                    let mut doc: TantivyDocument =
+                        TantivyDocument::new(krate.id, krate.name.clone());
+
+                    // If there is some description, then set it
+                    if let Some(description) = krate.description.as_ref() {
+                        doc.set_description(description.clone());
+                    }
+
+                    // Add all keywords
+                    while current_keyword.is_some()
+                        && current_keyword.as_ref().unwrap().0 == krate.id
+                    {
+                        doc.add_keyword(current_keyword.unwrap().1);
+                        current_keyword = keywords_iterator.next();
+                    }
+
+                    // Add all cateogries
+                    while current_category.is_some()
+                        && current_category.as_ref().unwrap().0 == krate.id
+                    {
+                        doc.add_category(current_category.unwrap().1);
+                        current_category = categories_iterator.next();
+                    }
+
+                    // TODO get README
+
+                    if let Err(error) = self.create_or_update(krate.id, doc) {
+                        warn!(
+                                "Can't convert crate '{}' ({}) into Tantivy document : {error}",
+                                krate.id,
+                                krate.name.clone()
+                            );
+                    }
+                    count_crate += 1;
+
+                    if count_crate % 1000 == 0 {
+                        info!("{} crates indexed", count_crate);
+                    }
+                }
+            } else {
+                info!("End indexing {start} crates");
+                self.commit()?;
+                break 'indexing;
+            }
+        }
+
+        Ok(())
     }
 }
