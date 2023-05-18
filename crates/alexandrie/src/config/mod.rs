@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::sync::RwLock;
 
 /// Database configuration (`[database]` section).
 pub mod database;
@@ -81,7 +80,7 @@ pub struct State {
     /// The syntect configuration.
     pub syntect: SyntectState,
     /// Search config
-    pub search: RwLock<Tantivy>,
+    pub search: Tantivy,
     /// The frontend configured state.
     #[cfg(feature = "frontend")]
     pub frontend: FrontendState,
@@ -105,7 +104,7 @@ impl TryFrom<Config> for State {
             storage: config.storage.into(),
             db: Database::new(&config.database),
             syntect: config.syntect.into(),
-            search: RwLock::new(config.search.try_into()?),
+            search: config.search.try_into()?,
             #[cfg(feature = "frontend")]
             frontend: config.frontend.into(),
         })
