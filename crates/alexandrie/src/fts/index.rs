@@ -3,7 +3,6 @@ use std::num::NonZeroUsize;
 use std::sync::RwLock;
 
 use log::{debug, error, info, warn};
-use tantivy::{Index as TantivyIndex, IndexReader, IndexWriter, Opstamp, ReloadPolicy, TantivyError, Term};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
 use tantivy::query::QueryParser;
@@ -11,6 +10,9 @@ use tantivy::schema::{NumericOptions, Schema, TextFieldIndexing, TextOptions};
 use tantivy::tokenizer::{
     Language, LowerCaser, RawTokenizer, SimpleTokenizer, StopWordFilter, TextAnalyzer,
     TokenizerManager,
+};
+use tantivy::{
+    Index as TantivyIndex, IndexReader, IndexWriter, Opstamp, ReloadPolicy, TantivyError, Term,
 };
 use tantivy_analysis_contrib::commons::EdgeNgramTokenFilter;
 
@@ -22,7 +24,6 @@ use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::error::Error;
 use crate::fts::TantivyDocument;
-
 
 const NUMBER_RESULT_PER_PAGE: i64 = 1000;
 
@@ -141,7 +142,10 @@ impl TryFrom<SearchConfig> for Tantivy {
         // Get an index writer with 50MB of heap
         let index_writer = RwLock::new(index.writer(50_000_000)?);
 
-        let index_reader = index.reader_builder().reload_policy(ReloadPolicy::OnCommit).try_into()?;
+        let index_reader = index
+            .reader_builder()
+            .reload_policy(ReloadPolicy::OnCommit)
+            .try_into()?;
 
         Ok(Self {
             index_reader,
@@ -163,7 +167,8 @@ impl Tantivy {
         let document = document.try_into(&self.schema)?;
         if let Some(field) = self.schema.get_field(super::ID_FIELD_NAME) {
             let term = Term::from_field_i64(field, id);
-            let index_writer = self.index_writer
+            let index_writer = self
+                .index_writer
                 .read()
                 .map_err(|error| Error::PoisonedError(error.to_string()))?;
             index_writer.delete_term(term);
@@ -176,7 +181,8 @@ impl Tantivy {
     }
 
     pub fn delete_all_documents(&self) -> Result<Opstamp, Error> {
-        let index_writer = self.index_writer
+        let index_writer = self
+            .index_writer
             .read()
             .map_err(|error| Error::PoisonedError(error.to_string()))?;
         Ok(index_writer.delete_all_documents()?)
@@ -184,7 +190,8 @@ impl Tantivy {
 
     /// Commit all pending changes inside the index.
     pub fn commit(&self) -> Result<Opstamp, Error> {
-        let mut index_writer = self.index_writer
+        let mut index_writer = self
+            .index_writer
             .write()
             .map_err(|error| Error::PoisonedError(error.to_string()))?;
         Ok(index_writer.commit()?)
@@ -313,7 +320,7 @@ impl Tantivy {
         Ok((count, results))
     }
 
-    pub async fn index_all(&self, repo:&Database) -> Result<(), Error> {
+    pub async fn index_all(&self, repo: &Database) -> Result<(), Error> {
         info!("Index all crates");
         self.delete_all_documents()?;
         self.commit()?;
@@ -323,7 +330,10 @@ impl Tantivy {
         'indexing: loop {
             let result: Result<Option<CrateKeywordCategory>, Error> = repo
                 .run(move |conn| {
-                    debug!("Querying crates from {start} to {}", start + NUMBER_RESULT_PER_PAGE);
+                    debug!(
+                        "Querying crates from {start} to {}",
+                        start + NUMBER_RESULT_PER_PAGE
+                    );
                     let krates = crates::table
                         .order_by(crates::id.asc())
                         .limit(NUMBER_RESULT_PER_PAGE)
@@ -359,7 +369,8 @@ impl Tantivy {
                         .load::<(i64, String)>(conn)?;
 
                     Ok(Some((krates, keywords, categories)))
-                }).await;
+                })
+                .await;
 
             let result = result?;
 
@@ -402,10 +413,10 @@ impl Tantivy {
 
                     if let Err(error) = self.create_or_update(krate.id, doc) {
                         warn!(
-                                "Can't convert crate '{}' ({}) into Tantivy document : {error}",
-                                krate.id,
-                                krate.name.clone()
-                            );
+                            "Can't convert crate '{}' ({}) into Tantivy document : {error}",
+                            krate.id,
+                            krate.name.clone()
+                        );
                     }
                     count_crate += 1;
 

@@ -242,7 +242,7 @@ async fn run() -> Result<(), Error> {
     #[cfg(feature = "frontend")]
     let frontend_config = config.frontend.clone();
 
-    let state:config::State = config.try_into()?;
+    let state: config::State = config.try_into()?;
 
     let database = &state.db;
     state.search.index_all(database).await?;
