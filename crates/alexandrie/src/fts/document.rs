@@ -7,8 +7,7 @@ use crate::error::Error;
 
 /// Represent a crate.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct TantivyDocument<'a> {
-    schema: &'a Schema,
+pub struct TantivyDocument {
     id: i64,
     name: String,
     description: Option<String>,
@@ -17,7 +16,7 @@ pub(crate) struct TantivyDocument<'a> {
     categories: Vec<String>,
 }
 
-impl std::fmt::Display for TantivyDocument<'_> {
+impl std::fmt::Display for TantivyDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "id: {}, name: {}", self.id, self.name)?;
         if let Some(description) = &self.description {
@@ -48,22 +47,31 @@ impl std::fmt::Display for TantivyDocument<'_> {
     }
 }
 
-impl TryFrom<TantivyDocument<'_>> for Document {
-    type Error = Error;
+impl TantivyDocument {
+    pub fn new(id: i64, name: String) -> Self {
+        Self {
+            id,
+            name,
+            description: None,
+            readme: None,
+            keywords: Vec::with_capacity(5),
+            categories: Vec::with_capacity(5),
+        }
+    }
 
-    fn try_from(value: TantivyDocument) -> Result<Self, Self::Error> {
+    pub fn try_into(self, schema: &Schema) -> Result<Document, Error> {
         // Can't implement From because I need to use a tuple to hold schema and both
         // tuple and Document are in another crate :-(
         let mut document = Document::new();
 
-        let id_field = value.schema.get_field(super::ID_FIELD_NAME);
-        let name_field = value.schema.get_field(super::NAME_FIELD_NAME);
-        let name_full_field = value.schema.get_field(super::NAME_FIELD_NAME_FULL);
-        let name_prefix_field = value.schema.get_field(super::NAME_FIELD_PREFIX_NAME);
-        let description_field = value.schema.get_field(super::DESCRIPTION_FIELD_NAME);
-        let readme_field = value.schema.get_field(super::README_FIELD_NAME);
-        let category_field = value.schema.get_field(super::CATEGORY_FIELD_NAME);
-        let keyword_field = value.schema.get_field(super::KEYWORD_FIELD_NAME);
+        let id_field = schema.get_field(super::ID_FIELD_NAME);
+        let name_field = schema.get_field(super::NAME_FIELD_NAME);
+        let name_full_field = schema.get_field(super::NAME_FIELD_NAME_FULL);
+        let name_prefix_field = schema.get_field(super::NAME_FIELD_PREFIX_NAME);
+        let description_field = schema.get_field(super::DESCRIPTION_FIELD_NAME);
+        let readme_field = schema.get_field(super::README_FIELD_NAME);
+        let category_field = schema.get_field(super::CATEGORY_FIELD_NAME);
+        let keyword_field = schema.get_field(super::KEYWORD_FIELD_NAME);
 
         // None of the fields should be `None`.
         // But we check that anyway.
@@ -80,27 +88,27 @@ impl TryFrom<TantivyDocument<'_>> for Document {
             return Err(Error::MissingField(super::NAME_FIELD_PREFIX_NAME));
         }
 
-        document.add_i64(id_field.unwrap(), value.id);
-        document.add_text(name_field.unwrap(), &value.name);
-        document.add_text(name_full_field.unwrap(), &value.name);
-        document.add_text(name_prefix_field.unwrap(), &value.name);
+        document.add_i64(id_field.unwrap(), self.id);
+        document.add_text(name_field.unwrap(), &self.name);
+        document.add_text(name_full_field.unwrap(), &self.name);
+        document.add_text(name_prefix_field.unwrap(), self.name);
 
         // For the following fields we will not fail if they are not in schema
         // but TODO add warn
-        if let Some(description) = &value.description {
+        if let Some(description) = &self.description {
             if let Some(field) = description_field {
                 document.add_text(field, description)
             }
         }
 
-        if let Some(readme) = &value.readme {
+        if let Some(readme) = &self.readme {
             if let Some(field) = readme_field {
                 document.add_text(field, readme)
             }
         }
 
         if let Some(field) = keyword_field {
-            value
+            self
                 .keywords
                 .clone()
                 .into_iter()
@@ -108,7 +116,7 @@ impl TryFrom<TantivyDocument<'_>> for Document {
         }
 
         if let Some(field) = category_field {
-            value
+            self
                 .categories
                 .clone()
                 .into_iter()
@@ -117,38 +125,24 @@ impl TryFrom<TantivyDocument<'_>> for Document {
 
         Ok(document)
     }
-}
-
-impl<'a> TantivyDocument<'a> {
-    pub(crate) fn new(id: i64, name: String, schema: &'a Schema) -> Self {
-        Self {
-            schema,
-            id,
-            name,
-            description: None,
-            readme: None,
-            keywords: Vec::with_capacity(5),
-            categories: Vec::with_capacity(5),
-        }
-    }
 
     /// Set crate's description
-    pub(crate) fn set_description(&mut self, description: String) {
+    pub fn set_description(&mut self, description: String) {
         self.description = Some(description);
     }
 
     /// Set crate's README
-    pub(crate) fn set_readme(&mut self, readme: String) {
+    pub fn set_readme(&mut self, readme: String) {
         self.readme = Some(readme);
     }
 
     /// Add new crate's keyword
-    pub(crate) fn add_keyword(&mut self, keyword: String) {
+    pub fn add_keyword(&mut self, keyword: String) {
         self.keywords.push(keyword);
     }
 
     /// Add new crate's category
-    pub(crate) fn add_category(&mut self, category: String) {
+    pub fn add_category(&mut self, category: String) {
         self.categories.push(category);
     }
 }

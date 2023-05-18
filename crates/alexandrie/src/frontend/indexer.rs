@@ -67,7 +67,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                     debug!("crate {:?}", krate);
                     // Create a document with database ID and crate name
                     let mut doc: TantivyDocument =
-                        TantivyDocument::new(krate.id, krate.name.clone(), &tantivy.schema);
+                        TantivyDocument::new(krate.id, krate.name.clone());
 
                     // If there is some description, then set it
                     if let Some(description) = krate.description.as_ref() {
@@ -92,17 +92,12 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 
                     // TODO get README
 
-                    match doc.try_into() {
-                        Ok(document) => {
-                            tantivy.create_or_update(krate.id, document)?;
-                        }
-                        Err(error) => {
-                            warn!(
+                    if let Err(error) = tantivy.create_or_update(krate.id, doc) {
+                        warn!(
                                 "Can't convert crate '{}' ({}) into Tantivy document : {error}",
                                 krate.id,
                                 krate.name.clone()
                             );
-                        }
                     }
                     count_crate += 1;
 
