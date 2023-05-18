@@ -2,6 +2,7 @@ use std::convert::TryFrom;
 use std::num::NonZeroUsize;
 use std::sync::RwLock;
 
+use diesel::prelude::*;
 use log::{debug, error, info, warn};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
@@ -17,11 +18,9 @@ use tantivy::{
 use tantivy_analysis_contrib::commons::EdgeNgramTokenFilter;
 
 use crate::config::SearchConfig;
-use crate::db::Database;
-use diesel::prelude::*;
-
 use crate::db::models::Crate;
 use crate::db::schema::*;
+use crate::db::Database;
 use crate::error::Error;
 use crate::fts::TantivyDocument;
 
@@ -376,8 +375,8 @@ impl Tantivy {
 
             if let Some((krates, keywords, categories)) = result {
                 start = start + krates.len() as i64;
-                let mut keywords_iterator = keywords.into_iter();
-                let mut categories_iterator = categories.into_iter();
+                let mut keywords_iterator = keywords.into_iter().peekable();
+                let mut categories_iterator = categories.into_iter().peekable();
 
                 let mut current_keyword: Option<(i64, String)> = keywords_iterator.next();
                 let mut current_category: Option<(i64, String)> = categories_iterator.next();
@@ -393,19 +392,23 @@ impl Tantivy {
                         doc.set_description(description.clone());
                     }
 
-                    // Add all keywords
+                    // Skip keywords that might be orphan and add keywords that match ids
                     while current_keyword.is_some()
-                        && current_keyword.as_ref().unwrap().0 == krate.id
+                        && current_keyword.as_ref().unwrap().0 <= krate.id
                     {
-                        doc.add_keyword(current_keyword.unwrap().1);
+                        if current_keyword.as_ref().unwrap().0 == krate.id {
+                            doc.add_keyword(current_keyword.unwrap().1);
+                        }
                         current_keyword = keywords_iterator.next();
                     }
 
-                    // Add all cateogries
+                    // Skip keywords that might be orphan and add keywords that match ids
                     while current_category.is_some()
-                        && current_category.as_ref().unwrap().0 == krate.id
+                        && current_category.as_ref().unwrap().0 <= krate.id
                     {
-                        doc.add_category(current_category.unwrap().1);
+                        if current_category.as_ref().unwrap().0 == krate.id {
+                            doc.add_keyword(current_category.unwrap().1);
+                        }
                         current_category = categories_iterator.next();
                     }
 
