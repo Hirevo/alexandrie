@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use log::{info, warn};
+use log::{info, warn, debug};
 use tide::{Request, Response};
 
 use crate::db::models::Crate;
@@ -41,7 +41,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                     .collect::<Vec<i64>>();
                 start += krates.len() as i64;
 
-                info!("Crates {:?}", ids);
+                debug!("Crates {:?}", ids);
 
                 let keywords = keywords::table
                     .inner_join(crate_keywords::table)
@@ -64,7 +64,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                 let mut current_category: Option<(i64, String)> = categories_iterator.next();
 
                 for krate in krates.into_iter() {
-                    info!("crate {:?}", krate);
+                    debug!("crate {:?}", krate);
                     // Create a document with database ID and crate name
                     let mut doc: TantivyDocument =
                         TantivyDocument::new(krate.id, krate.name.clone(), &tantivy.schema);
@@ -105,6 +105,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                         }
                     }
                     count_crate += 1;
+
+                    if count_crate % 1000 == 0 {
+                        info!("{} crates indexed", count_crate);
+                    }
                 }
 
                 (*tantivy).commit()?;
