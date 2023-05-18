@@ -8,8 +8,8 @@ use tide::Request;
 use alexandrie_index::Indexer;
 
 use crate::error::{AlexError, Error};
-use crate::State;
 use crate::utils;
+use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct APIResponse {

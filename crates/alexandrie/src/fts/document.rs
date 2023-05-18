@@ -108,16 +108,14 @@ impl TantivyDocument {
         }
 
         if let Some(field) = keyword_field {
-            self
-                .keywords
+            self.keywords
                 .clone()
                 .into_iter()
                 .for_each(|v| document.add_text(field, v))
         }
 
         if let Some(field) = category_field {
-            self
-                .categories
+            self.categories
                 .clone()
                 .into_iter()
                 .for_each(|v| document.add_text(field, v))
