@@ -95,8 +95,7 @@ You can also configure things like the address and port of the server:
 
 ```toml
 [general]
-addr = "127.0.0.1"
-port = 3000
+bind_address = "127.0.0.1:3000"  # The endpoint and port on which to serve the service.
 ```
 
 Then, you need to configure a crate index.  
