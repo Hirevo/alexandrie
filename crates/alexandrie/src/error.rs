@@ -87,6 +87,14 @@ pub enum AlexError {
         /// The list of missing query parameters.
         missing_params: &'static [&'static str],
     },
+    /// The uploaded crate is larger than the maximum allowed crate size.
+    #[error(
+        "uploaded crate is larger than the maximum allowed crate size of {max_crate_size} bytes"
+    )]
+    CrateTooLarge {
+        /// The maximum allowed crate size (in bytes).
+        max_crate_size: u64,
+    },
 }
 
 // impl IntoResponse for Error {
