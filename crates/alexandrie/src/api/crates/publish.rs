@@ -186,7 +186,14 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         .ok_or(AlexError::InvalidToken)?;
 
     let mut bytes = Vec::new();
-    (&mut req).take(10_000_000).read_to_end(&mut bytes).await?;
+    if let Some(max_crate_size) = req.state().general.max_crate_size {
+        (&mut req)
+            .take(max_crate_size)
+            .read_to_end(&mut bytes)
+            .await?;
+    } else {
+        (&mut req).read_to_end(&mut bytes).await?;
+    }
     let mut cursor = std::io::Cursor::new(bytes);
 
     let metadata_size = cursor.read_u32::<LittleEndian>()?;
