@@ -6,6 +6,9 @@ pub mod database;
 #[cfg(feature = "frontend")]
 pub mod frontend;
 
+/// Serde (de)serialization helper functions.
+pub mod serde_utils;
+
 use alexandrie_index::config::IndexConfig;
 use alexandrie_index::Index;
 use alexandrie_rendering::config::{SyntectConfig, SyntectState};
@@ -24,6 +27,9 @@ use self::database::DatabaseConfig;
 pub struct GeneralConfig {
     /// The address to bind the server on.
     pub bind_address: String,
+    /// The maximum allowed crate size.
+    #[serde(deserialize_with = "serde_utils::deserialize_file_size_opt")]
+    max_crate_size: Option<u64>,
 }
 
 /// The application configuration struct.
@@ -44,8 +50,16 @@ pub struct Config {
     pub frontend: FrontendConfig,
 }
 
+/// the general configuration state, created from [GeneralConfig].
+pub struct GeneralState {
+    /// The maximum crate size allowed for publication.
+    pub max_crate_size: Option<u64>,
+}
+
 /// The application state, created from [Config].
 pub struct State {
+    /// General configuration state.
+    pub general: GeneralState,
     /// The current crate indexer used.
     pub index: Index,
     /// The current crate storage strategy used.
@@ -59,9 +73,18 @@ pub struct State {
     pub frontend: FrontendState,
 }
 
+impl From<GeneralConfig> for GeneralState {
+    fn from(config: GeneralConfig) -> Self {
+        Self {
+            max_crate_size: config.max_crate_size,
+        }
+    }
+}
+
 impl From<Config> for State {
     fn from(config: Config) -> State {
         State {
+            general: config.general.into(),
             index: config.index.into(),
             storage: config.storage.into(),
             db: Database::new(&config.database),

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::Read;
 use std::path::PathBuf;
+use std::pin::pin;
 
 use async_std::io::prelude::*;
 
@@ -171,6 +172,21 @@ fn link_badges(
     Ok(())
 }
 
+/// Checks whether the passed-in reader has ended (meaning it has reached EOF).
+///
+/// This function tests for this by attempting to read one more byte from the passed-in reader.
+/// Therefore, the reader should not be used after having called this function, because that one byte
+/// will be missing from the output.
+async fn has_reader_ended<R>(reader: R) -> std::io::Result<bool>
+where
+    R: async_std::io::Read,
+{
+    pin!(reader)
+        .read(&mut [0])
+        .await
+        .map(|bytes_read| bytes_read == 0)
+}
+
 /// Route to publish a new crate (used by `cargo publish`).
 pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     let state = req.state().clone();
@@ -186,7 +202,18 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         .ok_or(AlexError::InvalidToken)?;
 
     let mut bytes = Vec::new();
-    (&mut req).take(10_000_000).read_to_end(&mut bytes).await?;
+    if let Some(max_crate_size) = req.state().general.max_crate_size {
+        (&mut req)
+            .take(max_crate_size)
+            .read_to_end(&mut bytes)
+            .await?;
+
+        if !has_reader_ended(&mut req).await? {
+            return Err(Error::from(AlexError::CrateTooLarge { max_crate_size }).into());
+        }
+    } else {
+        (&mut req).read_to_end(&mut bytes).await?;
+    }
     let mut cursor = std::io::Cursor::new(bytes);
 
     let metadata_size = cursor.read_u32::<LittleEndian>()?;
