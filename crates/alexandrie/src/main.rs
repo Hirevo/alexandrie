@@ -244,9 +244,6 @@ async fn run() -> Result<(), Error> {
 
     let state: config::State = config.try_into()?;
 
-    let database = &state.db;
-    state.search.index_all(database).await?;
-
     let state = Arc::new(state);
 
     log::info!("starting Alexandrie (version: {})", build::short());
@@ -255,6 +252,9 @@ async fn run() -> Result<(), Error> {
     #[rustfmt::skip]
     state.db.run(|conn| conn.run_pending_migrations(db::MIGRATIONS).map(|_| ())).await
         .expect("migration execution error");
+
+    let database = &state.db;
+    state.search.index_all(database).await?;
 
     let mut app = tide::with_state(Arc::clone(&state));
 

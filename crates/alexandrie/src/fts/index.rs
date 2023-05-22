@@ -162,7 +162,8 @@ impl Tantivy {
 
     /// Method that create or update a document in Tantivy index. As there is no update, we need
     /// to first delete the document then create a new document.
-    pub fn create_or_update(&self, id: i64, document: TantivyDocument) -> Result<(), Error> {
+    pub fn create_or_update(&self, document: TantivyDocument) -> Result<(), Error> {
+        let id = document.id();
         let document = document.try_into(&self.schema)?;
         if let Some(field) = self.schema.get_field(super::ID_FIELD_NAME) {
             let term = Term::from_field_i64(field, id);
@@ -384,29 +385,22 @@ impl Tantivy {
                 for krate in krates.into_iter() {
                     debug!("crate {:?}", krate);
                     // Create a document with database ID and crate name
-                    let mut doc: TantivyDocument =
-                        TantivyDocument::new(krate.id, krate.name.clone());
+                    let id = krate.id;
+                    let name = krate.name.clone();
 
-                    // If there is some description, then set it
-                    if let Some(description) = krate.description.as_ref() {
-                        doc.set_description(description.clone());
-                    }
+                    let mut doc: TantivyDocument = krate.into();
 
                     // Skip keywords that might be orphan and add keywords that match ids
-                    while current_keyword.is_some()
-                        && current_keyword.as_ref().unwrap().0 <= krate.id
-                    {
-                        if current_keyword.as_ref().unwrap().0 == krate.id {
+                    while current_keyword.is_some() && current_keyword.as_ref().unwrap().0 <= id {
+                        if current_keyword.as_ref().unwrap().0 == id {
                             doc.add_keyword(current_keyword.unwrap().1);
                         }
                         current_keyword = keywords_iterator.next();
                     }
 
                     // Skip keywords that might be orphan and add keywords that match ids
-                    while current_category.is_some()
-                        && current_category.as_ref().unwrap().0 <= krate.id
-                    {
-                        if current_category.as_ref().unwrap().0 == krate.id {
+                    while current_category.is_some() && current_category.as_ref().unwrap().0 <= id {
+                        if current_category.as_ref().unwrap().0 == id {
                             doc.add_keyword(current_category.unwrap().1);
                         }
                         current_category = categories_iterator.next();
@@ -414,11 +408,9 @@ impl Tantivy {
 
                     // TODO get README
 
-                    if let Err(error) = self.create_or_update(krate.id, doc) {
+                    if let Err(error) = self.create_or_update(doc) {
                         warn!(
-                            "Can't convert crate '{}' ({}) into Tantivy document : {error}",
-                            krate.id,
-                            krate.name.clone()
+                            "Can't convert crate '{id}' ({name}) into Tantivy document : {error}"
                         );
                     }
                     count_crate += 1;

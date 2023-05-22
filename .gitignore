@@ -9,6 +9,7 @@
 
 # Rust compilation folder
 /target
+crates/*/target
 
 # hidden folders from code editors
 /.vscode
