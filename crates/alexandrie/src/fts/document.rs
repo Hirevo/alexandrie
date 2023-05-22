@@ -1,5 +1,6 @@
 use std::fmt::Formatter;
 
+use crate::db::models::Crate;
 use tantivy::schema::Schema;
 use tantivy::Document;
 
@@ -44,6 +45,19 @@ impl std::fmt::Display for TantivyDocument {
         }
 
         Ok(())
+    }
+}
+
+impl From<Crate> for TantivyDocument {
+    fn from(value: Crate) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            description: value.description,
+            readme: None,
+            keywords: vec![],
+            categories: vec![],
+        }
     }
 }
 
@@ -124,6 +138,10 @@ impl TantivyDocument {
         Ok(document)
     }
 
+    pub fn id(&self) -> i64 {
+        self.id
+    }
+
     /// Set crate's description
     pub fn set_description(&mut self, description: String) {
         self.description = Some(description);
@@ -139,8 +157,22 @@ impl TantivyDocument {
         self.keywords.push(keyword);
     }
 
+    /// Add all keywords
+    pub fn add_all_keywords(&mut self, keywords: Vec<String>) {
+        for keyword in keywords {
+            self.add_keyword(keyword);
+        }
+    }
+
     /// Add new crate's category
     pub fn add_category(&mut self, category: String) {
         self.categories.push(category);
+    }
+
+    /// Add all keywords
+    pub fn add_all_categories(&mut self, categories: Vec<String>) {
+        for category in categories {
+            self.add_category(category);
+        }
     }
 }
