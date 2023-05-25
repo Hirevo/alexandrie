@@ -171,7 +171,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         };
 
         let data = json!({
-            "ok": "true",
+            "ok": true,
             "msg": format!("{0} has been added as authors of {1}", authors_list, name),
         });
         Ok(utils::response::json(&data))
@@ -274,7 +274,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
         };
 
         let data = json!({
-            "ok": "true",
+            "ok": true,
             "msg": format!("{0} has been removed from authors of {1}", authors_list, name),
         });
         Ok(utils::response::json(&data))
