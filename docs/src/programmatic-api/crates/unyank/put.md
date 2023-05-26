@@ -29,6 +29,6 @@ Currently, the registry will return an object of the following shape:
 ```js
 {
     // Whether the operation went well.
-    "ok": "true",
+    "ok": true,
 }
 ```

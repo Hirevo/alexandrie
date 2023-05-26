@@ -43,7 +43,7 @@ Currently, the registry will return an object of the following shape:
 ```js
 {
     // Whether the operation went well.
-    "ok": "true",
+    "ok": true,
     // A human-displayable message describing the operation's outcome.
     "msg": "John Doe and Nicolas Polomack has been removed from authors",
 }
