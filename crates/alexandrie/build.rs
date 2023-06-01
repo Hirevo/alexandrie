@@ -1,3 +1,5 @@
-fn main() -> shadow_rs::SdResult<()> {
-    shadow_rs::new()
+use std::io;
+
+fn main() -> io::Result<()> {
+    built::write_built_file()
 }
