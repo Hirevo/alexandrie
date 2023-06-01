@@ -9,7 +9,7 @@ pub fn short() -> String {
     format!(
         "{version} - {commit} ({features})",
         version = built::PKG_VERSION,
-        commit = built::GIT_COMMIT_HASH_SHORT.unwrap(),
+        commit = built::GIT_COMMIT_HASH_SHORT.unwrap_or("<none>"),
         features = built::FEATURES_STR,
     )
 }
@@ -24,8 +24,8 @@ pub fn long() -> String {
         build time (UTC) = {build_time}\n\
         rustc version = {rustc_version}",
         version = built::PKG_VERSION,
-        branch = built::GIT_HEAD_REF.unwrap_or("(detached HEAD)"),
-        commit = built::GIT_COMMIT_HASH.unwrap(),
+        branch = built::GIT_HEAD_REF.unwrap_or("<none>"),
+        commit = built::GIT_COMMIT_HASH.unwrap_or("<none>"),
         features = built::FEATURES_STR,
         build_time = built::BUILT_TIME_UTC,
         rustc_version = built::RUSTC_VERSION,
