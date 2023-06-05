@@ -22,7 +22,7 @@ Public endpoints are accessible without needing to authenticate.
 
 **Crates section:**
 
-- [**Search crates**](crates/search/get.md): **`POST /api/v1/crates?<q>[&<page>][&<per_page>]`**
+- [**Search crates**](crates/search/get.md): **`GET /api/v1/crates?<q>[&<page>][&<per_page>]`**
 - [**Get crate information**](crates/info/get.md): **`GET /api/v1/crates/<name>`**
 - [**List crate owners**](crates/owners/put.md): **`GET /api/v1/crates/<name>/owners`**
 - [**Download crate archive**](crates/download/get.md): **`GET /api/v1/crates/<name>/<version>/download`**
