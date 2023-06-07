@@ -27,6 +27,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
     let user = req.get_author();
+    if req.state().is_login_required() && user.is_none() {
+        return Ok(utils::response::redirect("/account/login"));
+    }
+
     let state = req.state().clone();
     let db = &state.db;
 
