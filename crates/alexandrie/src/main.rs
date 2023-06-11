@@ -57,7 +57,9 @@ pub mod utils;
 /// Frontend endpoints definitions.
 #[cfg(feature = "frontend")]
 pub mod frontend;
-mod fts;
+
+/// Full text search
+pub mod fts;
 
 use crate::config::Config;
 use crate::error::Error;

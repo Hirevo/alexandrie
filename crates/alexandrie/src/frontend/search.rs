@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::num::NonZeroUsize;
 
 use diesel::prelude::*;
 use json::json;
@@ -16,12 +16,10 @@ use crate::utils;
 use crate::utils::auth::AuthExt;
 use crate::State;
 
-const RESULT_PER_PAGE: i64 = 15;
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct SearchParams {
     pub q: String,
-    pub page: Option<NonZeroU32>,
+    pub page: Option<NonZeroUsize>,
 }
 
 /// Route to search through crates (used by `cargo search`) using tantivy index
@@ -30,7 +28,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let searched_text = params.q.clone();
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
-    let offset = (page_number - 1) * RESULT_PER_PAGE as u32;
+    let offset = (page_number - 1) * crate::fts::DEFAULT_RESULT_PER_PAGE;
 
     let user = req.get_author();
     if req.state().is_login_required() && user.is_none() {
@@ -42,16 +40,16 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 
     let (count, results) = state.search.search(
         searched_text.clone(),
-        offset as usize,
-        RESULT_PER_PAGE as usize,
+        offset,
+        crate::fts::DEFAULT_RESULT_PER_PAGE,
     )?;
 
-    let page_count = (count / RESULT_PER_PAGE as usize
-        + if count > 0 && count % RESULT_PER_PAGE as usize == 0 {
+    let page_count = count / crate::fts::DEFAULT_RESULT_PER_PAGE
+        + if count > 0 && count % crate::fts::DEFAULT_RESULT_PER_PAGE == 0 {
             0
         } else {
             1
-        }) as u32;
+        };
 
     let transaction = repo.transaction(move |conn| {
         let state = req.state();

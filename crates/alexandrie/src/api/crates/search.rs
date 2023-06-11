@@ -14,10 +14,6 @@ use crate::error::{AlexError, Error};
 use crate::utils;
 use crate::State;
 
-/// Default number of result per page
-/// Perhaps should make this configurable in toml.
-const DEFAULT_PER_PAGE: usize = 15;
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct SearchResponse {
     pub crates: Vec<SearchResult>,
@@ -58,7 +54,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let state = req.state().clone();
 
     let query = params.q;
-    let per_page = params.per_page.map(|v| v.get()).unwrap_or(DEFAULT_PER_PAGE);
+    let per_page = params.per_page.map(|v| v.get()).unwrap_or(crate::fts::DEFAULT_RESULT_PER_PAGE);
     let page = params.page.map(|v| v.get()).unwrap_or(1) - 1;
 
     let searcher = &state.search;
