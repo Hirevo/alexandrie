@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use std::sync::RwLock;
 
 use diesel::prelude::*;
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
 use tantivy::query::QueryParser;
@@ -107,15 +107,19 @@ impl TryFrom<SearchConfig> for Tantivy {
         // A filter that lowercase words
         let stop_words =
             StopWordFilter::new(Language::English).ok_or(Self::Error::EmptyStopWord)?;
-        let analyzer = TextAnalyzer::from(SimpleTokenizer)
+        let analyzer = TextAnalyzer::builder(SimpleTokenizer::default())
             .filter(stop_words)
-            .filter(LowerCaser);
-
-        let analyzer_full = TextAnalyzer::from(RawTokenizer).filter(LowerCaser);
-
-        let analyzer_prefix = TextAnalyzer::from(SimpleTokenizer)
             .filter(LowerCaser)
-            .filter(EdgeNgramTokenFilter::new(NonZeroUsize::new(1).unwrap(), None, false).unwrap());
+            .build();
+
+        let analyzer_full = TextAnalyzer::builder(RawTokenizer::default())
+            .filter(LowerCaser)
+            .build();
+
+        let analyzer_prefix = TextAnalyzer::builder(SimpleTokenizer::default())
+            .filter(LowerCaser)
+            .filter(EdgeNgramTokenFilter::new(NonZeroUsize::new(1).unwrap(), None, false).unwrap())
+            .build();
 
         let index = TantivyIndex::open_or_create(directory, schema.clone())?;
         // Register analyzer
@@ -135,7 +139,9 @@ impl TryFrom<SearchConfig> for Tantivy {
         search_tokenizer_manager.register(analyzer_name_full, analyzer_full);
         search_tokenizer_manager.register(
             analyzer_prefix_name,
-            TextAnalyzer::from(SimpleTokenizer).filter(LowerCaser),
+            TextAnalyzer::builder(SimpleTokenizer::default())
+                .filter(LowerCaser)
+                .build(),
         );
 
         // Get an index writer with 50MB of heap
@@ -165,17 +171,14 @@ impl Tantivy {
     pub fn create_or_update(&self, document: TantivyDocument) -> Result<(), Error> {
         let id = document.id();
         let document = document.try_into(&self.schema)?;
-        if let Some(field) = self.schema.get_field(super::ID_FIELD_NAME) {
-            let term = Term::from_field_i64(field, id);
-            let index_writer = self
-                .index_writer
-                .read()
-                .map_err(|error| Error::PoisonedError(error.to_string()))?;
-            index_writer.delete_term(term);
-            index_writer.add_document(document)?;
-        } else {
-            error!("There is no field {} in schema", super::ID_FIELD_NAME);
-        }
+        let field = self.schema.get_field(super::ID_FIELD_NAME)?;
+        let term = Term::from_field_i64(field, id);
+        let index_writer = self
+            .index_writer
+            .read()
+            .map_err(|error| Error::PoisonedError(error.to_string()))?;
+        index_writer.delete_term(term);
+        index_writer.add_document(document)?;
 
         Ok(())
     }
@@ -239,8 +242,7 @@ impl Tantivy {
                 }
                 x.cloned()
             })
-            .map(|v| v.and_then(|i| i.as_text().map(|t| t.to_owned())))
-            .flatten()
+            .filter_map(|v| v.and_then(|i| i.as_text().map(|t| t.to_owned())))
             .collect();
 
         Ok(results)
@@ -293,7 +295,7 @@ impl Tantivy {
 
         let results = results
             .into_iter()
-            .map(|(score, doc_address)| {
+            .filter_map(|(score, doc_address)| {
                 let retrieve_doc = match searcher.doc(doc_address) {
                     Ok(retrieve_doc) => retrieve_doc,
                     Err(error) => {
@@ -314,7 +316,6 @@ impl Tantivy {
                     None
                 }
             })
-            .flatten()
             .collect();
 
         Ok((count, results))
@@ -375,7 +376,7 @@ impl Tantivy {
             let result = result?;
 
             if let Some((krates, keywords, categories)) = result {
-                start = start + krates.len() as i64;
+                start += krates.len() as i64;
                 let mut keywords_iterator = keywords.into_iter().peekable();
                 let mut categories_iterator = categories.into_iter().peekable();
 

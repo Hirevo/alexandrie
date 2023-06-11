@@ -78,62 +78,39 @@ impl TantivyDocument {
         // tuple and Document are in another crate :-(
         let mut document = Document::new();
 
-        let id_field = schema.get_field(super::ID_FIELD_NAME);
-        let name_field = schema.get_field(super::NAME_FIELD_NAME);
-        let name_full_field = schema.get_field(super::NAME_FIELD_NAME_FULL);
-        let name_prefix_field = schema.get_field(super::NAME_FIELD_PREFIX_NAME);
-        let description_field = schema.get_field(super::DESCRIPTION_FIELD_NAME);
-        let readme_field = schema.get_field(super::README_FIELD_NAME);
-        let category_field = schema.get_field(super::CATEGORY_FIELD_NAME);
-        let keyword_field = schema.get_field(super::KEYWORD_FIELD_NAME);
+        let id_field = schema.get_field(super::ID_FIELD_NAME)?;
+        let name_field = schema.get_field(super::NAME_FIELD_NAME)?;
+        let name_full_field = schema.get_field(super::NAME_FIELD_NAME_FULL)?;
+        let name_prefix_field = schema.get_field(super::NAME_FIELD_PREFIX_NAME)?;
+        let category_field = schema.get_field(super::CATEGORY_FIELD_NAME)?;
+        let keyword_field = schema.get_field(super::KEYWORD_FIELD_NAME)?;
 
-        // None of the fields should be `None`.
-        // But we check that anyway.
-        if id_field.is_none() {
-            return Err(Error::MissingField(super::ID_FIELD_NAME));
-        }
-        if name_field.is_none() {
-            return Err(Error::MissingField(super::NAME_FIELD_NAME));
-        }
-        if name_full_field.is_none() {
-            return Err(Error::MissingField(super::NAME_FIELD_NAME_FULL));
-        }
-        if name_prefix_field.is_none() {
-            return Err(Error::MissingField(super::NAME_FIELD_PREFIX_NAME));
-        }
-
-        document.add_i64(id_field.unwrap(), self.id);
-        document.add_text(name_field.unwrap(), &self.name);
-        document.add_text(name_full_field.unwrap(), &self.name);
-        document.add_text(name_prefix_field.unwrap(), self.name);
+        document.add_i64(id_field, self.id);
+        document.add_text(name_field, &self.name);
+        document.add_text(name_full_field, &self.name);
+        document.add_text(name_prefix_field, self.name);
 
         // For the following fields we will not fail if they are not in schema
         // but TODO add warn
         if let Some(description) = &self.description {
-            if let Some(field) = description_field {
-                document.add_text(field, description)
-            }
+            let description_field = schema.get_field(super::DESCRIPTION_FIELD_NAME)?;
+            document.add_text(description_field, description);
         }
 
         if let Some(readme) = &self.readme {
-            if let Some(field) = readme_field {
-                document.add_text(field, readme)
-            }
+            let readme_field = schema.get_field(super::README_FIELD_NAME)?;
+            document.add_text(readme_field, readme);
         }
 
-        if let Some(field) = keyword_field {
-            self.keywords
-                .clone()
-                .into_iter()
-                .for_each(|v| document.add_text(field, v))
-        }
+        self.keywords
+            .clone()
+            .into_iter()
+            .for_each(|v| document.add_text(keyword_field, v));
 
-        if let Some(field) = category_field {
-            self.categories
-                .clone()
-                .into_iter()
-                .for_each(|v| document.add_text(field, v))
-        }
+        self.categories
+            .clone()
+            .into_iter()
+            .for_each(|v| document.add_text(category_field, v));
 
         Ok(document)
     }
