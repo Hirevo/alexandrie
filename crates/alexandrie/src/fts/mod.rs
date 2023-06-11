@@ -5,7 +5,6 @@ mod index;
 pub(crate) use document::TantivyDocument;
 pub(crate) use index::Tantivy;
 
-
 /// Default number of result per page
 /// Perhaps should make this configurable in toml.
 pub const DEFAULT_RESULT_PER_PAGE: usize = 15;
