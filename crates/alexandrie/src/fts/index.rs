@@ -249,12 +249,14 @@ impl Tantivy {
     }
 
     /// Search documents. Return document count & database IDs.
-    pub fn search(
+    pub fn search<Q: AsRef<str>>(
         &self,
-        query: String,
+        query: Q,
         offset: usize,
         limit: usize,
     ) -> Result<(usize, Vec<i64>), TantivyError> {
+        let query = query.as_ref();
+
         let searcher = self.index_reader.searcher();
 
         let id = self.schema.get_field(super::ID_FIELD_NAME).unwrap();
@@ -284,7 +286,7 @@ impl Tantivy {
         query_parser.set_field_boost(description, 0.2);
         query_parser.set_field_boost(readme, 0.2);
 
-        let query = query_parser.parse_query(&query)?;
+        let query = query_parser.parse_query(query)?;
 
         info!("Query offset={} query limit={}", offset, limit);
 
