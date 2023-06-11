@@ -54,7 +54,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let state = req.state().clone();
 
     let query = params.q;
-    let per_page = params.per_page.map(|v| v.get()).unwrap_or(crate::fts::DEFAULT_RESULT_PER_PAGE);
+    let per_page = params
+        .per_page
+        .map(|v| v.get())
+        .unwrap_or(crate::fts::DEFAULT_RESULT_PER_PAGE);
     let page = params.page.map(|v| v.get()).unwrap_or(1) - 1;
 
     let searcher = &state.search;
@@ -68,12 +71,21 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         let state = req.state();
 
         // Get crate from database
-        let results = crates::table
-            .filter(crates::id.eq_any(ids))
+        let mut tmp = crates::table
+            .filter(crates::id.eq_any(&ids))
             .load::<Crate>(conn)?;
 
+        // Sort database result by relevance since we lost ordering...
+        let mut sorted: Vec<Crate> = Vec::with_capacity(tmp.len());
+        for id in ids {
+            if let Some(idx) = tmp.iter().position(|krate| krate.id == id) {
+                let krate = tmp.remove(idx);
+                sorted.push(krate);
+            }
+        }
+
         // Fetch missing informations from index
-        let crates = results
+        let crates = sorted
             .into_iter()
             .map(|krate| {
                 let latest = state.index.latest_record(krate.name.as_str())?;
