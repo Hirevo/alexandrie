@@ -395,18 +395,30 @@ impl Tantivy {
                     let mut doc: TantivyDocument = krate.into();
 
                     // Skip keywords that might be orphan and add keywords that match ids
-                    while current_keyword.is_some() && current_keyword.as_ref().unwrap().0 <= id {
-                        if current_keyword.as_ref().unwrap().0 == id {
-                            doc.add_keyword(current_keyword.unwrap().1);
+                    while let Some((crate_id, keyword)) = current_keyword {
+                        if crate_id > id {
+                            current_keyword = Some((crate_id, keyword));
+                            break;
                         }
+
+                        if crate_id == id {
+                            doc.add_keyword(keyword);
+                        }
+
                         current_keyword = keywords_iterator.next();
                     }
 
-                    // Skip keywords that might be orphan and add keywords that match ids
-                    while current_category.is_some() && current_category.as_ref().unwrap().0 <= id {
-                        if current_category.as_ref().unwrap().0 == id {
-                            doc.add_keyword(current_category.unwrap().1);
+                    // Skip categories that might be orphan and add categories that match ids
+                    while let Some((crate_id, category)) = current_category {
+                        if crate_id > id {
+                            current_category = Some((crate_id, category));
+                            break;
                         }
+
+                        if crate_id == id {
+                            doc.add_category(category);
+                        }
+
                         current_category = categories_iterator.next();
                     }
 
