@@ -78,4 +78,4 @@ path = "syntect/dumps/themes.dump"
 theme_name = "frontier-contrast"
 
 [search]
-directory = "/tmp/tantivy"
+path = "/tmp/tantivy"

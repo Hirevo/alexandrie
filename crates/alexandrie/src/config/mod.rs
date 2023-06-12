@@ -38,7 +38,7 @@ pub struct GeneralConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SearchConfig {
     /// Path to the directory where Tantivy will store its index.
-    pub directory: String,
+    pub path: String,
 }
 
 /// The application configuration struct.
