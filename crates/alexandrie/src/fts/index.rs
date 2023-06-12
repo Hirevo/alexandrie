@@ -97,7 +97,6 @@ impl TryFrom<SearchConfig> for Tantivy {
         schema_builder.add_text_field(super::NAME_FIELD_NAME_FULL, options_full.clone());
         schema_builder.add_text_field(super::NAME_FIELD_PREFIX_NAME, options_prefixes);
         schema_builder.add_text_field(super::DESCRIPTION_FIELD_NAME, options.clone());
-        schema_builder.add_text_field(super::README_FIELD_NAME, options.clone());
         schema_builder.add_text_field(super::CATEGORY_FIELD_NAME, options_full);
         schema_builder.add_text_field(super::KEYWORD_FIELD_NAME, options);
         let schema = schema_builder.build();
@@ -266,13 +265,12 @@ impl Tantivy {
             .schema
             .get_field(super::DESCRIPTION_FIELD_NAME)
             .unwrap();
-        let readme = self.schema.get_field(super::README_FIELD_NAME).unwrap();
         let categories = self.schema.get_field(super::CATEGORY_FIELD_NAME).unwrap();
         let keywords = self.schema.get_field(super::KEYWORD_FIELD_NAME).unwrap();
 
         let mut query_parser = QueryParser::for_index(
             searcher.index(),
-            vec![name, name_full, description, readme, categories, keywords],
+            vec![name, name_full, description, categories, keywords],
         );
 
         // Exact matches (on name_full) have a big boost
@@ -284,7 +282,6 @@ impl Tantivy {
         query_parser.set_field_boost(keywords, 0.5);
         // description & readme are full text they got a lower boost (if there is a match, that might not be relevant)
         query_parser.set_field_boost(description, 0.2);
-        query_parser.set_field_boost(readme, 0.2);
 
         let query = query_parser.parse_query(query)?;
 

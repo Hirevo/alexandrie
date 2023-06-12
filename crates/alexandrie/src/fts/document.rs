@@ -12,7 +12,6 @@ pub struct TantivyDocument {
     id: i64,
     name: String,
     description: Option<String>,
-    readme: Option<String>,
     keywords: Vec<String>,
     categories: Vec<String>,
 }
@@ -22,12 +21,6 @@ impl std::fmt::Display for TantivyDocument {
         write!(f, "id: {}, name: {}", self.id, self.name)?;
         if let Some(description) = &self.description {
             write!(f, ", '{}'", description)?;
-        }
-        // Don't write the README, it might be big, and
-        // log will be unreadable. Just say that it has
-        // a README.
-        if self.readme.is_some() {
-            write!(f, ", crate has README",)?;
         }
 
         if self.keywords.is_empty() {
@@ -54,7 +47,6 @@ impl From<Crate> for TantivyDocument {
             id: value.id,
             name: value.name,
             description: value.description,
-            readme: None,
             keywords: vec![],
             categories: vec![],
         }
@@ -67,7 +59,6 @@ impl TantivyDocument {
             id,
             name,
             description: None,
-            readme: None,
             keywords: Vec::with_capacity(5),
             categories: Vec::with_capacity(5),
         }
@@ -97,11 +88,6 @@ impl TantivyDocument {
             document.add_text(description_field, description);
         }
 
-        if let Some(readme) = &self.readme {
-            let readme_field = schema.get_field(super::README_FIELD_NAME)?;
-            document.add_text(readme_field, readme);
-        }
-
         self.keywords
             .clone()
             .into_iter()
@@ -122,11 +108,6 @@ impl TantivyDocument {
     /// Set crate's description
     pub fn set_description(&mut self, description: String) {
         self.description = Some(description);
-    }
-
-    /// Set crate's README
-    pub fn set_readme(&mut self, readme: String) {
-        self.readme = Some(readme);
     }
 
     /// Add new crate's keyword

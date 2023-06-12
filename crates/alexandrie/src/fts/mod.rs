@@ -23,6 +23,5 @@ const NAME_FIELD_NAME_FULL: &str = "name.full";
 /// contains word's prefixes to do "search as you type".
 const NAME_FIELD_PREFIX_NAME: &str = "name.prefix";
 const DESCRIPTION_FIELD_NAME: &str = "description";
-const README_FIELD_NAME: &str = "readme";
 const CATEGORY_FIELD_NAME: &str = "category";
 const KEYWORD_FIELD_NAME: &str = "keyword";
