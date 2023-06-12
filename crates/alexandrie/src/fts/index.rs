@@ -51,7 +51,7 @@ impl TryFrom<SearchConfig> for Tantivy {
         let analyzer_prefix_name = "alexandrie_prefix";
 
         // Create index directory
-        let path = search.directory.as_str();
+        let path = search.path.as_str();
         std::fs::create_dir_all(path)?;
         let directory = MmapDirectory::open(path)?;
 

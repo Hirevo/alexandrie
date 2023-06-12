@@ -71,21 +71,20 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
         let state = req.state();
 
         // Get crate from database
-        let mut tmp = crates::table
+        let mut crates = crates::table
             .filter(crates::id.eq_any(&ids))
             .load::<Crate>(conn)?;
 
         // Sort database result by relevance since we lost ordering...
-        let mut sorted: Vec<Crate> = Vec::with_capacity(tmp.len());
-        for id in ids {
-            if let Some(idx) = tmp.iter().position(|krate| krate.id == id) {
-                let krate = tmp.remove(idx);
-                sorted.push(krate);
-            }
-        }
+        // (the `unwrap_or` call should be unreachable, but if it is reached, it would sort the crate towards the end)
+        crates.sort_unstable_by_key(|krate| {
+            ids.iter()
+                .position(|id| *id == krate.id)
+                .unwrap_or(ids.len())
+        });
 
         // Fetch missing informations from index
-        let crates = sorted
+        let crates = crates
             .into_iter()
             .map(|krate| {
                 let latest = state.index.latest_record(krate.name.as_str())?;

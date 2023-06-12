@@ -59,17 +59,15 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             .map(|v| {
                 let krate = crates::table
                     .filter(crates::id.eq(v))
-                    .first::<Crate>(conn)
-                    .unwrap();
+                    .first::<Crate>(conn)?;
                 let keywords = crate_keywords::table
                     .inner_join(keywords::table)
                     .select(keywords::name)
                     .filter(crate_keywords::crate_id.eq(krate.id))
-                    .load::<String>(conn)
-                    .unwrap();
-                (krate, keywords)
+                    .load::<String>(conn)?;
+                Ok((krate, keywords))
             })
-            .collect();
+            .collect::<Result<_, Error>>()?;
 
         let encoded_q = percent_encoding::percent_encode(
             params.q.as_bytes(),
