@@ -6,7 +6,7 @@ use diesel::prelude::*;
 use log::{debug, info, warn};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
-use tantivy::query::QueryParser;
+use tantivy::query::{AllQuery, QueryParser};
 use tantivy::schema::{NumericOptions, Schema, TextFieldIndexing, TextOptions};
 use tantivy::tokenizer::{
     Language, LowerCaser, RawTokenizer, SimpleTokenizer, StopWordFilter, TextAnalyzer,
@@ -254,7 +254,7 @@ impl Tantivy {
         offset: usize,
         limit: usize,
     ) -> Result<(usize, Vec<i64>), TantivyError> {
-        let query = query.as_ref();
+        let query = query.as_ref().trim();
 
         let searcher = self.index_reader.searcher();
 
@@ -268,22 +268,26 @@ impl Tantivy {
         let categories = self.schema.get_field(super::CATEGORY_FIELD_NAME).unwrap();
         let keywords = self.schema.get_field(super::KEYWORD_FIELD_NAME).unwrap();
 
-        let mut query_parser = QueryParser::for_index(
-            searcher.index(),
-            vec![name, name_full, description, categories, keywords],
-        );
+        let query = if query.is_empty() {
+            Box::new(AllQuery)
+        } else {
+            let mut query_parser = QueryParser::for_index(
+                searcher.index(),
+                vec![name, name_full, description, categories, keywords],
+            );
 
-        // Exact matches (on name_full) have a big boost
-        query_parser.set_field_boost(name_full, 10.0);
-        query_parser.set_field_boost(name, 5.0);
-        // Categories shouldn't be free (there is a list) so a nice boost
-        query_parser.set_field_boost(categories, 1.0);
-        // Keywords are free
-        query_parser.set_field_boost(keywords, 0.5);
-        // description & readme are full text they got a lower boost (if there is a match, that might not be relevant)
-        query_parser.set_field_boost(description, 0.2);
+            // Exact matches (on name_full) have a big boost
+            query_parser.set_field_boost(name_full, 10.0);
+            query_parser.set_field_boost(name, 5.0);
+            // Categories shouldn't be free (there is a list) so a nice boost
+            query_parser.set_field_boost(categories, 1.0);
+            // Keywords are free
+            query_parser.set_field_boost(keywords, 0.5);
+            // description & readme are full text they got a lower boost (if there is a match, that might not be relevant)
+            query_parser.set_field_boost(description, 0.2);
 
-        let query = query_parser.parse_query(query)?;
+            query_parser.parse_query(query)?
+        };
 
         info!("Query offset={} query limit={}", offset, limit);
 
