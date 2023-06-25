@@ -13,6 +13,7 @@ max_crate_size = "50 MB"
 enabled = true
 title = "Alexandrie"
 description = "An alternative crate registry for Cargo, the Rust package manager."
+login_required = false
 
 [frontend.sessions]
 cookie_name = "alexandrie.sid"

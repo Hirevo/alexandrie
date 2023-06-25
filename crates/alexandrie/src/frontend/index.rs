@@ -13,6 +13,10 @@ use crate::State;
 
 pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let user = req.get_author();
+    if req.state().is_login_required() && user.is_none() {
+        return Ok(utils::response::redirect("/account/login"));
+    }
+
     let state = req.state().clone();
     let db = &state.db;
 

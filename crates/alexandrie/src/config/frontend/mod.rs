@@ -60,6 +60,8 @@ pub struct FrontendConfig {
     pub favicon: Option<String>,
     /// Some related links.
     pub links: Option<Vec<Link>>,
+    /// Whether to disallow anonymous browsing of the registry.
+    pub login_required: bool,
     /// Assets configuration options.
     pub assets: AssetsConfig,
     /// Templates configuration options.

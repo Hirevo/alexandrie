@@ -94,3 +94,11 @@ impl From<Config> for State {
         }
     }
 }
+
+impl State {
+    /// Returns whether we require users to log in to browse crates.
+    #[cfg(feature = "frontend")]
+    pub fn is_login_required(&self) -> bool {
+        self.frontend.config.login_required
+    }
+}

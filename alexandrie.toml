@@ -11,6 +11,7 @@ links = [
     { name = "Github repository", href = "https://github.com/Hirevo/alexandrie" },
     { name = "User documentation", href = "https://hirevo.github.io/alexandrie" },
 ]
+login_required = false
 
 [frontend.sessions]
 cookie_name = "alexandrie.sid"
