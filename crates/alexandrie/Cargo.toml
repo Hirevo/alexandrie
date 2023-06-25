@@ -60,9 +60,6 @@ thiserror = "1.0.40"
 flate2 = "1.0.25"
 tar = "0.4.38"
 
-# build-tme debug information
-shadow-rs = "0.21.0"
-
 # frontend
 handlebars = { version = "4.3.6", features = ["dir_source"], optional = true }
 time = { version = "0.3.20", optional = true }
@@ -90,17 +87,7 @@ sqlite = ["diesel/sqlite", "diesel_migrations/sqlite"]
 postgres = ["diesel/postgres", "diesel_migrations/postgres"]
 git2 = ["alexandrie-index/git2"]
 s3 = ["alexandrie-storage/s3"]
-frontend = [
-    "dep:handlebars",
-    "dep:oauth2",
-    "dep:once_cell",
-    "dep:regex",
-    "dep:reqwest",
-    "dep:num-format",
-    "dep:bigdecimal",
-    "dep:time",
-    "diesel/numeric",
-]
+frontend = ["dep:handlebars", "dep:oauth2", "dep:once_cell", "dep:regex", "dep:reqwest", "dep:num-format", "dep:bigdecimal", "dep:time", "diesel/numeric"]
 
 [build-dependencies]
-shadow-rs = "0.21.0"
+built = { version = "0.6.0", features = ["git2", "chrono"] }
