@@ -7,7 +7,7 @@ About
 Alexandrie is an alternative crate registry suitable for use with Cargo.
 
 This repository implements the Cargo APIs and interacts with a crate index as specified in the [Cargo's Alternative Registries RFC].  
-This allows to have a private registry to host crates that are specific to what you're doing and not suitable for publication on [crates.io] while maintaining the same build experience as with crates from [crates.io].  
+This allows you to have a private registry to host crates that are specific to what you're doing and not suitable for publication on [crates.io] while maintaining the same build experience as with crates from [crates.io].  
 
 [crates.io]: https://crates.io
 [Cargo's Alternative Registries RFC]: https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification
