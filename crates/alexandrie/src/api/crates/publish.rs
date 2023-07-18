@@ -4,12 +4,12 @@ use std::path::PathBuf;
 use std::pin::pin;
 
 use async_std::io::prelude::*;
-
 use byteorder::{LittleEndian, ReadBytesExt};
 use chrono::Utc;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
+use log::warn;
 use ring::digest as hasher;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
@@ -26,6 +26,7 @@ use crate::db::schema::*;
 use crate::db::Connection;
 use crate::db::DATETIME_FORMAT;
 use crate::error::{AlexError, Error};
+use crate::fts::TantivyDocument;
 use crate::utils;
 use crate::State;
 
@@ -70,7 +71,7 @@ struct CrateMetaDependency {
 fn link_keywords(
     conn: &mut Connection,
     crate_id: i64,
-    keywords: Option<Vec<String>>,
+    keywords: &Option<Vec<String>>,
 ) -> Result<(), Error> {
     diesel::delete(crate_keywords::table.filter(crate_keywords::crate_id.eq(crate_id)))
         .execute(conn)?;
@@ -116,7 +117,7 @@ fn link_keywords(
 fn link_categories(
     conn: &mut Connection,
     crate_id: i64,
-    categories: Option<Vec<String>>,
+    categories: &Option<Vec<String>>,
 ) -> Result<(), Error> {
     diesel::delete(crate_categories::table.filter(crate_categories::crate_id.eq(crate_id)))
         .execute(conn)?;
@@ -354,10 +355,10 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         };
 
         //? Update keywords.
-        link_keywords(conn, krate.id, metadata.keywords)?;
+        link_keywords(conn, krate.id, &metadata.keywords)?;
 
         //? Update categories.
-        link_categories(conn, krate.id, metadata.categories)?;
+        link_categories(conn, krate.id, &metadata.categories)?;
 
         //? Update badges.
         link_badges(conn, krate.id, metadata.badges)?;
@@ -395,6 +396,24 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         state
             .storage
             .store_crate(&crate_desc.name, crate_desc.vers.clone(), crate_bytes)?;
+
+        let id = krate.id;
+        let name = krate.name.clone();
+
+        // Index into full text index
+        let mut document: TantivyDocument = krate.into();
+        if let Some(keywords) = metadata.keywords {
+            document.add_all_keywords(keywords);
+        }
+        if let Some(categories) = metadata.categories {
+            document.add_all_categories(categories);
+        }
+
+        if let Err(error) = state.search.create_or_update(document) {
+            warn!("Can't convert crate '{id}' ({name}) into Tantivy document : {error}");
+        } else {
+            state.search.commit()?;
+        }
 
         //? Store the crate's readme.
         if let Some(rendered) = rendered_readme {

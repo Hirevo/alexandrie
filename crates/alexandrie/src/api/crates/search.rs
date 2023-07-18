@@ -1,6 +1,5 @@
-use std::num::NonZeroU32;
+use std::num::NonZeroUsize;
 
-use diesel::dsl as sql;
 use diesel::prelude::*;
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -35,14 +34,14 @@ struct SearchResult {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct SearchMeta {
-    pub total: i64,
+    pub total: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct QueryParams {
     pub q: String,
-    pub per_page: Option<NonZeroU32>,
-    pub page: Option<NonZeroU32>,
+    pub per_page: Option<NonZeroUsize>,
+    pub page: Option<NonZeroUsize>,
 }
 
 /// Route to search through crates (used by `cargo search`).
@@ -53,51 +52,39 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             missing_params: &["q"],
         })?;
     let state = req.state().clone();
+
+    let query = params.q;
+    let per_page = params
+        .per_page
+        .map(|v| v.get())
+        .unwrap_or(crate::fts::DEFAULT_RESULT_PER_PAGE);
+    let page = params.page.map(|v| v.get()).unwrap_or(1) - 1;
+
+    let searcher = &state.search;
+    // Run query on tantivy and get total and matching ids
+    // Perhaps should use suggest method as it allow to deal with "starts with", but I don't think
+    // that's what is expected.
+    let (total, ids) = searcher.search(&query, page * per_page, per_page)?;
+
     let db = &state.db;
-
-    //? Fetch the latest index changes.
-    // state.index.refresh()?;
-
-    let name = utils::canonical_name(params.q.as_str());
-
-    //? Build the search pattern.
-    let name_pattern = format!("%{0}%", name.replace('\\', "\\\\").replace('%', "\\%"));
-
     let transaction = db.transaction(move |conn| {
         let state = req.state();
 
-        //? Limit the result count depending on parameters.
-        let results = match (params.per_page, params.page) {
-            (Some(per_page), Some(page)) => {
-                //? Get search results for the given page number and entries per page.
-                crates::table
-                    .filter(crates::canon_name.like(name_pattern.as_str()))
-                    .limit(i64::from(per_page.get()))
-                    .offset(i64::from((page.get() - 1) * per_page.get()))
-                    .load::<Crate>(conn)?
-            }
-            (Some(per_page), None) => {
-                //? Get the first page of search results with the given entries per page.
-                crates::table
-                    .filter(crates::canon_name.like(name_pattern.as_str()))
-                    .limit(i64::from(per_page.get()))
-                    .load::<Crate>(conn)?
-            }
-            _ => {
-                //? Get ALL the crates (might be too much, tbh).
-                crates::table
-                    .filter(crates::canon_name.like(name_pattern.as_str()))
-                    .load::<Crate>(conn)?
-            }
-        };
+        // Get crate from database
+        let mut crates = crates::table
+            .filter(crates::id.eq_any(&ids))
+            .load::<Crate>(conn)?;
 
-        //? Fetch the total result count.
-        let total = crates::table
-            .select(sql::count(crates::id))
-            .filter(crates::canon_name.like(name_pattern.as_str()))
-            .first::<i64>(conn)?;
+        // Sort database result by relevance since we lost ordering...
+        // (the `unwrap_or` call should be unreachable, but if it is reached, it would sort the crate towards the end)
+        crates.sort_unstable_by_key(|krate| {
+            ids.iter()
+                .position(|id| *id == krate.id)
+                .unwrap_or(ids.len())
+        });
 
-        let crates = results
+        // Fetch missing informations from index
+        let crates = crates
             .into_iter()
             .map(|krate| {
                 let latest = state.index.latest_record(krate.name.as_str())?;

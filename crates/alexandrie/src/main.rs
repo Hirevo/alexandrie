@@ -58,6 +58,9 @@ pub mod utils;
 #[cfg(feature = "frontend")]
 pub mod frontend;
 
+/// Full text search
+pub mod fts;
+
 use crate::config::Config;
 use crate::error::Error;
 use crate::utils::build;
@@ -241,7 +244,9 @@ async fn run() -> Result<(), Error> {
     #[cfg(feature = "frontend")]
     let frontend_config = config.frontend.clone();
 
-    let state: Arc<config::State> = Arc::new(config.into());
+    let state: config::State = config.try_into()?;
+
+    let state = Arc::new(state);
 
     log::info!("starting Alexandrie (version: {})", build::short());
 
@@ -249,6 +254,9 @@ async fn run() -> Result<(), Error> {
     #[rustfmt::skip]
     state.db.run(|conn| conn.run_pending_migrations(db::MIGRATIONS).map(|_| ())).await
         .expect("migration execution error");
+
+    let database = &state.db;
+    state.search.index_all(database).await?;
 
     let mut app = tide::with_state(Arc::clone(&state));
 

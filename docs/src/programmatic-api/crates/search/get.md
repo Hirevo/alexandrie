@@ -15,8 +15,8 @@ HTTP Query Parameters
 This endpoint accepts the following query parameters:
 
 - **(required)** `q`: The query string for the search (like `serde json` to possibly find `serde_json`).
-- `page`: The non-zero page number to retrive (defaults to `1`), ignored if `per_page` is missing.
-- `per_page`: The non-zero number of results per page (infinite by default).
+- `page`: The non-zero page number to retrive (defaults to `1`).
+- `per_page`: The non-zero number of results per page (default to `15`).
 
 Responses
 ---------

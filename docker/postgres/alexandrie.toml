@@ -51,3 +51,6 @@ path = "syntect/dumps/syntaxes.dump"
 type = "dump"
 path = "syntect/dumps/themes.dump"
 theme_name = "frontier-contrast"
+
+[search]
+path = "appdata/tantivy"
