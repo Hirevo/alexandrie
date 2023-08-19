@@ -1,5 +1,7 @@
+#[cfg(feature = "frontend")]
 use json::json;
 
+#[cfg(feature = "frontend")]
 use crate::error::FrontendError;
 
 /// Various utilities to construct common response pages.
