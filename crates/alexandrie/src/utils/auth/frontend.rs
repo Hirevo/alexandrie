@@ -1,72 +1,45 @@
-use diesel::prelude::*;
-use tide::utils::async_trait;
-use tide::{Middleware, Next, Request};
+use std::sync::Arc;
 
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
+use axum::http::StatusCode;
+use axum::{async_trait, RequestPartsExt};
+use axum_sessions::extractors::ReadableSession;
+use diesel::prelude::*;
+
+use crate::config::AppState;
 use crate::db::models::Author;
 use crate::db::schema::*;
-use crate::State;
 
 /// Session cookie's name.
 pub const COOKIE_NAME: &str = "session";
 
-/// The authentication middleware for `alexandrie`.
+/// The authentication extractor impl for `alexandrie`.
 ///
 /// What it does:
-///   - extracts the token from the session cookie.
-///   - tries to match it with an author's session in the database.
-///   - exposes an [`Author`] struct if successful.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct AuthMiddleware;
-
-impl AuthMiddleware {
-    /// Creates a new instance of the middleware.
-    pub fn new() -> AuthMiddleware {
-        AuthMiddleware {}
-    }
-}
-
+///   - extracts the author ID from the session data.
+///   - tries to match it with an existing author in the database.
+///   - exposes the [`Author`] struct if successful.
 #[async_trait]
-impl Middleware<State> for AuthMiddleware {
-    async fn handle(&self, mut req: Request<State>, next: Next<'_, State>) -> tide::Result {
-        let author_id: Option<i64> = req.session().get("author.id");
+impl FromRequestParts<Arc<AppState>> for Author {
+    type Rejection = StatusCode;
 
-        if let Some(author_id) = author_id {
-            let query = req.state().db.run(move |conn| {
-                //? Get the session matching the user-provided token.
-                authors::table
-                    .find(author_id)
-                    .first::<Author>(conn)
-                    .optional()
-            });
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &Arc<AppState>,
+    ) -> Result<Self, Self::Rejection> {
+        // The `Rejection` associated type for `ReadableSession` is `Infallible`, so this unwrapping is fine.
+        let session = parts.extract::<ReadableSession>().await.unwrap();
+        let author_id: i64 = session.get("author.id").ok_or(StatusCode::BAD_REQUEST)?;
 
-            if let Some(author) = query.await? {
-                req.set_ext(author);
-            }
-        }
-
-        let response = next.run(req).await;
-
-        Ok(response)
-    }
-}
-
-/// A trait to extend `tide::Request` with authentication-related helper methods.
-pub trait AuthExt {
-    /// Get the currently-authenticated [`Author`] (returns `None` if not authenticated).
-    fn get_author(&self) -> Option<Author>;
-
-    /// Is the user currently authenticated?
-    fn is_authenticated(&self) -> bool {
-        self.get_author().is_some()
-    }
-}
-
-impl AuthExt for Request<State> {
-    fn get_author(&self) -> Option<Author> {
-        self.ext::<Author>().cloned()
-    }
-
-    fn is_authenticated(&self) -> bool {
-        self.ext::<Author>().is_some()
+        state
+            .db
+            .run(move |conn| {
+                //? Get the author matching the ID from the session.
+                authors::table.find(author_id).first(conn).optional()
+            })
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            .ok_or(StatusCode::BAD_REQUEST)
     }
 }

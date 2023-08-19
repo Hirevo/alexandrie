@@ -1,37 +1,46 @@
 use std::collections::HashMap;
+use std::io;
 use std::io::Read;
 use std::path::PathBuf;
 use std::pin::pin;
+use std::sync::Arc;
 
-use async_std::io::prelude::*;
+use axum::extract::BodyStream;
+use axum::extract::State;
+use axum::headers::authorization::Bearer;
+use axum::headers::Authorization;
+use axum::Json;
+use axum::TypedHeader;
 use byteorder::{LittleEndian, ReadBytesExt};
 use chrono::Utc;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
+use futures_util::io::AsyncReadExt;
+use futures_util::stream::TryStreamExt;
 use log::warn;
 use ring::digest as hasher;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use tar::Archive;
-use tide::Request;
 
 use alexandrie_index::{CrateDependency, CrateDependencyKind, CrateVersion, Indexer};
 use alexandrie_storage::Store;
 
+use crate::config::AppState;
 use crate::db::models::{
     Crate, NewBadge, NewCrate, NewCrateAuthor, NewCrateCategory, NewCrateKeyword,
 };
 use crate::db::schema::*;
 use crate::db::Connection;
 use crate::db::DATETIME_FORMAT;
+use crate::error::ApiError;
 use crate::error::{AlexError, Error};
 use crate::fts::TantivyDocument;
 use crate::utils;
-use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct PublishResponse {}
+pub(crate) struct PublishResponse {}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct CrateMeta {
@@ -180,7 +189,7 @@ fn link_badges(
 /// will be missing from the output.
 async fn has_reader_ended<R>(reader: R) -> std::io::Result<bool>
 where
-    R: async_std::io::Read,
+    R: futures_util::io::AsyncRead,
 {
     pin!(reader)
         .read(&mut [0])
@@ -189,31 +198,35 @@ where
 }
 
 /// Route to publish a new crate (used by `cargo publish`).
-pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
-    let state = req.state().clone();
+pub(crate) async fn put(
+    State(state): State<Arc<AppState>>,
+    TypedHeader(authorization): TypedHeader<Authorization<Bearer>>,
+    body: BodyStream,
+) -> Result<Json<PublishResponse>, ApiError> {
     let db = &state.db;
 
-    let headers = req
-        .header(utils::auth::AUTHORIZATION_HEADER)
-        .ok_or(AlexError::InvalidToken)?;
-    let header = headers.last().to_string();
+    let header = authorization.token().to_string();
     let author = db
         .run(move |conn| utils::checks::get_author(conn, header))
         .await
         .ok_or(AlexError::InvalidToken)?;
 
+    let mut body = body
+        .map_err(|err| io::Error::new(io::ErrorKind::Other, err))
+        .into_async_read();
+
     let mut bytes = Vec::new();
-    if let Some(max_crate_size) = req.state().general.max_crate_size {
-        (&mut req)
+    if let Some(max_crate_size) = state.general.max_crate_size {
+        (&mut body)
             .take(max_crate_size)
             .read_to_end(&mut bytes)
             .await?;
 
-        if !has_reader_ended(&mut req).await? {
+        if !has_reader_ended(body).await? {
             return Err(Error::from(AlexError::CrateTooLarge { max_crate_size }).into());
         }
     } else {
-        (&mut req).read_to_end(&mut bytes).await?;
+        body.read_to_end(&mut bytes).await?;
     }
     let mut cursor = std::io::Cursor::new(bytes);
 
@@ -227,13 +240,11 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
     cursor.read_exact(&mut crate_bytes)?;
     let hash = hex::encode(hasher::digest(&hasher::SHA256, &crate_bytes).as_ref());
 
-    let db = &state.db;
-
     // state.index.refresh()?;
 
+    let db = &state.db;
+    let state = Arc::clone(&state);
     let transaction = db.transaction(move |conn| {
-        let state = req.state();
-
         let canon_name = utils::canonical_name(metadata.name.as_str());
 
         //? Construct a crate description.
@@ -432,9 +443,8 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         state.index.add_record(crate_desc)?;
         state.index.commit_and_push(commit_msg.as_str())?;
 
-        let body = PublishResponse {};
-        Ok(utils::response::json(&body))
+        Ok(Json(PublishResponse {}))
     });
 
-    Ok(transaction.await?)
+    transaction.await.map_err(ApiError::from)
 }

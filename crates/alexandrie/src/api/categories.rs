@@ -1,20 +1,23 @@
+use std::sync::Arc;
+
+use axum::extract::State;
+use axum::Json;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use tide::Request;
 
+use crate::config::AppState;
 use crate::db::models::Category;
 use crate::db::schema::*;
-use crate::utils;
-use crate::State;
+use crate::error::ApiError;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct CategoriesResponse {
+pub(crate) struct CategoriesResponse {
     pub categories: Vec<CategoriesResult>,
     pub meta: CategoriesMeta,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct CategoriesResult {
+pub(crate) struct CategoriesResult {
     pub name: String,
     pub tag: String,
     pub description: String,
@@ -31,13 +34,14 @@ impl From<Category> for CategoriesResult {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct CategoriesMeta {
+pub(crate) struct CategoriesMeta {
     pub total: usize,
 }
 
 /// Route to list categories.
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let state = req.state();
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<CategoriesResponse>, ApiError> {
     let db = &state.db;
 
     let categories = db
@@ -47,9 +51,8 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let categories: Vec<_> = categories.into_iter().map(CategoriesResult::from).collect();
     let total = categories.len();
 
-    let data = CategoriesResponse {
+    Ok(Json(CategoriesResponse {
         categories,
         meta: CategoriesMeta { total },
-    };
-    Ok(utils::response::json(&data))
+    }))
 }

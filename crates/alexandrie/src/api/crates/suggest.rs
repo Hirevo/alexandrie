@@ -1,60 +1,55 @@
 use std::num::NonZeroU32;
+use std::sync::Arc;
 
-use log::info;
+use axum::extract::{Query, State};
+use axum::Json;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use tide::Request;
 
 use alexandrie_index::Indexer;
 
-use crate::error::{AlexError, Error};
+use crate::config::AppState;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct APIResponse {
+pub(crate) struct APIResponse {
     pub suggestions: Vec<Suggestion>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct Suggestion {
+pub(crate) struct Suggestion {
     pub name: String,
     pub vers: Version,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct QueryParams {
+pub(crate) struct QueryParams {
     pub q: String,
     pub limit: Option<NonZeroU32>,
 }
 
 /// Route to search through crates (used by `cargo search`).
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let params = req
-        .query::<QueryParams>()
-        .map_err(|_| AlexError::MissingQueryParams {
-            missing_params: &["q"],
-        })?;
-
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<QueryParams>,
+) -> Result<Json<APIResponse>, ApiError> {
     let name = utils::canonical_name(params.q);
     let limit = params.limit.map_or(10, |limit| limit.get() as usize);
 
-    info!("Suggester : {} & {}", name, limit);
-    let state = req.state().clone();
-    let index = &state.index;
+    log::info!("Suggester : {name} & {limit}");
 
     let results = state.search.suggest(name, limit)?;
-    let suggestions = results
+    let suggestions: Vec<Suggestion> = results
         .into_iter()
         .map(|krate| {
-            let latest = index.latest_record(krate.to_lowercase().as_str())?;
+            let latest = state.index.latest_record(krate.to_lowercase().as_str())?;
             Ok(Suggestion {
                 name: krate,
                 vers: latest.vers,
             })
         })
-        .collect::<Result<Vec<Suggestion>, Error>>()?;
+        .collect::<Result<_, ApiError>>()?;
 
-    let data = APIResponse { suggestions };
-    Ok(utils::response::json(&data))
+    Ok(Json(APIResponse { suggestions }))
 }

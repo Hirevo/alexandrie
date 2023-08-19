@@ -1,11 +1,18 @@
+use std::sync::Arc;
+
+use anyhow::Context;
+use axum::extract::{Path, State};
+use axum::headers::authorization::Bearer;
+use axum::headers::Authorization;
+use axum::{Json, TypedHeader};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
+use crate::config::AppState;
 use crate::db::models::AuthorToken;
 use crate::db::schema::*;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -24,32 +31,23 @@ pub struct ResponseBody {
 }
 
 /// Route to get information about a registry token.
-pub async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param("name")?.to_string();
-
-    let state = req.state().clone();
+pub async fn get(
+    State(state): State<Arc<AppState>>,
+    TypedHeader(authorization): TypedHeader<Authorization<Bearer>>,
+    Path(name): Path<String>,
+) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author logged in ?
-    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
-        let header = headers.last().to_string();
-        db.run(move |conn| utils::checks::get_author(conn, header))
+    let author = {
+        let token = authorization.token().to_string();
+        db.run(move |conn| utils::checks::get_author(conn, token))
             .await
-    } else {
-        None
-    };
-    let author = match author {
-        Some(author) => author,
-        None => {
-            return Ok(utils::response::error(
-                StatusCode::Unauthorized,
-                "please log in first to access token information",
-            ));
-        }
+            .context("invalid authorization token")?
     };
 
     //? Fetch the token from the database.
-    let token = db
+    let maybe_token = db
         .run(move |conn| {
             author_tokens::table
                 .filter(author_tokens::name.eq(name.as_str()))
@@ -60,52 +58,34 @@ pub async fn get(req: Request<State>) -> tide::Result {
         .await?;
 
     //? Was a token found ?
-    let token = match token {
-        Some(token) => token,
-        None => {
-            return Ok(utils::response::error(
-                StatusCode::NotFound,
-                "no token was found for the supplied name",
-            ))
-        }
+    let Some(token) = maybe_token else {
+        return Err(ApiError::msg("no token was found for the supplied name"));
     };
 
-    let expires_at = None;
-    let response = ResponseBody {
+    Ok(Json(ResponseBody {
         name: token.name,
-        expires_at,
-    };
-    Ok(utils::response::json(&response))
+        expires_at: None,
+    }))
 }
 
 /// Route to get information about a registry token.
-pub async fn post(mut req: Request<State>) -> tide::Result {
-    let state = req.state().clone();
+pub async fn post(
+    State(state): State<Arc<AppState>>,
+    TypedHeader(authorization): TypedHeader<Authorization<Bearer>>,
+    Json(body): Json<RequestBody>,
+) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author logged in ?
-    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
-        let header = headers.last().to_string();
-        db.run(move |conn| utils::checks::get_author(conn, header))
+    let author = {
+        let token = authorization.token().to_string();
+        db.run(move |conn| utils::checks::get_author(conn, token))
             .await
-    } else {
-        None
+            .context("invalid authorization token")?
     };
-    let author = match author {
-        Some(author) => author,
-        None => {
-            return Ok(utils::response::error(
-                StatusCode::Unauthorized,
-                "please log in first to access token information",
-            ));
-        }
-    };
-
-    //? Parse request body.
-    let body: RequestBody = req.body_json().await?;
 
     //? Fetch the token from the database.
-    let token = db
+    let maybe_token = db
         .run(move |conn| {
             author_tokens::table
                 .filter(author_tokens::token.eq(body.token.as_str()))
@@ -116,20 +96,12 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
         .await?;
 
     //? Was a token found ?
-    let token = match token {
-        Some(token) => token,
-        None => {
-            return Ok(utils::response::error(
-                StatusCode::Forbidden,
-                "unauthorized access to this token",
-            ))
-        }
+    let Some(token) = maybe_token else {
+        return Err(ApiError::msg("unauthorized access to this token"));
     };
 
-    let expires_at = None;
-    let response = ResponseBody {
+    Ok(Json(ResponseBody {
         name: token.name,
-        expires_at,
-    };
-    Ok(utils::response::json(&response))
+        expires_at: None,
+    }))
 }

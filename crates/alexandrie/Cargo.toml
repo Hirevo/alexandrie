@@ -22,8 +22,11 @@ alexandrie-storage = { path = "../alexandrie-storage", version = "0.1.0" }
 alexandrie-rendering = { path = "../alexandrie-rendering", version = "0.1.0" }
 
 # core
-tide = { version = "0.16.0", default-features = false, features = ["h1-server", "sessions"] }
-clap = { version = "4.2.2", features = ["string"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "fs", "macros"] }
+axum = { version = "0.6.19", features = ["http2", "headers"] }
+axum-extra = "0.7.5"
+axum-sessions = "0.5.0"
+clap = { version = "4.2.2", features = ["string", "derive"] }
 
 # session handling
 async-session = "3.0.0"
@@ -32,6 +35,7 @@ async-session = "3.0.0"
 url = "2.3.1"
 semver = { version = "1.0.17", features = ["serde"] }
 chrono = { version = "0.4.24", features = ["serde"] }
+bytes = "1.4.0"
 
 # file formats
 serde = { version = "1.0.160", features = ["derive"] }
@@ -55,10 +59,13 @@ tantivy = "0.20"
 tantivy-analysis-contrib = { version = "0.9", default-features = false, features = ["commons"] }
 
 # async primitives
-async-std = { version = "1.12.0", features = ["attributes", "tokio1"] }
+futures-util = "0.3.28"
+tower = "0.4.13"
+tower-http = { version = "0.4.1", features = ["trace", "fs"] }
 
 # error handling
 thiserror = "1.0.40"
+anyhow = "1.0.72"
 
 # README rendering
 flate2 = "1.0.25"
@@ -76,11 +83,8 @@ regex = { version = "1.7.3", optional = true }
 
 # logs
 log = "0.4.17"
-slog = "2.7.0"
-slog-stdlog = "4.1.1"
-slog-scope = "4.4.0"
-slog-term = "2.9.0"
-slog-async = "2.7.0"
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 
 [features]
 default = ["frontend", "sqlite"]

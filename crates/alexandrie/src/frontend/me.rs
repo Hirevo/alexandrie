@@ -1,8 +1,5 @@
-use tide::Request;
+use axum::response::Redirect;
 
-use crate::utils;
-use crate::State;
-
-pub(crate) async fn get(_: Request<State>) -> tide::Result {
-    Ok(utils::response::redirect("/account/manage"))
+pub(crate) async fn get() -> Redirect {
+    Redirect::to("/account/manage")
 }

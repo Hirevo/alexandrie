@@ -88,12 +88,13 @@ where
         T: Send,
     {
         let pool = self.connection_pool.clone();
-        let future = async_std::task::spawn_blocking(move || {
+        let future = tokio::task::spawn_blocking(move || {
             let mut conn = pool.get().unwrap();
             f(&mut *conn)
         });
 
-        future.await
+        // FIXME: truly figure out what to do with a `JoinError`.
+        future.await.unwrap()
     }
 
     /// Runs the given closure in a way that is safe for blocking IO to the database.
@@ -108,11 +109,12 @@ where
         E: From<diesel::result::Error> + Send + 'static,
     {
         let pool = self.connection_pool.clone();
-        let future = async_std::task::spawn_blocking(move || {
+        let future = tokio::task::spawn_blocking(move || {
             let mut conn = pool.get().unwrap();
             conn.transaction(|conn| f(conn))
         });
 
-        future.await
+        // FIXME: truly figure out what to do with a `JoinError`.
+        future.await.unwrap()
     }
 }

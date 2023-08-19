@@ -1,6 +1,13 @@
+use std::sync::Arc;
+
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::Redirect;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
+use axum_sessions::extractors::WritableSession;
 use oauth2::{CsrfToken, Scope};
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
 /// Endpoint to attach to an existing Alexandrie account.
 pub mod attach;
@@ -9,10 +16,11 @@ pub mod callback;
 /// Endpoint to detach from an existing Alexandrie account.
 pub mod detach;
 
+use crate::config::AppState;
+use crate::db::models::Author;
+use crate::error::FrontendError;
 use crate::utils;
-use crate::utils::auth::AuthExt;
 use crate::utils::response::common;
-use crate::State;
 
 const GITLAB_LOGIN_STATE_KEY: &str = "login.gitlab";
 
@@ -22,22 +30,24 @@ struct GitlabLoginState {
     attach: bool,
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
-    if let Some(author) = req.get_author() {
-        let state = req.state().as_ref();
-        return common::already_logged_in(state, author);
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Author>,
+    mut session: WritableSession,
+) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
+    if let Some(author) = maybe_author {
+        let state = state.as_ref();
+        let response = common::already_logged_in(state, author)?;
+        return Ok(Either::E1(response));
     }
 
-    let gitlab_state = match req.state().frontend.auth.gitlab.as_ref() {
-        Some(state) => state,
-        None => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::BadRequest,
-                "authentication using GitLab is not allowed on this instance",
-            );
-        }
+    let Some(gitlab_state) = state.frontend.auth.gitlab.as_ref() else {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
+            None,
+            "authentication using GitLab is not allowed on this instance",
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     };
 
     let (url, state) = gitlab_state
@@ -50,7 +60,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         state,
         attach: false,
     };
-    req.session_mut().insert(GITLAB_LOGIN_STATE_KEY, &data)?;
+    session.insert(GITLAB_LOGIN_STATE_KEY, &data)?;
 
-    return Ok(utils::response::redirect(url.as_str()));
+    return Ok(Either::E2(Redirect::to(url.as_str())));
 }

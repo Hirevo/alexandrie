@@ -1,32 +1,36 @@
+use std::sync::Arc;
+
+use axum::extract::State;
+use axum::response::Redirect;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
-use tide::Request;
 
+use crate::config::AppState;
+use crate::db::models::Author;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
+use crate::error::FrontendError;
 use crate::frontend::helpers;
-use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
 
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let user = req.get_author();
-    if req.state().is_login_required() && user.is_none() {
-        return Ok(utils::response::redirect("/account/login"));
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    user: Option<Author>,
+) -> Result<Either<Html<String>, Redirect>, FrontendError> {
+    if state.is_login_required() && user.is_none() {
+        return Ok(Either::E2(Redirect::to("/account/login")));
     }
 
-    let state = req.state().clone();
     let db = &state.db;
-
+    let state = Arc::clone(&state);
     let transaction = db.transaction(move |conn| {
-        let state = req.state();
-
         //? Get total number of crates.
-        let crate_count = crates::table
+        let crate_count: i64 = crates::table
             .select(sql::count(crates::id))
-            .first::<i64>(conn)?;
+            .first(conn)?;
 
         //? Get total number of crate downloads.
         let total_downloads = crates::table
@@ -38,18 +42,18 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             });
 
         //? Get the 10 most downloaded crates.
-        let most_downloaded = crates::table
+        let most_downloaded: Vec<(String, i64)> = crates::table
             .select((crates::name, crates::downloads))
             .order_by(crates::downloads.desc())
             .limit(10)
-            .load::<(String, i64)>(conn)?;
+            .load(conn)?;
 
         //? Get the 10 most recently updated crates.
-        let last_updated = crates::table
+        let last_updated: Vec<(String, String)> = crates::table
             .select((crates::name, crates::updated_at))
             .order_by(crates::updated_at.desc())
             .limit(10)
-            .load::<(String, String)>(conn)?;
+            .load(conn)?;
 
         let engine = &state.frontend.handlebars;
         let context = json!({
@@ -69,9 +73,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                 })
             }).collect::<Vec<_>>(),
         });
-        Ok(utils::response::html(
-            engine.render("index", &context)?,
-        ))
+
+        let rendered = engine.render("index", &context)?;
+
+        Ok::<_, FrontendError>(Either::E1(Html(rendered)))
     });
 
     transaction.await

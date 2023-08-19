@@ -1,24 +1,27 @@
-use diesel::prelude::*;
-use tide::Request;
+use std::sync::Arc;
 
+use axum::extract::{Path, State};
+use axum::response::Redirect;
+use axum_sessions::extractors::WritableSession;
+use diesel::prelude::*;
+
+use crate::config::AppState;
+use crate::db::models::Author;
 use crate::db::schema::*;
-use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
+use crate::error::FrontendError;
 
 use super::{ManageFlashMessage, ACCOUNT_MANAGE_FLASH};
 
-pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
-    let author = match req.get_author() {
-        Some(author) => author,
-        None => {
-            return Ok(utils::response::redirect("/account/manage"));
-        }
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<i64>,
+    maybe_author: Option<Author>,
+    mut session: WritableSession,
+) -> Result<Redirect, FrontendError> {
+    let Some(author) = maybe_author else {
+        return Ok(Redirect::to("/account/manage"));
     };
 
-    let id: i64 = req.param("token-id")?.parse()?;
-
-    let state = req.state().clone();
     let db = &state.db;
 
     let transaction = db.transaction(move |conn| {
@@ -39,16 +42,14 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 
                 let message = String::from("the token has successfully been revoked.");
                 let flash_message = ManageFlashMessage::TokenRevocationSuccess { message };
-                req.session_mut()
-                    .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
-                Ok(utils::response::redirect("/account/manage"))
+                session.insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+                Ok(Redirect::to("/account/manage"))
             }
             Some(_) | None => {
                 let message = String::from("invalid token to revoke.");
                 let flash_message = ManageFlashMessage::TokenRevocationError { message };
-                req.session_mut()
-                    .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
-                Ok(utils::response::redirect("/account/manage"))
+                session.insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+                Ok(Redirect::to("/account/manage"))
             }
         }
     });

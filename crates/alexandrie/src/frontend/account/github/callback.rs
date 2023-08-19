@@ -1,25 +1,31 @@
+use std::sync::Arc;
 use std::time::Duration;
 
+use axum::extract::{Query, State};
+use axum::http::StatusCode;
+use axum::response::Redirect;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
+use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthorizationCode, TokenResponse};
 use ring::digest as hasher;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
 use crate::config::frontend::auth::github::GithubAuthOrganizationConfig;
+use crate::config::AppState;
 use crate::db::models::{Author, NewAuthor, NewSalt};
 use crate::db::schema::{authors, salts};
+use crate::error::FrontendError;
 use crate::frontend::account::github::GITHUB_LOGIN_STATE_KEY;
 use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
 
 use super::GithubLoginState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct CallbackQueryData {
+pub(crate) struct CallbackQueryData {
     code: String,
     state: String,
 }
@@ -59,60 +65,57 @@ struct GithubUserTeamOrg {
     login: String,
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
-    let data: GithubLoginState = match req.session().get(GITHUB_LOGIN_STATE_KEY) {
-        Some(data) => data,
-        None => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::BadRequest,
-                "no authentication is currently being performed",
-            );
-        }
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<CallbackQueryData>,
+    maybe_author: Option<Author>,
+    mut session: WritableSession,
+) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
+    let Some(data): Option<GithubLoginState> = session.get(GITHUB_LOGIN_STATE_KEY) else {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
+            None,
+            "no authentication is currently being performed",
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     };
-    req.session_mut().remove("login.github");
+    session.remove("login.github");
 
-    let current_author = match (data.attach, req.get_author()) {
+    let current_author = match (data.attach, maybe_author) {
         (true, Some(author)) => Some(author),
         (true, None) => {
-            return utils::response::error_html(
-                req.state(),
+            let rendered = utils::response::error_html(
+                state.as_ref(),
                 None,
-                StatusCode::BadRequest,
                 "attaching to an account requires to be logged-in",
-            );
+            )?;
+            return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
         }
         (false, Some(_)) => {
-            return Ok(utils::response::redirect("/"));
+            return Ok(Either::E2(Redirect::to("/")));
         }
         (false, None) => None,
     };
 
-    let query: CallbackQueryData = req.query()?;
-
-    let github_config = &req.state().frontend.config.auth.github;
-    let github_state = match req.state().frontend.auth.github.as_ref() {
-        Some(state) => state,
-        None => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::BadRequest,
-                "authentication using GitHub is not allowed on this instance",
-            );
-        }
+    let github_config = &state.frontend.config.auth.github;
+    let Some(github_state) = state.frontend.auth.github.as_ref() else {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
+            None,
+            "authentication using GitHub is not allowed on this instance",
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     };
 
     let allow_register = github_config.allow_registration;
 
     if query.state.as_str() != data.state.secret() {
-        return utils::response::error_html(
-            req.state(),
+        let rendered = utils::response::error_html(
+            state.as_ref(),
             None,
-            StatusCode::BadRequest,
             "CSRF token is different than expected",
-        );
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     }
 
     let code = AuthorizationCode::new(query.code);
@@ -154,16 +157,13 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 
     //? Find the primary email address.
     let maybe_primary_email = emails.into_iter().find(|email| email.primary == true);
-    let primary_email = match maybe_primary_email {
-        Some(email) => email,
-        None => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::NotFound,
-                "could not find primary email",
-            );
-        }
+    let Some(primary_email) = maybe_primary_email else {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
+            None,
+            "could not find primary email",
+        )?;
+        return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
     };
 
     if let Some(allowed_organizations) = github_config.allowed_organizations.as_ref() {
@@ -179,17 +179,17 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         {
             //? The error message presented to users is intentionally vague about what check failed.
             // TODO(hirevo): maybe it is ok to say that it is an organization membership issue ?
-            return utils::response::error_html(
-                req.state(),
+            let rendered = utils::response::error_html(
+                state.as_ref(),
                 None,
-                StatusCode::NotFound,
                 "GitHub user doesn't fulfill required conditions for access",
-            );
+            )?;
+            return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
         }
     }
 
-    let state = req.state().clone();
     let db = &state.db;
+    let state = Arc::clone(&state);
 
     let transaction = db.transaction(move |conn| {
         let github_id = user_info.id.to_string();
@@ -204,7 +204,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
                 .set(authors::github_id.eq(github_id.as_str()))
                 .execute(conn)?;
 
-            return Ok(utils::response::redirect("/"));
+            return Ok(Either::E2(Redirect::to("/")));
         }
 
         //? Is this GitHub account attached to an existing author ?
@@ -258,22 +258,22 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 
             author_id
         } else {
-            return utils::response::error_html(
-                req.state(),
+            let rendered = utils::response::error_html(
+                state.as_ref(),
                 None,
-                StatusCode::NotFound,
                 "user registration is forbidden for this instance",
-            );
+            )?;
+            return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
         };
 
         //? Get the maximum duration of the session.
         let expiry = Duration::from_secs(86_400); // 1 day / 24 hours
 
         //? Set the user's session.
-        req.session_mut().insert("author.id", author_id)?;
-        req.session_mut().expire_in(expiry);
+        session.insert("author.id", author_id)?;
+        session.expire_in(expiry);
 
-        return Ok(utils::response::redirect("/"));
+        return Ok(Either::E2(Redirect::to("/")));
     });
 
     transaction.await
@@ -283,7 +283,7 @@ async fn fetch_relevent_user_orgs<'a>(
     allowed_organizations: &'a [GithubAuthOrganizationConfig],
     client: &reqwest::Client,
     token: &str,
-) -> tide::Result<Vec<&'a GithubAuthOrganizationConfig>> {
+) -> Result<Vec<&'a GithubAuthOrganizationConfig>, FrontendError> {
     let mut found_orgs = Vec::new();
 
     for page_number in 1.. {
@@ -320,7 +320,7 @@ async fn check_team_memberships(
     allowed_organizations: &[GithubAuthOrganizationConfig],
     client: &reqwest::Client,
     token: &str,
-) -> tide::Result<bool> {
+) -> Result<bool, FrontendError> {
     for page_number in 1.. {
         //? Get the list of the user's teams (which includes organizations).
         let teams: Vec<GithubUserTeam> = client

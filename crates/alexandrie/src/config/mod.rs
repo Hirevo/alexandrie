@@ -68,7 +68,7 @@ pub struct GeneralState {
 }
 
 /// The application state, created from [Config].
-pub struct State {
+pub struct AppState {
     /// General configuration state.
     pub general: GeneralState,
     /// The current crate indexer used.
@@ -94,11 +94,11 @@ impl From<GeneralConfig> for GeneralState {
     }
 }
 
-impl TryFrom<Config> for State {
+impl TryFrom<Config> for AppState {
     type Error = Error;
 
-    fn try_from(config: Config) -> Result<State, Self::Error> {
-        Ok(State {
+    fn try_from(config: Config) -> Result<Self, Self::Error> {
+        Ok(Self {
             general: config.general.into(),
             index: config.index.into(),
             storage: config.storage.into(),
@@ -111,7 +111,7 @@ impl TryFrom<Config> for State {
     }
 }
 
-impl State {
+impl AppState {
     /// Returns whether we require users to log in to browse crates.
     #[cfg(feature = "frontend")]
     pub fn is_login_required(&self) -> bool {

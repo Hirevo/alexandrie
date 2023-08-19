@@ -1,5 +1,12 @@
+use std::sync::Arc;
 use std::time::Duration;
 
+use axum::extract::{Query, State};
+use axum::http::StatusCode;
+use axum::response::Redirect;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
+use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AccessToken, AuthorizationCode, TokenResponse};
@@ -8,15 +15,14 @@ use regex::Regex;
 use ring::digest as hasher;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 use url::Url;
 
+use crate::config::AppState;
 use crate::db::models::{Author, NewAuthor, NewSalt};
 use crate::db::schema::{authors, salts};
+use crate::error::FrontendError;
 use crate::frontend::account::gitlab::GITLAB_LOGIN_STATE_KEY;
 use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
 
 use super::GitlabLoginState;
 
@@ -24,7 +30,7 @@ static LINK_HEADER_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r#"<([^>]+)>; rel="next""#).unwrap());
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct CallbackQueryData {
+pub(crate) struct CallbackQueryData {
     code: String,
     state: String,
 }
@@ -47,60 +53,57 @@ struct GitlabGroup {
     parent_id: Option<u64>,
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
-    let data: GitlabLoginState = match req.session().get(GITLAB_LOGIN_STATE_KEY) {
-        Some(data) => data,
-        None => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::BadRequest,
-                "no authentication is currently being performed",
-            );
-        }
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<CallbackQueryData>,
+    maybe_author: Option<Author>,
+    mut session: WritableSession,
+) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
+    let Some(data): Option<GitlabLoginState> = session.get(GITLAB_LOGIN_STATE_KEY) else {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
+            None,
+            "no authentication is currently being performed",
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     };
-    req.session_mut().remove("login.gitlab");
+    session.remove("login.gitlab");
 
-    let current_author = match (data.attach, req.get_author()) {
+    let current_author = match (data.attach, maybe_author) {
         (true, Some(author)) => Some(author),
         (true, None) => {
-            return utils::response::error_html(
-                req.state(),
+            let rendered = utils::response::error_html(
+                state.as_ref(),
                 None,
-                StatusCode::BadRequest,
                 "attaching to an account requires to be logged-in",
-            );
+            )?;
+            return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
         }
         (false, Some(_)) => {
-            return Ok(utils::response::redirect("/"));
+            return Ok(Either::E2(Redirect::to("/")));
         }
         (false, None) => None,
     };
 
-    let query: CallbackQueryData = req.query()?;
-
-    let gitlab_config = &req.state().frontend.config.auth.gitlab;
-    let gitlab_state = match req.state().frontend.auth.gitlab.as_ref() {
-        Some(state) => state,
-        None => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::BadRequest,
-                "authentication using GitLab is not allowed on this instance",
-            );
-        }
+    let gitlab_config = &state.frontend.config.auth.gitlab;
+    let Some(gitlab_state) = state.frontend.auth.gitlab.as_ref() else {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
+            None,
+            "authentication using GitLab is not allowed on this instance",
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     };
 
     let allow_register = gitlab_config.allow_registration;
 
     if query.state.as_str() != data.state.secret() {
-        return utils::response::error_html(
-            req.state(),
+        let rendered = utils::response::error_html(
+            state.as_ref(),
             None,
-            StatusCode::BadRequest,
             "CSRF token is different than expected",
-        );
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     }
 
     let code = AuthorizationCode::new(query.code);
@@ -135,17 +138,17 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         if !allowed {
             //? The error message presented to users is intentionally vague about what check failed.
             // TODO(hirevo): maybe it is ok to say that it is an organization membership issue ?
-            return utils::response::error_html(
-                req.state(),
+            let rendered = utils::response::error_html(
+                state.as_ref(),
                 None,
-                StatusCode::NotFound,
                 "GitLab user doesn't fulfill required conditions for access",
-            );
+            )?;
+            return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
         }
     }
 
-    let state = req.state().clone();
     let db = &state.db;
+    let state = Arc::clone(&state);
 
     let transaction = db.transaction(move |conn| {
         let gitlab_id = user_info.id.to_string();
@@ -160,7 +163,7 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
                 .set(authors::gitlab_id.eq(gitlab_id.as_str()))
                 .execute(conn)?;
 
-            return Ok(utils::response::redirect("/"));
+            return Ok(Either::E2(Redirect::to("/")));
         }
 
         //? Is this GitLab account attached to an existing author ?
@@ -219,22 +222,22 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
 
             author_id
         } else {
-            return utils::response::error_html(
-                req.state(),
+            let rendered = utils::response::error_html(
+                state.as_ref(),
                 None,
-                StatusCode::NotFound,
                 "user registration is forbidden for this instance",
-            );
+            )?;
+            return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
         };
 
         //? Get the maximum duration of the session.
         let expiry = Duration::from_secs(86_400); // 1 day / 24 hours
 
         //? Set the user's session.
-        req.session_mut().insert("author.id", author_id)?;
-        req.session_mut().expire_in(expiry);
+        session.insert("author.id", author_id)?;
+        session.expire_in(expiry);
 
-        return Ok(utils::response::redirect("/"));
+        return Ok(Either::E2(Redirect::to("/")));
     });
 
     transaction.await
@@ -245,7 +248,7 @@ async fn check_memberships(
     allowed_groups: &[String],
     client: &reqwest::Client,
     token: &AccessToken,
-) -> tide::Result<bool> {
+) -> Result<bool, FrontendError> {
     let mut request_url = origin.clone();
     request_url.set_path("/api/v4/groups");
 

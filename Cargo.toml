@@ -6,3 +6,6 @@ members = [
     "crates/alexandrie-rendering",
     "helpers/syntect-dump",
 ]
+
+[workspace.dependencies]
+tokio = { version = "1.32.0" }

@@ -3,7 +3,6 @@ use std::num::NonZeroUsize;
 use std::sync::RwLock;
 
 use diesel::prelude::*;
-use log::{debug, info, warn};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
 use tantivy::query::{AllQuery, QueryParser};
@@ -224,11 +223,11 @@ impl Tantivy {
 
         let query = query_parser.parse_query(&query)?;
 
-        info!("Query : {:?}", query);
+        log::info!("Query : {:?}", query);
 
         let results = searcher.search(&query, &TopDocs::with_limit(limit))?;
 
-        info!("Result : {:?}", results);
+        log::info!("Result : {:?}", results);
 
         let results = results
             .into_iter()
@@ -237,7 +236,7 @@ impl Tantivy {
 
                 let x = retrieve_doc.get_all(name).next();
                 if let Some(n) = x {
-                    info!("Score : {} / Crate : {:?}", score, n);
+                    log::info!("Score : {} / Crate : {:?}", score, n);
                 }
                 x.cloned()
             })
@@ -289,7 +288,7 @@ impl Tantivy {
             query_parser.parse_query(query)?
         };
 
-        info!("Query offset={} query limit={}", offset, limit);
+        log::info!("Query offset={} query limit={}", offset, limit);
 
         let (count, results) = searcher.search(
             &query,
@@ -302,20 +301,20 @@ impl Tantivy {
                 let retrieve_doc = match searcher.doc(doc_address) {
                     Ok(retrieve_doc) => retrieve_doc,
                     Err(error) => {
-                        warn!("Could not find document {doc_address:?} : {error}");
+                        log::warn!("Could not find document {doc_address:?} : {error}");
                         return None;
                     }
                 };
 
                 if let Some(name) = retrieve_doc.get_all(name).next() {
-                    info!("Score : {} / Crate : {:?}", score, name);
+                    log::info!("Score : {} / Crate : {:?}", score, name);
                 }
 
                 let mut field = retrieve_doc.get_all(id);
                 if let Some(x) = field.next() {
                     x.as_i64()
                 } else {
-                    warn!("Could not find field id");
+                    log::warn!("Could not find field id");
                     None
                 }
             })
@@ -325,7 +324,7 @@ impl Tantivy {
     }
 
     pub async fn index_all(&self, repo: &Database) -> Result<(), Error> {
-        info!("Index all crates");
+        log::info!("Index all crates");
         self.delete_all_documents()?;
         self.commit()?;
         let mut start: i64 = 0;
@@ -334,7 +333,7 @@ impl Tantivy {
         'indexing: loop {
             let result: Result<Option<CrateKeywordCategory>, Error> = repo
                 .run(move |conn| {
-                    debug!(
+                    log::debug!(
                         "Querying crates from {start} to {}",
                         start + NUMBER_RESULT_PER_PAGE
                     );
@@ -344,7 +343,7 @@ impl Tantivy {
                         .offset(start)
                         .load::<Crate>(conn)?;
 
-                    debug!("{} crates fetched", krates.len());
+                    log::debug!("{} crates fetched", krates.len());
 
                     if krates.is_empty() {
                         return Ok(None);
@@ -356,7 +355,7 @@ impl Tantivy {
                         .map(|c| c.id)
                         .collect::<Vec<i64>>();
 
-                    debug!("Crates {:?}", ids);
+                    log::debug!("Crates {:?}", ids);
 
                     let keywords = keywords::table
                         .inner_join(crate_keywords::table)
@@ -387,7 +386,7 @@ impl Tantivy {
                 let mut current_category: Option<(i64, String)> = categories_iterator.next();
 
                 for krate in krates.into_iter() {
-                    debug!("crate {:?}", krate);
+                    log::debug!("crate {:?}", krate);
                     // Create a document with database ID and crate name
                     let id = krate.id;
                     let name = krate.name.clone();
@@ -425,18 +424,18 @@ impl Tantivy {
                     // TODO get README
 
                     if let Err(error) = self.create_or_update(doc) {
-                        warn!(
+                        log::warn!(
                             "Can't convert crate '{id}' ({name}) into Tantivy document : {error}"
                         );
                     }
                     count_crate += 1;
 
                     if count_crate % 1000 == 0 {
-                        info!("{} crates indexed", count_crate);
+                        log::info!("{} crates indexed", count_crate);
                     }
                 }
             } else {
-                info!("End indexing {start} crates");
+                log::info!("End indexing {start} crates");
                 self.commit()?;
                 break 'indexing;
             }

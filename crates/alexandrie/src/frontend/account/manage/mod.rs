@@ -1,21 +1,25 @@
+use std::sync::Arc;
+
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum_extra::response::Html;
+use axum_sessions::extractors::WritableSession;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::Request;
 
 /// Password management routes (eg. "/account/manage/password").
 pub mod passwd;
 /// Token management routes (eg. "/account/manage/tokens").
 pub mod tokens;
 
-use crate::db::models::AuthorToken;
+use crate::config::AppState;
+use crate::db::models::{Author, AuthorToken};
 use crate::db::schema::*;
+use crate::error::FrontendError;
 use crate::frontend::helpers;
-use crate::utils;
-use crate::utils::auth::AuthExt;
 use crate::utils::response::common;
-use crate::State;
 
 const ACCOUNT_MANAGE_FLASH: &'static str = "account_manage.flash";
 
@@ -35,17 +39,18 @@ enum ManageFlashMessage {
     TokenRevocationError { message: String },
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
-    let author = match req.get_author() {
-        Some(author) => author,
-        None => {
-            let state = req.state().as_ref();
-            return common::need_to_login(state);
-        }
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Author>,
+    mut session: WritableSession,
+) -> Result<(StatusCode, Html<String>), FrontendError> {
+    let Some(author) = maybe_author else {
+        let state = state.as_ref();
+        return common::need_to_login(state);
     };
 
-    let state = req.state().clone();
     let db = &state.db;
+    let state = Arc::clone(&state);
 
     let transaction = db.transaction(move |conn| {
         //? Get the number of crates owned by this author.
@@ -65,12 +70,11 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
             .filter(author_tokens::author_id.eq(author.id))
             .load::<AuthorToken>(conn)?;
 
-        let flash_message: Option<ManageFlashMessage> = req.session().get(ACCOUNT_MANAGE_FLASH);
+        let flash_message: Option<ManageFlashMessage> = session.get(ACCOUNT_MANAGE_FLASH);
         if flash_message.is_some() {
-            req.session_mut().remove(ACCOUNT_MANAGE_FLASH);
+            session.remove(ACCOUNT_MANAGE_FLASH);
         }
 
-        let state = req.state();
         let engine = &state.frontend.handlebars;
         let context = json!({
             "user": author,
@@ -81,9 +85,9 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
             "tokens": tokens,
             "flash": flash_message,
         });
-        Ok(utils::response::html(
-            engine.render("account/manage", &context)?,
-        ))
+
+        let rendered = engine.render("account/manage", &context)?;
+        Ok((StatusCode::OK, Html(rendered)))
     });
 
     transaction.await

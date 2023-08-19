@@ -1,27 +1,29 @@
 use std::num::NonZeroUsize;
+use std::sync::Arc;
 
+use axum::extract::Query;
+use axum::extract::State;
+use axum::Json;
 use diesel::prelude::*;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use tide::Request;
 
 use alexandrie_index::Indexer;
 
+use crate::config::AppState;
 use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
-use crate::error::{AlexError, Error};
-use crate::utils;
-use crate::State;
+use crate::error::ApiError;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct SearchResponse {
+pub(crate) struct SearchResponse {
     pub crates: Vec<SearchResult>,
     pub meta: SearchMeta,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct SearchResult {
+pub(crate) struct SearchResult {
     pub name: String,
     pub max_version: Version,
     pub description: Option<String>,
@@ -33,26 +35,22 @@ struct SearchResult {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct SearchMeta {
+pub(crate) struct SearchMeta {
     pub total: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct QueryParams {
+pub(crate) struct QueryParams {
     pub q: String,
     pub per_page: Option<NonZeroUsize>,
     pub page: Option<NonZeroUsize>,
 }
 
 /// Route to search through crates (used by `cargo search`).
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let params = req
-        .query::<QueryParams>()
-        .map_err(|_| AlexError::MissingQueryParams {
-            missing_params: &["q"],
-        })?;
-    let state = req.state().clone();
-
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<QueryParams>,
+) -> Result<Json<SearchResponse>, ApiError> {
     let query = params.q;
     let per_page = params
         .per_page
@@ -67,9 +65,8 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
     let (total, ids) = searcher.search(&query, page * per_page, per_page)?;
 
     let db = &state.db;
+    let state = Arc::clone(&state);
     let transaction = db.transaction(move |conn| {
-        let state = req.state();
-
         // Get crate from database
         let mut crates = crates::table
             .filter(crates::id.eq_any(&ids))
@@ -109,14 +106,13 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                     updated_at,
                 })
             })
-            .collect::<Result<Vec<SearchResult>, Error>>()?;
+            .collect::<Result<Vec<SearchResult>, ApiError>>()?;
 
-        let data = SearchResponse {
+        Ok::<_, ApiError>(Json(SearchResponse {
             crates,
             meta: SearchMeta { total },
-        };
-        Ok(utils::response::json(&data))
+        }))
     });
 
-    transaction.await
+    transaction.await.map_err(ApiError::from)
 }

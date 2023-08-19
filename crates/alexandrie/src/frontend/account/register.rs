@@ -1,6 +1,14 @@
 use std::num::NonZeroU32;
+use std::sync::Arc;
 use std::time::Duration;
 
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::Redirect;
+use axum::Form;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
+use axum_sessions::extractors::WritableSession;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
@@ -8,14 +16,13 @@ use ring::digest as hasher;
 use ring::pbkdf2;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
-use crate::db::models::{NewAuthor, NewSalt};
+use crate::config::AppState;
+use crate::db::models::{Author, NewAuthor, NewSalt};
 use crate::db::schema::*;
+use crate::error::FrontendError;
 use crate::utils;
-use crate::utils::auth::AuthExt;
 use crate::utils::response::common;
-use crate::State;
 
 const REGISTER_FLASH: &'static str = "register.flash";
 
@@ -28,7 +35,7 @@ enum RegisterFlashMessage {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-struct RegisterForm {
+pub(crate) struct RegisterForm {
     pub email: String,
     pub name: String,
     pub password: String,
@@ -36,20 +43,21 @@ struct RegisterForm {
     pub remember: Option<String>,
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
-    if let Some(author) = req.get_author() {
-        let state = req.state().as_ref();
-        return common::already_logged_in(state, author);
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Author>,
+    mut session: WritableSession,
+) -> Result<(StatusCode, Html<String>), FrontendError> {
+    if let Some(author) = maybe_author {
+        return common::already_logged_in(state.as_ref(), author);
     }
 
-    let flash_message: Option<RegisterFlashMessage> = req.session().get(REGISTER_FLASH);
+    let flash_message: Option<RegisterFlashMessage> = session.get(REGISTER_FLASH);
     if flash_message.is_some() {
-        req.session_mut().remove(REGISTER_FLASH);
+        session.remove(REGISTER_FLASH);
     }
 
-    let state = req.state();
     let engine = &state.frontend.handlebars;
-
     let auth = &state.frontend.config.auth;
 
     let local_enabled = auth.local.enabled && auth.local.allow_registration;
@@ -68,48 +76,38 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         "has_separator": has_separator,
         "none_enabled": none_enabled,
     });
-    Ok(utils::response::html(
-        engine.render("account/register", &context)?,
-    ))
+
+    let rendered = engine.render("account/register", &context)?;
+    Ok((StatusCode::OK, Html(rendered)))
 }
 
-pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
-    if req.is_authenticated() {
-        return Ok(utils::response::redirect("/account/register"));
+pub(crate) async fn post(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Author>,
+    mut session: WritableSession,
+    Form(form): Form<RegisterForm>,
+) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
+    if maybe_author.is_some() {
+        return Ok(Either::E2(Redirect::to("/account/register")));
     }
 
-    let local = &req.state().frontend.config.auth.local;
-
-    if !local.enabled {
-        return utils::response::error_html(
-            req.state(),
+    if !state.frontend.config.auth.local.enabled {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
             None,
-            StatusCode::BadRequest,
             "local authentication is not allowed on this instance",
-        );
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     }
 
-    if !local.allow_registration {
-        return utils::response::error_html(
-            req.state(),
+    if !state.frontend.config.auth.local.allow_registration {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
             None,
-            StatusCode::BadRequest,
             "local registration is not allowed on this instance",
-        );
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     }
-
-    //? Deserialize form data.
-    let form: RegisterForm = match req.body_form().await {
-        Ok(form) => form,
-        Err(_) => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::BadRequest,
-                "could not deseriailize form data",
-            );
-        }
-    };
 
     //? Are all fields filled-in ?
     if form.email.is_empty()
@@ -119,19 +117,19 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
     {
         let message = String::from("some fields were left empty.");
         let flash_message = RegisterFlashMessage::Error { message };
-        req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
-        return Ok(utils::response::redirect("/account/register"));
+        session.insert(REGISTER_FLASH, &flash_message)?;
+        return Ok(Either::E2(Redirect::to("/account/register")));
     }
 
     //? Does the two passwords match (consistency check) ?
     if form.password != form.confirm_password {
         let message = String::from("the two passwords did not match.");
         let flash_message = RegisterFlashMessage::Error { message };
-        req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
-        return Ok(utils::response::redirect("/account/register"));
+        session.insert(REGISTER_FLASH, &flash_message)?;
+        return Ok(Either::E2(Redirect::to("/account/register")));
     }
 
-    let state = req.state().clone();
+    let state = Arc::clone(&state);
     let db = &state.db;
 
     let transaction = db.transaction(move |conn| {
@@ -143,19 +141,17 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         if already_exists {
             let message = String::from("an author already exists for this email.");
             let flash_message = RegisterFlashMessage::Error { message };
-            req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
-            return Ok(utils::response::redirect("/account/register"));
+            session.insert(REGISTER_FLASH, &flash_message)?;
+            return Ok(Either::E2(Redirect::to("/account/register")));
         }
 
+        dbg!(&form);
         //? Decode hex-encoded password hash.
-        let decoded_password = match hex::decode(form.password.as_bytes()) {
-            Ok(passwd) => passwd,
-            Err(_) => {
-                let message = String::from("password/salt decoding issue.");
-                let flash_message = RegisterFlashMessage::Error { message };
-                req.session_mut().insert(REGISTER_FLASH, &flash_message)?;
-                return Ok(utils::response::redirect("/account/register"));
-            }
+        let Ok(decoded_password) = hex::decode(form.password.as_bytes()) else {
+            let message = String::from("password/salt decoding issue.");
+            let flash_message = RegisterFlashMessage::Error { message };
+            session.insert(REGISTER_FLASH, &flash_message)?;
+            return Ok(Either::E2(Redirect::to("/account/register")));
         };
 
         //? Generate the user's authentication salt.
@@ -193,10 +189,10 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
             .execute(conn)?;
 
         //? Fetch the newly-inserted author back.
-        let author_id = authors::table
+        let author_id: i64 = authors::table
             .select(authors::id)
             .filter(authors::email.eq(form.email.as_str()))
-            .first::<i64>(conn)?;
+            .first(conn)?;
 
         //? Store the author's newly-generated authentication salt.
         let encoded_generated_salt = hex::encode(decoded_generated_salt.as_ref());
@@ -215,10 +211,10 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         };
 
         //? Set the user's session.
-        req.session_mut().insert("author.id", author_id)?;
-        req.session_mut().expire_in(expiry);
+        session.insert("author.id", author_id)?;
+        session.expire_in(expiry);
 
-        Ok(utils::response::redirect("/"))
+        Ok(Either::E2(Redirect::to("/")))
     });
 
     transaction.await

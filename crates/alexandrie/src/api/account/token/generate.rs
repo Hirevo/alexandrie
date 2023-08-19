@@ -1,11 +1,18 @@
+use std::sync::Arc;
+
+use anyhow::Context;
+use axum::extract::State;
+use axum::headers::authorization::Bearer;
+use axum::headers::Authorization;
+use axum::{Json, TypedHeader};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
+use crate::config::AppState;
 use crate::db::models::{AuthorToken, NewAuthorToken};
 use crate::db::schema::*;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,30 +29,20 @@ pub struct ResponseBody {
 }
 
 /// Route to revoke a registry token.
-pub async fn put(mut req: Request<State>) -> tide::Result {
-    let state = req.state().clone();
+pub async fn put(
+    State(state): State<Arc<AppState>>,
+    TypedHeader(authorization): TypedHeader<Authorization<Bearer>>,
+    Json(body): Json<RequestBody>,
+) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author logged in ?
-    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
-        let header = headers.last().to_string();
-        db.run(move |conn| utils::checks::get_author(conn, header))
+    let author = {
+        let token = authorization.token().to_string();
+        db.run(move |conn| utils::checks::get_author(conn, token))
             .await
-    } else {
-        None
+            .context("invalid authorization token")?
     };
-    let author = match author {
-        Some(author) => author,
-        None => {
-            return Ok(utils::response::error(
-                StatusCode::Unauthorized,
-                "please log in first to generate tokens",
-            ));
-        }
-    };
-
-    //? Parse request body.
-    let body: RequestBody = req.body_json().await?;
 
     let transaction = db.transaction(move |conn| {
         //? Does a token with that name already exist for that author ?
@@ -57,8 +54,7 @@ pub async fn put(mut req: Request<State>) -> tide::Result {
 
         //? Was a token found ?
         if token.is_some() {
-            return Ok(utils::response::error(
-                StatusCode::BadRequest,
+            return Err(ApiError::msg(
                 "a token of that same name already exist for your account",
             ));
         }
@@ -79,11 +75,10 @@ pub async fn put(mut req: Request<State>) -> tide::Result {
             .values(new_author_token)
             .execute(conn)?;
 
-        let response = ResponseBody {
+        Ok(Json(ResponseBody {
             token: String::from(token),
-        };
-        Ok(utils::response::json(&response))
+        }))
     });
 
-    transaction.await
+    transaction.await.map_err(ApiError::from)
 }

@@ -1,17 +1,22 @@
 use std::num::NonZeroU32;
+use std::sync::Arc;
 
+use axum::extract::{Json, State};
+use axum::headers::authorization::Bearer;
+use axum::headers::Authorization;
+use axum::TypedHeader;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use ring::digest as hasher;
 use ring::pbkdf2;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
+use crate::config::AppState;
 use crate::db::models::{NewAuthor, NewAuthorToken, NewSalt};
 use crate::db::schema::*;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -32,39 +37,35 @@ pub struct ResponseBody {
 }
 
 /// Route to register a new account.
-pub async fn post(mut req: Request<State>) -> tide::Result {
-    let state = req.state().clone();
+pub async fn post(
+    State(state): State<Arc<AppState>>,
+    authorization: Option<TypedHeader<Authorization<Bearer>>>,
+    Json(body): Json<RequestBody>,
+) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author already logged in ?
-    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
-        let header = headers.last().to_string();
-        db.run(move |conn| utils::checks::get_author(conn, header))
+    let author = if let Some(TypedHeader(header)) = authorization {
+        let token = header.token().to_string();
+        db.run(move |conn| utils::checks::get_author(conn, token))
             .await
     } else {
         None
     };
     if author.is_some() {
-        return Ok(utils::response::error(
-            StatusCode::Unauthorized,
+        return Err(ApiError::msg(
             "please log out first to register as a new author",
         ));
     }
 
-    //? Parse request body.
-    let body: RequestBody = req.body_json().await?;
-
-    let transaction = db.transaction(move |conn| {
+    let transaction = state.db.transaction(move |conn| {
         //? Does the user already exist ?
         let already_exists = sql::select(sql::exists(
             authors::table.filter(authors::email.eq(body.email.as_str())),
         ))
         .get_result(conn)?;
         if already_exists {
-            return Ok(utils::response::error(
-                StatusCode::Forbidden,
-                "an author already exists for this email.",
-            ));
+            return Err(ApiError::msg("an author already exists for this email."));
         }
 
         //? First rounds of PBKDF2 (5_000 rounds, it corresponds to what the frontend does, cf. `wasm-pbkdf2` sub-crate).
@@ -145,11 +146,10 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
             .values(new_author_token)
             .execute(conn)?;
 
-        let response = ResponseBody {
+        Ok(Json(ResponseBody {
             token: String::from(token),
-        };
-        Ok(utils::response::json(&response))
+        }))
     });
 
-    transaction.await
+    transaction.await.map_err(ApiError::from)
 }

@@ -42,13 +42,13 @@ Things yet to do
 How to build
 ------------
 
-Alexandrie is built using [**Tide**][Tide] and offers multiple options to be used as its database.  
+Alexandrie is built using [**Axum**][Axum] and offers multiple options to be used as its database.  
 
 The current minimum supported Rust version for Alexandrie is `1.68` (on stable), so make sure to check if your local Rust version is adequate by running `rustc -V`.
 
 To build, you can run `cargo build [--release]`.  
 
-[Tide]: https://github.com/http-rs/tide
+[Axum]: https://github.com/tokio-rs/axum
 
 Before running it, you need to configure your instance in the `alexandrie.toml` file.
 
