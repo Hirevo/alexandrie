@@ -68,7 +68,7 @@ impl Credentials for Bare {
     }
 
     fn encode(&self) -> HeaderValue {
-        self.0.0.clone()
+        (&self.0).0.clone()
     }
 }
 
