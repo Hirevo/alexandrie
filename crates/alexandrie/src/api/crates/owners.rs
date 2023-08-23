@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::headers::authorization::Bearer;
 use axum::headers::Authorization;
 use axum::{Json, TypedHeader};
 use diesel::prelude::*;
@@ -13,6 +12,7 @@ use crate::db::models::{Author, NewCrateAuthor};
 use crate::db::schema::*;
 use crate::error::{AlexError, ApiError};
 use crate::utils;
+use crate::utils::auth::Bare;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct OwnerListResponse {
@@ -84,7 +84,7 @@ pub(crate) async fn get(
 pub(crate) async fn put(
     State(state): State<Arc<AppState>>,
     Path(name): Path<String>,
-    TypedHeader(authorization): TypedHeader<Authorization<Bearer>>,
+    TypedHeader(authorization): TypedHeader<Authorization<Bare>>,
     Json(body): Json<OwnerAddBody>,
 ) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
@@ -93,7 +93,7 @@ pub(crate) async fn put(
 
     let db = &state.db;
     let transaction = db.transaction(move |conn| {
-        let header = authorization.token().to_string();
+        let header = authorization.0.token().to_string();
         let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
 
         //? Get this crate's ID.
@@ -176,7 +176,7 @@ pub(crate) async fn put(
 pub(crate) async fn delete(
     State(state): State<Arc<AppState>>,
     Path(name): Path<String>,
-    TypedHeader(authorization): TypedHeader<Authorization<Bearer>>,
+    TypedHeader(authorization): TypedHeader<Authorization<Bare>>,
     Json(body): Json<OwnerDeleteBody>,
 ) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
@@ -185,7 +185,7 @@ pub(crate) async fn delete(
 
     let db = &state.db;
     let transaction = db.transaction(move |conn| {
-        let header = authorization.token().to_string();
+        let header = authorization.0.token().to_string();
         let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
 
         //? Get this crate's ID.
