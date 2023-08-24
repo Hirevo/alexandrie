@@ -158,11 +158,8 @@ pub(crate) async fn get(
     //? Find the primary email address.
     let maybe_primary_email = emails.into_iter().find(|email| email.primary == true);
     let Some(primary_email) = maybe_primary_email else {
-        let rendered = utils::response::error_html(
-            state.as_ref(),
-            None,
-            "could not find primary email",
-        )?;
+        let rendered =
+            utils::response::error_html(state.as_ref(), None, "could not find primary email")?;
         return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
     };
 

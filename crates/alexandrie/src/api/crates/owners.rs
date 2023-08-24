@@ -102,9 +102,9 @@ pub(crate) async fn put(
             .first::<i64>(conn)
             .optional()?;
         let Some(crate_id) = maybe_crate_id else {
-            return Err(ApiError::msg(
-                format!("no crates named '{name}' could be found"),
-            ));
+            return Err(ApiError::msg(format!(
+                "no crates named '{name}' could be found"
+            )));
         };
 
         //? Get all authors of this crate.
@@ -194,9 +194,9 @@ pub(crate) async fn delete(
             .first::<i64>(conn)
             .optional()?;
         let Some(crate_id) = maybe_crate_id else {
-            return Err(ApiError::msg(
-                format!("no crates named '{name}' could be found"),
-            ));
+            return Err(ApiError::msg(format!(
+                "no crates named '{name}' could be found"
+            )));
         };
 
         //? Get all authors of this crate.
