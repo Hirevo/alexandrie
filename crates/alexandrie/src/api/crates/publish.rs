@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 use axum::extract::BodyStream;
 use axum::extract::State;
-use axum::headers::Authorization;
 use axum::Json;
 use axum::TypedHeader;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -37,7 +36,7 @@ use crate::error::ApiError;
 use crate::error::{AlexError, Error};
 use crate::fts::TantivyDocument;
 use crate::utils;
-use crate::utils::auth::Bare;
+use crate::utils::auth::Authorization;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct PublishResponse {}
@@ -200,12 +199,12 @@ where
 /// Route to publish a new crate (used by `cargo publish`).
 pub(crate) async fn put(
     State(state): State<Arc<AppState>>,
-    TypedHeader(authorization): TypedHeader<Authorization<Bare>>,
+    TypedHeader(authorization): TypedHeader<Authorization>,
     body: BodyStream,
 ) -> Result<Json<PublishResponse>, ApiError> {
     let db = &state.db;
 
-    let header = authorization.0.token().to_string();
+    let header = authorization.token().to_string();
     let author = db
         .run(move |conn| utils::checks::get_author(conn, header))
         .await

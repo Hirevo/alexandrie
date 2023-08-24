@@ -1,11 +1,9 @@
 use std::fmt;
 
-use axum::headers::authorization::Credentials;
-use axum::http::header::HeaderValue;
+use axum::headers::Header;
+use axum::http::header::{HeaderName, HeaderValue, AUTHORIZATION};
 use ring::digest as hasher;
 use ring::rand::{SecureRandom, SystemRandom};
-
-use crate::error::ApiError;
 
 #[cfg(feature = "frontend")]
 mod frontend;
@@ -28,11 +26,11 @@ pub(crate) struct HeaderValueString(
 );
 
 impl HeaderValueString {
-    pub(crate) fn from_value(val: &HeaderValue) -> Result<Self, ApiError> {
+    pub(crate) fn from_value(val: &HeaderValue) -> Result<Self, axum::headers::Error> {
         if val.to_str().is_ok() {
             Ok(HeaderValueString(val.clone()))
         } else {
-            Err(ApiError::msg("invalid `Authorization` header"))
+            Err(axum::headers::Error::invalid())
         }
     }
 
@@ -51,24 +49,37 @@ impl fmt::Debug for HeaderValueString {
 
 #[derive(Clone, PartialEq, Debug)]
 /// Represent a bare token from the `Authorization` header's value.
-pub struct Bare(HeaderValueString);
+pub struct Authorization(HeaderValueString);
 
-impl Bare {
+impl Authorization {
     /// View the token part as a `&str`.
     pub fn token(&self) -> &str {
         self.0.as_str()
     }
 }
 
-impl Credentials for Bare {
-    const SCHEME: &'static str = "";
-
-    fn decode(value: &HeaderValue) -> Option<Self> {
-        HeaderValueString::from_value(value).ok().map(Self)
+impl Header for Authorization {
+    fn name() -> &'static HeaderName {
+        &AUTHORIZATION
     }
 
-    fn encode(&self) -> HeaderValue {
-        (&self.0).0.clone()
+    fn decode<'i, I>(values: &mut I) -> Result<Self, axum::headers::Error>
+    where
+        I: Iterator<Item = &'i HeaderValue>,
+    {
+        values
+            .next()
+            .ok_or_else(axum::headers::Error::invalid)
+            .and_then(HeaderValueString::from_value)
+            .map(Self)
+    }
+
+    fn encode<E>(&self, values: &mut E)
+    where
+        E: Extend<HeaderValue>,
+    {
+        let value = (&self.0).0.clone();
+        values.extend(std::iter::once(value));
     }
 }
 

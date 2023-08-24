@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::headers::Authorization;
 use axum::{Json, TypedHeader};
 use diesel::prelude::*;
 use json::json;
@@ -13,19 +12,19 @@ use crate::config::AppState;
 use crate::db::schema::crates;
 use crate::error::{AlexError, ApiError};
 use crate::utils;
-use crate::utils::auth::Bare;
+use crate::utils::auth::Authorization;
 
 pub(crate) async fn delete(
     State(state): State<Arc<AppState>>,
     Path((name, version)): Path<(String, Version)>,
-    TypedHeader(authorization): TypedHeader<Authorization<Bare>>,
+    TypedHeader(authorization): TypedHeader<Authorization>,
 ) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
 
     let db = &state.db;
     let state = Arc::clone(&state);
     let transaction = db.transaction(move |conn| {
-        let header = authorization.0.token().to_string();
+        let header = authorization.token().to_string();
         let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
 
         //? Does this crate exists?

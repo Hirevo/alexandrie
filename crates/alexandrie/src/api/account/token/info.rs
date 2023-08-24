@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use axum::extract::{Path, State};
-use axum::headers::Authorization;
 use axum::{Json, TypedHeader};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -12,7 +11,7 @@ use crate::db::models::AuthorToken;
 use crate::db::schema::*;
 use crate::error::ApiError;
 use crate::utils;
-use crate::utils::auth::Bare;
+use crate::utils::auth::Authorization;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -33,14 +32,14 @@ pub struct ResponseBody {
 /// Route to get information about a registry token.
 pub async fn get(
     State(state): State<Arc<AppState>>,
-    TypedHeader(authorization): TypedHeader<Authorization<Bare>>,
+    TypedHeader(authorization): TypedHeader<Authorization>,
     Path(name): Path<String>,
 ) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author logged in ?
     let author = {
-        let token = authorization.0.token().to_string();
+        let token = authorization.token().to_string();
         db.run(move |conn| utils::checks::get_author(conn, token))
             .await
             .context("invalid authorization token")?
@@ -71,14 +70,14 @@ pub async fn get(
 /// Route to get information about a registry token.
 pub async fn post(
     State(state): State<Arc<AppState>>,
-    TypedHeader(authorization): TypedHeader<Authorization<Bare>>,
+    TypedHeader(authorization): TypedHeader<Authorization>,
     Json(body): Json<RequestBody>,
 ) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author logged in ?
     let author = {
-        let token = authorization.0.token().to_string();
+        let token = authorization.token().to_string();
         db.run(move |conn| utils::checks::get_author(conn, token))
             .await
             .context("invalid authorization token")?
