@@ -21,10 +21,10 @@ tokio = { workspace = true, optional = true }
 semver = { version = "1.0.17", features = ["serde"] }
 
 # file formats
-serde = { version = "1.0.160", features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
 
 # error handling
-thiserror = "1.0.40"
+thiserror = { workspace = true }
 
 # S3 crate storage
 rusoto_core = { version = "0.48.0", optional = true }

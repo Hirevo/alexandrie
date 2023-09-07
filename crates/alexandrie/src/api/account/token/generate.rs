@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use anyhow::Context;
 use axum::extract::State;
-use axum::{Json, TypedHeader};
+use axum::Json;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +10,7 @@ use crate::db::models::{AuthorToken, NewAuthorToken};
 use crate::db::schema::*;
 use crate::error::ApiError;
 use crate::utils;
-use crate::utils::auth::Authorization;
+use crate::utils::auth::api::Auth;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,18 +29,10 @@ pub struct ResponseBody {
 /// Route to revoke a registry token.
 pub async fn put(
     State(state): State<Arc<AppState>>,
-    TypedHeader(authorization): TypedHeader<Authorization>,
+    Auth(author): Auth,
     Json(body): Json<RequestBody>,
 ) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
-
-    //? Is the author logged in ?
-    let author = {
-        let token = authorization.token().to_string();
-        db.run(move |conn| utils::checks::get_author(conn, token))
-            .await
-            .context("invalid authorization token")?
-    };
 
     let transaction = db.transaction(move |conn| {
         //? Does a token with that name already exist for that author ?

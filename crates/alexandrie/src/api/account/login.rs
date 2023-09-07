@@ -2,7 +2,7 @@ use std::num::NonZeroU32;
 use std::sync::Arc;
 
 use axum::extract::State;
-use axum::{Json, TypedHeader};
+use axum::Json;
 use diesel::prelude::*;
 use ring::digest as hasher;
 use ring::pbkdf2;
@@ -13,7 +13,7 @@ use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
 use crate::error::ApiError;
 use crate::utils;
-use crate::utils::auth::Authorization;
+use crate::utils::auth::api::Auth;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -34,20 +34,13 @@ pub struct ResponseBody {
 /// Route to log in to an account.
 pub async fn post(
     State(state): State<Arc<AppState>>,
-    authorization: Option<TypedHeader<Authorization>>,
+    maybe_author: Option<Auth>,
     Json(body): Json<RequestBody>,
 ) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author logged in ?
-    let author = if let Some(TypedHeader(header)) = authorization {
-        let token = header.token().to_string();
-        db.run(move |conn| utils::checks::get_author(conn, token))
-            .await
-    } else {
-        None
-    };
-    if author.is_some() {
+    if maybe_author.is_some() {
         return Err(ApiError::msg(
             "please log out first to login as a new author",
         ));

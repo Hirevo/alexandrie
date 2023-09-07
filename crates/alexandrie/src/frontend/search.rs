@@ -13,11 +13,12 @@ use serde::{Deserialize, Serialize};
 use alexandrie_index::Indexer;
 
 use crate::config::AppState;
-use crate::db::models::{Author, Crate};
+use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
 use crate::error::{Error, FrontendError};
 use crate::frontend::helpers;
+use crate::utils::auth::frontend::Auth;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct QueryParams {
@@ -29,7 +30,7 @@ pub(crate) struct QueryParams {
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     Query(params): Query<QueryParams>,
-    user: Option<Author>,
+    user: Option<Auth>,
 ) -> Result<Either<Html<String>, Redirect>, FrontendError> {
     let searched_text = params.q.clone();
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
@@ -97,7 +98,7 @@ pub(crate) async fn get(
 
         let engine = &state.frontend.handlebars;
         let context = json!({
-            "user": user,
+            "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "searched_text": searched_text,
             "total_results": count,

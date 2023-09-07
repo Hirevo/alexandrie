@@ -15,10 +15,11 @@ pub mod passwd;
 pub mod tokens;
 
 use crate::config::AppState;
-use crate::db::models::{Author, AuthorToken};
+use crate::db::models::AuthorToken;
 use crate::db::schema::*;
 use crate::error::FrontendError;
 use crate::frontend::helpers;
+use crate::utils::auth::frontend::Auth;
 use crate::utils::response::common;
 
 const ACCOUNT_MANAGE_FLASH: &'static str = "account_manage.flash";
@@ -41,10 +42,10 @@ enum ManageFlashMessage {
 
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
 ) -> Result<(StatusCode, Html<String>), FrontendError> {
-    let Some(author) = maybe_author else {
+    let Some(Auth(author)) = maybe_author else {
         let state = state.as_ref();
         return common::need_to_login(state);
     };

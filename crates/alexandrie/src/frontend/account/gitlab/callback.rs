@@ -23,6 +23,7 @@ use crate::db::schema::{authors, salts};
 use crate::error::FrontendError;
 use crate::frontend::account::gitlab::GITLAB_LOGIN_STATE_KEY;
 use crate::utils;
+use crate::utils::auth::frontend::Auth;
 
 use super::GitlabLoginState;
 
@@ -56,7 +57,7 @@ struct GitlabGroup {
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     Query(query): Query<CallbackQueryData>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
     let Some(data): Option<GitlabLoginState> = session.get(GITLAB_LOGIN_STATE_KEY) else {

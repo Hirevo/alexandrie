@@ -8,4 +8,6 @@ members = [
 ]
 
 [workspace.dependencies]
-tokio = { version = "1.32.0" }
+tokio = "1.32.0"
+serde = "1.0.160"
+thiserror = "1.0.40"

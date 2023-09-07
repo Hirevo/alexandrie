@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::{Json, TypedHeader};
+use axum::Json;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 use crate::config::AppState;
 use crate::db::models::{Author, NewCrateAuthor};
 use crate::db::schema::*;
-use crate::error::{AlexError, ApiError};
+use crate::error::ApiError;
 use crate::utils;
-use crate::utils::auth::Authorization;
+use crate::utils::auth::api::Auth;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct OwnerListResponse {
@@ -82,8 +82,8 @@ pub(crate) async fn get(
 
 pub(crate) async fn put(
     State(state): State<Arc<AppState>>,
+    Auth(author): Auth,
     Path(name): Path<String>,
-    TypedHeader(authorization): TypedHeader<Authorization>,
     Json(body): Json<OwnerAddBody>,
 ) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
@@ -92,9 +92,6 @@ pub(crate) async fn put(
 
     let db = &state.db;
     let transaction = db.transaction(move |conn| {
-        let header = authorization.token().to_string();
-        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
-
         //? Get this crate's ID.
         let maybe_crate_id = crates::table
             .select(crates::id)
@@ -174,8 +171,8 @@ pub(crate) async fn put(
 
 pub(crate) async fn delete(
     State(state): State<Arc<AppState>>,
+    Auth(author): Auth,
     Path(name): Path<String>,
-    TypedHeader(authorization): TypedHeader<Authorization>,
     Json(body): Json<OwnerDeleteBody>,
 ) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
@@ -184,9 +181,6 @@ pub(crate) async fn delete(
 
     let db = &state.db;
     let transaction = db.transaction(move |conn| {
-        let header = authorization.token().to_string();
-        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
-
         //? Get this crate's ID.
         let maybe_crate_id = crates::table
             .select(crates::id)

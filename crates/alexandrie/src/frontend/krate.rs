@@ -13,12 +13,13 @@ use alexandrie_index::Indexer;
 use alexandrie_storage::Store;
 
 use crate::config::AppState;
-use crate::db::models::{Author, Badge, Crate, CrateAuthor, CrateCategory, CrateKeyword, Keyword};
+use crate::db::models::{Badge, Crate, CrateAuthor, CrateCategory, CrateKeyword, Keyword};
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
 use crate::error::FrontendError;
 use crate::frontend::helpers;
 use crate::utils;
+use crate::utils::auth::frontend::Auth;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct BadgeRepr {
@@ -30,7 +31,7 @@ struct BadgeRepr {
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     Path(crate_name): Path<String>,
-    user: Option<Author>,
+    user: Option<Auth>,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
     let canon_name = utils::canonical_name(crate_name);
 
@@ -51,7 +52,7 @@ pub(crate) async fn get(
         let Some(crate_desc) = maybe_crate_desc else {
             let rendered = utils::response::error_html(
                 state.as_ref(),
-                user,
+                user.map(|it| it.into_inner()),
                 format!("No crate named '{0}' has been found.", canon_name),
             )?;
             return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
@@ -335,7 +336,7 @@ pub(crate) async fn get(
 
         let engine = &state.frontend.handlebars;
         let context = json!({
-            "user": user,
+            "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "crate": {
                 "id": crate_desc.id,

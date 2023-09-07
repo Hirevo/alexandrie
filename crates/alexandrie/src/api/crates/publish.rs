@@ -1,14 +1,11 @@
 use std::collections::HashMap;
-use std::io;
-use std::io::Read;
+use std::io::{self, Read};
 use std::path::PathBuf;
 use std::pin::pin;
 use std::sync::Arc;
 
-use axum::extract::BodyStream;
-use axum::extract::State;
+use axum::extract::{BodyStream, State};
 use axum::Json;
-use axum::TypedHeader;
 use byteorder::{LittleEndian, ReadBytesExt};
 use chrono::Utc;
 use diesel::dsl as sql;
@@ -16,7 +13,6 @@ use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use futures_util::io::AsyncReadExt;
 use futures_util::stream::TryStreamExt;
-use log::warn;
 use ring::digest as hasher;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
@@ -32,11 +28,10 @@ use crate::db::models::{
 use crate::db::schema::*;
 use crate::db::Connection;
 use crate::db::DATETIME_FORMAT;
-use crate::error::ApiError;
-use crate::error::{AlexError, Error};
+use crate::error::{AlexError, ApiError, Error};
 use crate::fts::TantivyDocument;
 use crate::utils;
-use crate::utils::auth::Authorization;
+use crate::utils::auth::api::Auth;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct PublishResponse {}
@@ -199,17 +194,9 @@ where
 /// Route to publish a new crate (used by `cargo publish`).
 pub(crate) async fn put(
     State(state): State<Arc<AppState>>,
-    TypedHeader(authorization): TypedHeader<Authorization>,
+    Auth(author): Auth,
     body: BodyStream,
 ) -> Result<Json<PublishResponse>, ApiError> {
-    let db = &state.db;
-
-    let header = authorization.token().to_string();
-    let author = db
-        .run(move |conn| utils::checks::get_author(conn, header))
-        .await
-        .ok_or(AlexError::InvalidToken)?;
-
     let mut body = body
         .map_err(|err| io::Error::new(io::ErrorKind::Other, err))
         .into_async_read();
@@ -420,7 +407,7 @@ pub(crate) async fn put(
         }
 
         if let Err(error) = state.search.create_or_update(document) {
-            warn!("Can't convert crate '{id}' ({name}) into Tantivy document : {error}");
+            tracing::warn!("Can't convert crate '{id}' ({name}) into Tantivy document : {error}");
         } else {
             state.search.commit()?;
         }

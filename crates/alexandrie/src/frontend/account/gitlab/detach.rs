@@ -8,17 +8,17 @@ use axum_extra::response::Html;
 use diesel::prelude::*;
 
 use crate::config::AppState;
-use crate::db::models::Author;
 use crate::db::schema::authors;
 use crate::error::FrontendError;
 use crate::frontend::account::utils::count_auth_methods;
 use crate::utils;
+use crate::utils::auth::frontend::Auth;
 
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
-    let Some(author) = maybe_author else {
+    let Some(Auth(author)) = maybe_author else {
         return Ok(Either::E2(Redirect::to("/account/manage")));
     };
 

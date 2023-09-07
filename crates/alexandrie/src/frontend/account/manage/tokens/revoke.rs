@@ -6,19 +6,19 @@ use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 
 use crate::config::AppState;
-use crate::db::models::Author;
 use crate::db::schema::*;
 use crate::error::FrontendError;
+use crate::utils::auth::frontend::Auth;
 
 use super::{ManageFlashMessage, ACCOUNT_MANAGE_FLASH};
 
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     Path(id): Path<i64>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
 ) -> Result<Redirect, FrontendError> {
-    let Some(author) = maybe_author else {
+    let Some(Auth(author)) = maybe_author else {
         return Ok(Redirect::to("/account/manage"));
     };
 

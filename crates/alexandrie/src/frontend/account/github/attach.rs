@@ -9,17 +9,17 @@ use axum_sessions::extractors::WritableSession;
 use oauth2::{CsrfToken, Scope};
 
 use crate::config::AppState;
-use crate::db::models::Author;
 use crate::error::FrontendError;
 use crate::frontend::account::github::{GithubLoginState, GITHUB_LOGIN_STATE_KEY};
 use crate::utils;
+use crate::utils::auth::frontend::Auth;
 
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
-    let Some(author) = maybe_author else {
+    let Some(Auth(author)) = maybe_author else {
         return Ok(Either::E2(Redirect::to("/account/manage")));
     };
 

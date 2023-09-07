@@ -17,10 +17,10 @@ pub mod callback;
 pub mod detach;
 
 use crate::config::AppState;
-use crate::db::models::Author;
 use crate::error::FrontendError;
 use crate::utils;
 use crate::utils::response::common;
+use crate::utils::auth::frontend::Auth;
 
 const GITLAB_LOGIN_STATE_KEY: &str = "login.gitlab";
 
@@ -32,10 +32,10 @@ struct GitlabLoginState {
 
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
-    if let Some(author) = maybe_author {
+    if let Some(Auth(author)) = maybe_author {
         let state = state.as_ref();
         let response = common::already_logged_in(state, author)?;
         return Ok(Either::E1(response));

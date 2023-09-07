@@ -36,6 +36,8 @@ use tracing::Level;
 use axum_sessions::{SameSite, SessionLayer};
 #[cfg(feature = "frontend")]
 use tower_http::services::ServeDir;
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 /// API endpoints definitions.
 pub mod api;
@@ -182,7 +184,7 @@ struct Opts {
 async fn run() -> Result<(), anyhow::Error> {
     let opts = Opts::parse();
 
-    log::info!("starting Alexandrie (version: {0})", build::short());
+    tracing::info!("starting Alexandrie (version: {0})", build::short());
 
     let contents = fs::read_to_string(&opts.config).await?;
     let config: Config = toml::from_str(contents.as_str())?;
@@ -195,7 +197,7 @@ async fn run() -> Result<(), anyhow::Error> {
 
     let state = Arc::new(state);
 
-    log::info!("running database migrations");
+    tracing::info!("running database migrations");
     #[rustfmt::skip]
     state.db.run(|conn| conn.run_pending_migrations(db::MIGRATIONS).map(|_| ())).await
         .expect("migration execution error");
@@ -216,11 +218,12 @@ async fn run() -> Result<(), anyhow::Error> {
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
+                .on_response(trace::DefaultOnResponse::new().level(Level::INFO))
+                .on_failure(trace::DefaultOnFailure::new().level(Level::ERROR)),
         )
         .with_state(Arc::clone(&state));
 
-    log::info!("listening on '{addr}'");
+    tracing::info!("listening on '{addr}'");
     Server::bind(&addr.parse().unwrap())
         .serve(app.into_make_service())
         .await?;
@@ -231,6 +234,11 @@ async fn run() -> Result<(), anyhow::Error> {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
         // .with_target(false)
         .compact()
         .init();

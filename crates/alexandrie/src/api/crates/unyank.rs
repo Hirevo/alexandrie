@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::{Json, TypedHeader};
+use axum::Json;
 use diesel::prelude::*;
 use json::json;
 use semver::Version;
@@ -10,23 +10,20 @@ use alexandrie_index::Indexer;
 
 use crate::config::AppState;
 use crate::db::schema::crates;
-use crate::error::{AlexError, ApiError};
+use crate::error::ApiError;
 use crate::utils;
-use crate::utils::auth::Authorization;
+use crate::utils::auth::api::Auth;
 
 pub(crate) async fn put(
     State(state): State<Arc<AppState>>,
+    Auth(author): Auth,
     Path((name, version)): Path<(String, Version)>,
-    TypedHeader(authorization): TypedHeader<Authorization>,
 ) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
 
     let db = &state.db;
     let state = Arc::clone(&state);
     let transaction = db.transaction(move |conn| {
-        let header = authorization.token().to_string();
-        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
-
         //? Does this crate exists?
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {

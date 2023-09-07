@@ -10,15 +10,15 @@ use diesel::prelude::*;
 use json::json;
 
 use crate::config::AppState;
-use crate::db::models::Author;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
 use crate::error::FrontendError;
 use crate::frontend::helpers;
+use crate::utils::auth::frontend::Auth;
 
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
-    user: Option<Author>,
+    user: Option<Auth>,
 ) -> Result<Either<Html<String>, Redirect>, FrontendError> {
     if state.is_login_required() && user.is_none() {
         return Ok(Either::E2(Redirect::to("/account/login")));
@@ -57,7 +57,7 @@ pub(crate) async fn get(
 
         let engine = &state.frontend.handlebars;
         let context = json!({
-            "user": user,
+            "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "total_downloads": helpers::humanize_number(total_downloads),
             "crate_count": helpers::humanize_number(crate_count),

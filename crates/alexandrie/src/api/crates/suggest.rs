@@ -37,7 +37,7 @@ pub(crate) async fn get(
     let name = utils::canonical_name(params.q);
     let limit = params.limit.map_or(10, |limit| limit.get() as usize);
 
-    log::info!("Suggester : {name} & {limit}");
+    tracing::info!("Suggester : {name} & {limit}");
 
     let results = state.search.suggest(name, limit)?;
     let suggestions: Vec<Suggestion> = results

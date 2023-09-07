@@ -11,10 +11,11 @@ use serde::{Deserialize, Serialize};
 pub mod revoke;
 
 use crate::config::AppState;
-use crate::db::models::{Author, NewAuthorToken};
+use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
 use crate::error::FrontendError;
 use crate::utils;
+use crate::utils::auth::frontend::Auth;
 
 use super::{ManageFlashMessage, ACCOUNT_MANAGE_FLASH};
 
@@ -26,11 +27,11 @@ pub(crate) struct CreateTokenForm {
 
 pub(crate) async fn post(
     State(state): State<Arc<AppState>>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
     Form(form): Form<CreateTokenForm>,
 ) -> Result<Redirect, FrontendError> {
-    let Some(author) = maybe_author else {
+    let Some(Auth(author)) = maybe_author else {
         return Ok(Redirect::to("/account/manage"));
     };
 

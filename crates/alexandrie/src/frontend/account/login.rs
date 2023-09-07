@@ -15,10 +15,10 @@ use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
 
 use crate::config::AppState;
-use crate::db::models::Author;
 use crate::db::schema::*;
 use crate::error::FrontendError;
 use crate::utils;
+use crate::utils::auth::frontend::Auth;
 use crate::utils::response::common;
 
 const LOGIN_FLASH: &'static str = "login.flash";
@@ -40,10 +40,10 @@ pub(crate) struct LoginForm {
 
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
 ) -> Result<(StatusCode, Html<String>), FrontendError> {
-    if let Some(author) = maybe_author {
+    if let Some(Auth(author)) = maybe_author {
         return common::already_logged_in(state.as_ref(), author);
     }
 
@@ -77,7 +77,7 @@ pub(crate) async fn get(
 
 pub(crate) async fn post(
     State(state): State<Arc<AppState>>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
     Form(form): Form<LoginForm>,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {

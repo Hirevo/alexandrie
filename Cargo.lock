@@ -61,7 +61,6 @@ dependencies = [
  "futures-util",
  "handlebars",
  "hex",
- "log",
  "num-format",
  "oauth2",
  "once_cell",

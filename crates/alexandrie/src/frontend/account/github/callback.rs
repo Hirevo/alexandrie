@@ -16,11 +16,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::frontend::auth::github::GithubAuthOrganizationConfig;
 use crate::config::AppState;
-use crate::db::models::{Author, NewAuthor, NewSalt};
+use crate::db::models::{NewAuthor, NewSalt, Author};
 use crate::db::schema::{authors, salts};
 use crate::error::FrontendError;
 use crate::frontend::account::github::GITHUB_LOGIN_STATE_KEY;
 use crate::utils;
+use crate::utils::auth::frontend::Auth;
 
 use super::GithubLoginState;
 
@@ -68,7 +69,7 @@ struct GithubUserTeamOrg {
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     Query(query): Query<CallbackQueryData>,
-    maybe_author: Option<Author>,
+    maybe_author: Option<Auth>,
     mut session: WritableSession,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
     let Some(data): Option<GithubLoginState> = session.get(GITHUB_LOGIN_STATE_KEY) else {

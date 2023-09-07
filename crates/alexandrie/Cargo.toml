@@ -26,6 +26,8 @@ tokio = { workspace = true, features = ["rt-multi-thread", "fs", "macros"] }
 axum = { version = "0.6.19", features = ["http2", "headers"] }
 axum-extra = "0.7.5"
 axum-sessions = "0.5.0"
+
+# command-line interface
 clap = { version = "4.2.2", features = ["string", "derive"] }
 
 # session handling
@@ -64,7 +66,7 @@ tower = "0.4.13"
 tower-http = { version = "0.4.1", features = ["trace", "fs"] }
 
 # error handling
-thiserror = "1.0.40"
+thiserror = { workspace = true }
 anyhow = "1.0.72"
 
 # README rendering
@@ -82,7 +84,6 @@ once_cell = { version = "1.17.1", optional = true }
 regex = { version = "1.7.3", optional = true }
 
 # logs
-log = "0.4.17"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 
