@@ -22,8 +22,8 @@ use crate::db::models::{NewAuthor, NewSalt};
 use crate::db::schema::*;
 use crate::error::FrontendError;
 use crate::utils;
-use crate::utils::response::common;
 use crate::utils::auth::frontend::Auth;
+use crate::utils::response::common;
 
 const REGISTER_FLASH: &'static str = "register.flash";
 

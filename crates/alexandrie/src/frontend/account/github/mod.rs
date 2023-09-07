@@ -19,8 +19,8 @@ pub mod detach;
 use crate::config::AppState;
 use crate::error::FrontendError;
 use crate::utils;
-use crate::utils::response::common;
 use crate::utils::auth::frontend::Auth;
+use crate::utils::response::common;
 
 const GITHUB_LOGIN_STATE_KEY: &str = "login.github";
 

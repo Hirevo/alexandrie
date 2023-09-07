@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::frontend::auth::github::GithubAuthOrganizationConfig;
 use crate::config::AppState;
-use crate::db::models::{NewAuthor, NewSalt, Author};
+use crate::db::models::{Author, NewAuthor, NewSalt};
 use crate::db::schema::{authors, salts};
 use crate::error::FrontendError;
 use crate::frontend::account::github::GITHUB_LOGIN_STATE_KEY;
