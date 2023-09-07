@@ -20,26 +20,24 @@
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
-#[macro_use(slog_o)]
-extern crate slog;
 
 use std::sync::Arc;
 
-#[cfg(feature = "frontend")]
-use std::io;
+use tokio::fs;
 
-use async_std::fs;
-
-use clap::{Arg, Command};
+use axum::routing::{delete, get, post, put};
+use axum::{Router, Server};
+use clap::Parser;
 use diesel_migrations::MigrationHarness;
-use tide::http::mime;
-use tide::utils::After;
-use tide::{Body, Response, Server};
+use tower_http::trace::{self, TraceLayer};
+use tracing::Level;
 
 #[cfg(feature = "frontend")]
-use tide::http::cookies::SameSite;
+use axum_sessions::{SameSite, SessionLayer};
 #[cfg(feature = "frontend")]
-use tide::sessions::SessionMiddleware;
+use tower_http::services::ServeDir;
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 /// API endpoints definitions.
 pub mod api;
@@ -49,8 +47,6 @@ pub mod config;
 pub mod db;
 /// Error-related type definitions.
 pub mod error;
-/// Logs initialisation.
-pub mod logs;
 /// Various utilities and helpers.
 pub mod utils;
 
@@ -61,196 +57,147 @@ pub mod frontend;
 /// Full text search
 pub mod fts;
 
-use crate::config::Config;
-use crate::error::Error;
+use crate::config::{AppState, Config};
 use crate::utils::build;
-use crate::utils::request_log::RequestLogger;
 
 #[cfg(feature = "frontend")]
 use crate::config::FrontendConfig;
 #[cfg(feature = "frontend")]
-use crate::utils::auth::AuthMiddleware;
-#[cfg(feature = "frontend")]
 use crate::utils::sessions::SqlStore;
 
 /// The application state type used for the web server.
-pub type State = Arc<config::State>;
+pub type State = Arc<AppState>;
 
 #[cfg(feature = "frontend")]
-fn frontend_routes(state: State, frontend_config: FrontendConfig) -> io::Result<Server<State>> {
-    let mut app = tide::with_state(Arc::clone(&state));
-
+fn frontend_routes(state: Arc<AppState>, frontend_config: FrontendConfig) -> Router<Arc<AppState>> {
     let store = SqlStore::new(state.db.clone());
+    let session_layer = SessionLayer::new(store, frontend_config.sessions.secret.as_bytes())
+        .with_cookie_name(frontend_config.sessions.cookie_name.as_str())
+        .with_same_site_policy(SameSite::Lax);
 
-    log::info!("setting up session middleware");
-    app.with(
-        SessionMiddleware::new(store, frontend_config.sessions.secret.as_bytes())
-            .with_cookie_name(frontend_config.sessions.cookie_name.as_str())
-            .with_same_site_policy(SameSite::Lax),
-    );
-    log::info!("setting up authentication middleware");
-    app.with(AuthMiddleware::new());
-
-    log::info!("mounting '/'");
-    app.at("/").get(frontend::index::get);
-    log::info!("mounting '/me'");
-    app.at("/me").get(frontend::me::get);
-    log::info!("mounting '/search'");
-    app.at("/search").get(frontend::search::get);
-    log::info!("mounting '/most-downloaded'");
-    app.at("/most-downloaded")
-        .get(frontend::most_downloaded::get);
-    log::info!("mounting '/last-updated'");
-    app.at("/last-updated").get(frontend::last_updated::get);
-    log::info!("mounting '/crates/:crate'");
-    app.at("/crates/:crate").get(frontend::krate::get);
-
-    log::info!("mounting '/account/login'");
-    app.at("/account/login")
-        .get(frontend::account::login::get)
-        .post(frontend::account::login::post);
-    log::info!("mounting '/account/logout'");
-    app.at("/account/logout")
-        .get(frontend::account::logout::get);
-    log::info!("mounting '/account/register'");
-    app.at("/account/register")
-        .get(frontend::account::register::get)
-        .post(frontend::account::register::post);
-    log::info!("mounting '/account/github'");
-    app.at("/account/github")
-        .get(frontend::account::github::get);
-    log::info!("mounting '/account/github/attach'");
-    app.at("/account/github/attach")
-        .get(frontend::account::github::attach::get);
-    log::info!("mounting '/account/github/detach'");
-    app.at("/account/github/detach")
-        .get(frontend::account::github::detach::get);
-    log::info!("mounting '/account/github/callback'");
-    app.at("/account/github/callback")
-        .get(frontend::account::github::callback::get);
-    log::info!("mounting '/account/gitlab'");
-    app.at("/account/gitlab")
-        .get(frontend::account::gitlab::get);
-    log::info!("mounting '/account/gitlab/attach'");
-    app.at("/account/gitlab/attach")
-        .get(frontend::account::gitlab::attach::get);
-    log::info!("mounting '/account/gitlab/detach'");
-    app.at("/account/gitlab/detach")
-        .get(frontend::account::gitlab::detach::get);
-    log::info!("mounting '/account/gitlab/callback'");
-    app.at("/account/gitlab/callback")
-        .get(frontend::account::gitlab::callback::get);
-    log::info!("mounting '/account/manage'");
-    app.at("/account/manage")
-        .get(frontend::account::manage::get);
-    log::info!("mounting '/account/manage/password'");
-    app.at("/account/manage/password")
-        .post(frontend::account::manage::passwd::post);
-    log::info!("mounting '/account/manage/tokens'");
-    app.at("/account/manage/tokens")
-        .post(frontend::account::manage::tokens::post);
-    log::info!("mounting '/account/manage/tokens/:token-id/revoke'");
-    app.at("/account/manage/tokens/:token-id/revoke")
-        .get(frontend::account::manage::tokens::revoke::get);
-
-    log::info!("mounting '/assets/*path'");
-    app.at("/assets").serve_dir(frontend_config.assets.path)?;
-
-    Ok(app)
-}
-
-fn api_routes(state: State) -> Server<State> {
-    let mut app = tide::with_state(state);
-
-    // Transform endpoint errors into the format expected by Cargo.
-    app.with(After(|mut res: Response| async {
-        if let Some(err) = res.error() {
-            let payload = json::json!({
-                "errors": [{
-                    "detail": err.to_string(),
-                }]
-            });
-            res.set_status(200);
-            res.set_content_type(mime::JSON);
-            res.set_body(Body::from_json(&payload)?);
-        }
-        Ok(res)
-    }));
-
-    log::info!("mounting '/api/v1/account/register'");
-    app.at("/account/register")
-        .post(api::account::register::post);
-    log::info!("mounting '/api/v1/account/login'");
-    app.at("/account/login").post(api::account::login::post);
-    log::info!("mounting '/api/v1/account/tokens'");
-    app.at("/account/tokens")
-        .post(api::account::token::info::post)
-        .put(api::account::token::generate::put)
-        .delete(api::account::token::revoke::delete);
-    log::info!("mounting '/api/v1/account/tokens/:name'");
-    app.at("/account/tokens/:name")
-        .get(api::account::token::info::get);
-    log::info!("mounting '/api/v1/categories'");
-    app.at("/categories").get(api::categories::get);
-    log::info!("mounting '/api/v1/crates'");
-    app.at("/crates").get(api::crates::search::get);
-    log::info!("mounting '/api/v1/crates/new'");
-    app.at("/crates/new").put(api::crates::publish::put);
-    log::info!("mounting '/api/v1/crates/suggest'");
-    app.at("/crates/suggest").get(api::crates::suggest::get);
-    log::info!("mounting '/api/v1/crates/:name'");
-    app.at("/crates/:name").get(api::crates::info::get);
-    log::info!("mounting '/api/v1/crates/:name/owners'");
-    app.at("/crates/:name/owners")
-        .get(api::crates::owners::get)
-        .put(api::crates::owners::put)
-        .delete(api::crates::owners::delete);
-    log::info!("mounting '/api/v1/crates/:name/:version/yank'");
-    app.at("/crates/:name/:version/yank")
-        .delete(api::crates::yank::delete);
-    log::info!("mounting '/api/v1/crates/:name/:version/unyank'");
-    app.at("/crates/:name/:version/unyank")
-        .put(api::crates::unyank::put);
-    log::info!("mounting '/api/v1/crates/:name/:version/download'");
-    app.at("/crates/:name/:version/download")
-        .get(api::crates::download::get);
-
-    app
-}
-
-async fn run() -> Result<(), Error> {
-    let matches = Command::new("alexandrie")
-        .version(build::short())
-        .long_version(build::long())
-        .arg(
-            Arg::new("config")
-                .short('c')
-                .long("config")
-                .value_name("CONFIG_FILE")
-                .help("Path to the configuration file")
-                .default_value("alexandrie.toml"),
+    Router::new()
+        .route("/", get(frontend::index::get))
+        .route("/me", get(frontend::me::get))
+        .route("/search", get(frontend::search::get))
+        .route("/most-downloaded", get(frontend::most_downloaded::get))
+        .route("/last-updated", get(frontend::last_updated::get))
+        .route("/crates/:crate", get(frontend::krate::get))
+        .route(
+            "/account/login",
+            get(frontend::account::login::get).post(frontend::account::login::post),
         )
-        .get_matches();
+        .route("/account/logout", get(frontend::account::logout::get))
+        .route(
+            "/account/register",
+            get(frontend::account::register::get).post(frontend::account::register::post),
+        )
+        .route("/account/github", get(frontend::account::github::get))
+        .route(
+            "/account/github/attach",
+            get(frontend::account::github::attach::get),
+        )
+        .route(
+            "/account/github/detach",
+            get(frontend::account::github::detach::get),
+        )
+        .route(
+            "/account/github/callback",
+            get(frontend::account::github::callback::get),
+        )
+        .route("/account/gitlab", get(frontend::account::gitlab::get))
+        .route(
+            "/account/gitlab/attach",
+            get(frontend::account::gitlab::attach::get),
+        )
+        .route(
+            "/account/gitlab/detach",
+            get(frontend::account::gitlab::detach::get),
+        )
+        .route(
+            "/account/gitlab/callback",
+            get(frontend::account::gitlab::callback::get),
+        )
+        .route("/account/manage", get(frontend::account::manage::get))
+        .route(
+            "/account/manage/password",
+            post(frontend::account::manage::passwd::post),
+        )
+        .route(
+            "/account/manage/tokens",
+            post(frontend::account::manage::tokens::post),
+        )
+        .route(
+            "/account/manage/tokens/:token-id/revoke",
+            get(frontend::account::manage::tokens::revoke::get),
+        )
+        .nest_service(
+            "/assets",
+            ServeDir::new(frontend_config.assets.path).append_index_html_on_directories(false),
+        )
+        .layer(session_layer)
+}
 
-    let config = matches
-        .get_one::<String>("config")
-        .map(|value| value.as_str())
-        .unwrap_or("alexandrie.toml");
+fn api_routes() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/account/register", post(api::account::register::post))
+        .route("/account/login", post(api::account::login::post))
+        .route(
+            "/account/tokens",
+            post(api::account::token::info::post)
+                .put(api::account::token::generate::put)
+                .delete(api::account::token::revoke::delete),
+        )
+        .route("/account/tokens/:name", get(api::account::token::info::get))
+        .route("/categories", get(api::categories::get))
+        .route("/crates", get(api::crates::search::get))
+        .route("/crates/new", put(api::crates::publish::put))
+        .route("/crates/suggest", get(api::crates::suggest::get))
+        .route("/crates/:name", get(api::crates::info::get))
+        .route(
+            "/crates/:name/owners",
+            get(api::crates::owners::get)
+                .put(api::crates::owners::put)
+                .delete(api::crates::owners::delete),
+        )
+        .route(
+            "/crates/:name/:version/yank",
+            delete(api::crates::yank::delete),
+        )
+        .route(
+            "/crates/:name/:version/unyank",
+            put(api::crates::unyank::put),
+        )
+        .route(
+            "/crates/:name/:version/download",
+            get(api::crates::download::get),
+        )
+}
 
-    let contents = fs::read_to_string(config).await?;
+#[derive(Debug, Parser)]
+#[command(about, version(build::short()), long_version(build::long()))]
+struct Opts {
+    /// Path to the configuration file
+    #[arg(short, long, default_value = "alexandrie.toml")]
+    pub config: String,
+}
+
+async fn run() -> Result<(), anyhow::Error> {
+    let opts = Opts::parse();
+
+    tracing::info!("starting Alexandrie (version: {0})", build::short());
+
+    let contents = fs::read_to_string(&opts.config).await?;
     let config: Config = toml::from_str(contents.as_str())?;
     let addr = config.general.bind_address.clone();
 
     #[cfg(feature = "frontend")]
     let frontend_config = config.frontend.clone();
 
-    let state: config::State = config.try_into()?;
+    let state: AppState = config.try_into()?;
 
     let state = Arc::new(state);
 
-    log::info!("starting Alexandrie (version: {})", build::short());
-
-    log::info!("running database migrations");
+    tracing::info!("running database migrations");
     #[rustfmt::skip]
     state.db.run(|conn| conn.run_pending_migrations(db::MIGRATIONS).map(|_| ())).await
         .expect("migration execution error");
@@ -258,30 +205,46 @@ async fn run() -> Result<(), Error> {
     let database = &state.db;
     state.search.index_all(database).await?;
 
-    let mut app = tide::with_state(Arc::clone(&state));
-
-    log::info!("setting up request logger middleware");
-    app.with(RequestLogger::new());
+    let app = Router::new().nest("/api/v1", api_routes());
 
     #[cfg(feature = "frontend")]
-    if frontend_config.enabled {
-        let frontend = frontend_routes(Arc::clone(&state), frontend_config)?;
-        app.at("/").nest(frontend);
-    }
-    app.at("/api/v1").nest(api_routes(state));
+    let app = if frontend_config.enabled {
+        app.nest("/", frontend_routes(Arc::clone(&state), frontend_config))
+    } else {
+        app
+    };
 
-    log::info!("listening on '{0}'", addr);
-    app.listen(addr).await?;
+    let app = app
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+                .on_response(trace::DefaultOnResponse::new().level(Level::INFO))
+                .on_failure(trace::DefaultOnFailure::new().level(Level::ERROR)),
+        )
+        .with_state(Arc::clone(&state));
+
+    tracing::info!("listening on '{addr}'");
+    Server::bind(&addr.parse().unwrap())
+        .serve(app.into_make_service())
+        .await?;
 
     Ok(())
 }
 
-#[async_std::main]
+#[tokio::main]
 async fn main() {
-    let _guard = logs::init();
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        // .with_target(false)
+        .compact()
+        .init();
 
     if let Err(err) = run().await {
-        eprintln!("{}", err);
+        eprintln!("{err}");
         std::process::exit(1);
     }
 }

@@ -1,34 +1,31 @@
-use async_std::io;
+use std::sync::Arc;
 
+use axum::extract::{Path, State};
+use bytes::Bytes;
 use diesel::prelude::*;
 use semver::Version;
-use tide::http::mime;
-use tide::{Body, Request, Response, StatusCode};
 
 use alexandrie_storage::Store;
 
+use crate::config::AppState;
 use crate::db::schema::*;
-use crate::error::{AlexError, Error};
+use crate::error::{AlexError, ApiError};
 use crate::utils;
-use crate::State;
 
 /// Route to download a crate's tarball (used by `cargo build`).
 ///
 /// The response is streamed, for performance and memory footprint reasons.
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param("name")?.to_string();
-    let version: Version = req.param("version")?.parse()?;
-
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Path((name, version)): Path<(String, Version)>,
+) -> Result<Bytes, ApiError> {
     let name = utils::canonical_name(name);
-
-    let state = req.state().clone();
-    let db = &state.db;
 
     // state.index.refresh()?;
 
+    let db = &state.db;
+    let state = Arc::clone(&state);
     let transaction = db.transaction(move |conn| {
-        let state = req.state();
-
         //? Fetch the download count for this crate.
         let crate_info = crates::table
             .select((crates::name, crates::downloads))
@@ -41,17 +38,13 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             diesel::update(crates::table.filter(crates::name.eq(name.as_str())))
                 .set(crates::downloads.eq(downloads + 1))
                 .execute(conn)?;
-            let mut krate = state.storage.read_crate(&name, version)?;
-            let mut buf = Vec::new();
-            krate.read_to_end(&mut buf)?;
-            let mut response = Response::new(StatusCode::Ok);
-            response.set_content_type(mime::BYTE_STREAM);
-            response.set_body(Body::from_reader(io::Cursor::new(buf), None));
-            Ok(response)
+
+            let krate = state.storage.get_crate(&name, version)?;
+            Ok(Bytes::from(krate))
         } else {
-            Err(Error::from(AlexError::CrateNotFound { name }))
+            Err(ApiError::from(AlexError::CrateNotFound { name }))
         }
     });
 
-    Ok(transaction.await?)
+    transaction.await.map_err(ApiError::from)
 }

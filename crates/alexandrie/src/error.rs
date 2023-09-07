@@ -1,6 +1,9 @@
 use std::convert::TryInto;
+use std::fmt::{Debug, Display};
 use std::io;
 
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use diesel::result::Error as SQLError;
 use hex::FromHexError as HexError;
 use io::Error as IOError;
@@ -15,6 +18,72 @@ use alexandrie_index::error::Error as IndexError;
 use alexandrie_storage::error::Error as StorageError;
 
 use crate::db::models::Author;
+
+/// Represents an error from the programmatic API.
+pub struct ApiError(anyhow::Error);
+
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        // Transform endpoint errors into the format expected by Cargo.
+        Json(json::json!({
+            "errors": [{
+                "detail": self.0.to_string(),
+            }]
+        }))
+        .into_response()
+    }
+}
+
+impl<E> From<E> for ApiError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
+    }
+}
+
+impl ApiError {
+    /// Constructs an instance from a single message.
+    pub fn msg<M>(message: M) -> Self
+    where
+        M: Display + Debug + Send + Sync + 'static,
+    {
+        Self(anyhow::Error::msg(message))
+    }
+}
+
+#[cfg(feature = "frontend")]
+/// Represents an error from the frontend.
+pub struct FrontendError(anyhow::Error);
+
+#[cfg(feature = "frontend")]
+impl IntoResponse for FrontendError {
+    fn into_response(self) -> Response {
+        axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+    }
+}
+
+#[cfg(feature = "frontend")]
+impl<E> From<E> for FrontendError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
+    }
+}
+
+#[cfg(feature = "frontend")]
+impl FrontendError {
+    /// Constructs an instance from a single message.
+    pub fn msg<M>(message: M) -> Self
+    where
+        M: Display + Debug + Send + Sync + 'static,
+    {
+        Self(anyhow::Error::msg(message))
+    }
+}
 
 /// The Error type for the registry.
 ///

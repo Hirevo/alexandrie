@@ -1,46 +1,40 @@
+use std::sync::Arc;
+
+use axum::extract::State;
+use axum::response::Redirect;
+use axum::Form;
+use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
 /// Token revocation routes (eg. "/account/manage/tokens/5/revoke").
 pub mod revoke;
 
+use crate::config::AppState;
 use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
+use crate::error::FrontendError;
 use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
+use crate::utils::auth::frontend::Auth;
 
 use super::{ManageFlashMessage, ACCOUNT_MANAGE_FLASH};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-struct CreateTokenForm {
+pub(crate) struct CreateTokenForm {
     token_name: String,
 }
 
-pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
-    let author = match req.get_author() {
-        Some(author) => author,
-        None => {
-            return Ok(utils::response::redirect("/account/manage"));
-        }
+pub(crate) async fn post(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Auth>,
+    mut session: WritableSession,
+    Form(form): Form<CreateTokenForm>,
+) -> Result<Redirect, FrontendError> {
+    let Some(Auth(author)) = maybe_author else {
+        return Ok(Redirect::to("/account/manage"));
     };
 
-    //? Deserialize form data.
-    let form: CreateTokenForm = match req.body_form().await {
-        Ok(form) => form,
-        Err(_) => {
-            return utils::response::error_html(
-                req.state(),
-                Some(author),
-                StatusCode::BadRequest,
-                "could not deseriailize form data",
-            );
-        }
-    };
-
-    let state = req.state().clone();
     let db = &state.db;
 
     let transaction = db.transaction(move |conn| {
@@ -59,9 +53,8 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
 
         let message = String::from(token);
         let flash_message = ManageFlashMessage::TokenGenerationSuccess { message };
-        req.session_mut()
-            .insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
-        Ok(utils::response::redirect("/account/manage"))
+        session.insert(ACCOUNT_MANAGE_FLASH, &flash_message)?;
+        Ok(Redirect::to("/account/manage"))
     });
 
     transaction.await

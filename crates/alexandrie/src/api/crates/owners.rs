@@ -1,54 +1,56 @@
+use std::sync::Arc;
+
+use axum::extract::{Path, State};
+use axum::Json;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
+use crate::config::AppState;
 use crate::db::models::{Author, NewCrateAuthor};
 use crate::db::schema::*;
-use crate::error::AlexError;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
+use crate::utils::auth::api::Auth;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct OwnerListResponse {
+pub(crate) struct OwnerListResponse {
     pub users: Vec<OwnerListEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct OwnerListEntry {
+pub(crate) struct OwnerListEntry {
     pub id: i64,
     pub login: String,
     pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct OwnerAddBody {
+pub(crate) struct OwnerAddBody {
     /// Owners' emails to add.
     pub users: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct OwnerDeleteBody {
+pub(crate) struct OwnerDeleteBody {
     /// Owners' emails to delete.
     pub users: Vec<String>,
 }
 
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param("name")?.to_string();
-
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Path(name): Path<String>,
+) -> Result<Json<OwnerListResponse>, ApiError> {
     let name = utils::canonical_name(name);
 
-    let state = req.state().clone();
     let db = &state.db;
-
     let transaction = db.transaction(move |conn| {
         //? Does this crate exists?
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {
-            return Ok(utils::response::error(
-                StatusCode::NotFound,
-                format!("no crates named '{0}' could be found", name),
-            ));
+            return Err(ApiError::msg(format!(
+                "no crates named '{name}' could be found",
+            )));
         }
 
         //? Get all authors of this crate.
@@ -72,43 +74,34 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             })
             .collect();
 
-        let data = OwnerListResponse { users };
-        Ok(utils::response::json(&data))
+        Ok(Json(OwnerListResponse { users }))
     });
 
-    transaction.await
+    transaction.await.map_err(ApiError::from)
 }
 
-pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
-    let name = req.param("name")?.to_string();
+pub(crate) async fn put(
+    State(state): State<Arc<AppState>>,
+    Auth(author): Auth,
+    Path(name): Path<String>,
+    Json(body): Json<OwnerAddBody>,
+) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
 
-    let OwnerAddBody { users: new_authors } = req.body_json().await?;
+    let OwnerAddBody { users: new_authors } = body;
 
-    let state = req.state().clone();
     let db = &state.db;
-
     let transaction = db.transaction(move |conn| {
-        let headers = req
-            .header(utils::auth::AUTHORIZATION_HEADER)
-            .ok_or(AlexError::InvalidToken)?;
-        let header = headers.last().to_string();
-        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
-
         //? Get this crate's ID.
-        let crate_id = crates::table
+        let maybe_crate_id = crates::table
             .select(crates::id)
             .filter(crates::canon_name.eq(name.as_str()))
             .first::<i64>(conn)
             .optional()?;
-        let crate_id = match crate_id {
-            Some(id) => id,
-            None => {
-                return Ok(utils::response::error(
-                    StatusCode::NotFound,
-                    format!("no crates named '{0}' could be found", name),
-                ))
-            }
+        let Some(crate_id) = maybe_crate_id else {
+            return Err(ApiError::msg(format!(
+                "no crates named '{name}' could be found"
+            )));
         };
 
         //? Get all authors of this crate.
@@ -121,10 +114,7 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
 
         //? Check if user is one of these authors.
         if !crate_authors.contains(&author.id) {
-            return Ok(utils::response::error(
-                StatusCode::Forbidden,
-                "you are not an author of this crate",
-            ));
+            return Err(ApiError::msg("you are not an author of this crate"));
         }
 
         //? Get all registered authors which:
@@ -163,52 +153,44 @@ pub(crate) async fn put(mut req: Request<State>) -> tide::Result {
         let authors_list = match new_authors_names.as_slice() {
             [] => String::new(),
             [author] => author.clone(),
-            [fst, snd] => format!("{}, and {}", fst, snd),
+            [fst, snd] => format!("{fst}, and {snd}"),
             [fsts @ .., last] => {
                 let fsts = fsts.join(", ");
-                format!("{} and {}", fsts, last)
+                format!("{fsts}, and {last}")
             }
         };
 
-        let data = json!({
+        Ok(Json(json!({
             "ok": true,
-            "msg": format!("{0} has been added as authors of {1}", authors_list, name),
-        });
-        Ok(utils::response::json(&data))
+            "msg": format!("{authors_list} has been added as authors of {name}"),
+        })))
     });
 
     transaction.await
 }
 
-pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
-    let name = req.param("name")?.to_string();
+pub(crate) async fn delete(
+    State(state): State<Arc<AppState>>,
+    Auth(author): Auth,
+    Path(name): Path<String>,
+    Json(body): Json<OwnerDeleteBody>,
+) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
 
-    let OwnerDeleteBody { users: old_authors } = req.body_json().await?;
+    let OwnerDeleteBody { users: old_authors } = body;
 
-    let state = req.state().clone();
     let db = &state.db;
-
     let transaction = db.transaction(move |conn| {
-        let headers = req
-            .header(utils::auth::AUTHORIZATION_HEADER)
-            .ok_or(AlexError::InvalidToken)?;
-        let header = headers.last().to_string();
-        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
         //? Get this crate's ID.
-        let crate_id = crates::table
+        let maybe_crate_id = crates::table
             .select(crates::id)
             .filter(crates::canon_name.eq(name.as_str()))
             .first::<i64>(conn)
             .optional()?;
-        let crate_id = match crate_id {
-            Some(id) => id,
-            None => {
-                return Ok(utils::response::error(
-                    StatusCode::NotFound,
-                    format!("no crates named '{0}' could be found", name),
-                ))
-            }
+        let Some(crate_id) = maybe_crate_id else {
+            return Err(ApiError::msg(format!(
+                "no crates named '{name}' could be found"
+            )));
         };
 
         //? Get all authors of this crate.
@@ -221,10 +203,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
 
         //? Check if user is one of these authors.
         if !crate_authors.contains(&author.id) {
-            return Ok(utils::response::error(
-                StatusCode::Forbidden,
-                "you are not an author of this crate",
-            ));
+            return Err(ApiError::msg("you are not an author of this crate"));
         }
 
         //? Get all registered authors which:
@@ -238,10 +217,7 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
 
         //? Check if there will remain at least one author for this crate.
         if crate_authors.len() == 1 && old_authors.len() == 1 {
-            return Ok(utils::response::error(
-                StatusCode::BadRequest,
-                "cannot leave the crate without any authors",
-            ));
+            return Err(ApiError::msg("cannot leave the crate without any authors"));
         }
 
         //? Split IDs and names into separate vectors.
@@ -266,19 +242,18 @@ pub(crate) async fn delete(mut req: Request<State>) -> tide::Result {
         let authors_list = match old_authors_names.as_slice() {
             [] => String::new(),
             [author] => author.clone(),
-            [fst, snd] => format!("{}, and {}", fst, snd),
+            [fst, snd] => format!("{fst}, and {snd}"),
             [fsts @ .., last] => {
                 let fsts = fsts.join(", ");
-                format!("{} and {}", fsts, last)
+                format!("{fsts}, and {last}")
             }
         };
 
-        let data = json!({
+        Ok(Json(json!({
             "ok": true,
-            "msg": format!("{0} has been removed from authors of {1}", authors_list, name),
-        });
-        Ok(utils::response::json(&data))
+            "msg": format!("{authors_list} has been removed from authors of {name}"),
+        })))
     });
 
-    transaction.await
+    transaction.await.map_err(ApiError::from)
 }

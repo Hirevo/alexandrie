@@ -15,7 +15,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 # file formats
-serde = { version = "1.0.160", features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
 
 # README rendering
 syntect = "5.0.0"

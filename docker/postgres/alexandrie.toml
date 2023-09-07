@@ -17,7 +17,7 @@ login_required = false
 
 [frontend.sessions]
 cookie_name = "alexandrie.sid"
-secret = "YOU_REALLY_SHOULD_CHANGE_THIS_BEFORE_DEPLOYING"
+secret = "YOU_REALLY_SHOULD_CHANGE_THIS_BEFORE_DEPLOYING_THIS_TO_PRODUCTION"
 
 [frontend.assets]
 path = "assets"

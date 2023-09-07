@@ -6,3 +6,8 @@ members = [
     "crates/alexandrie-rendering",
     "helpers/syntect-dump",
 ]
+
+[workspace.dependencies]
+tokio = "1.32.0"
+serde = "1.0.160"
+thiserror = "1.0.40"

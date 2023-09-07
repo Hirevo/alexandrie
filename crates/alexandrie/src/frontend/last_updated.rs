@@ -1,46 +1,49 @@
 use std::num::NonZeroU32;
+use std::sync::Arc;
 
+use axum::extract::{Query, State};
+use axum::response::Redirect;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::Request;
 
 use alexandrie_index::Indexer;
 
+use crate::config::AppState;
 use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
-use crate::error::Error;
+use crate::error::{Error, FrontendError};
 use crate::frontend::helpers;
-use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
+use crate::utils::auth::frontend::Auth;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct Params {
+pub(crate) struct QueryParams {
     pub page: Option<NonZeroU32>,
 }
 
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let params = req.query::<Params>().unwrap_or(Params { page: None });
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<QueryParams>,
+    user: Option<Auth>,
+) -> Result<Either<Html<String>, Redirect>, FrontendError> {
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
-    let user = req.get_author();
-    if req.state().is_login_required() && user.is_none() {
-        return Ok(utils::response::redirect("/account/login"));
+    if state.is_login_required() && user.is_none() {
+        return Ok(Either::E2(Redirect::to("/account/login")));
     }
 
-    let state = req.state().clone();
     let db = &state.db;
+    let state = Arc::clone(&state);
 
     let transaction = db.transaction(move |conn| {
-        let state = req.state();
-
         //? Get the total count of search results.
-        let total_results = crates::table
+        let total_results: i64 = crates::table
             .select(sql::count(crates::id))
-            .first::<i64>(conn)?;
+            .first(conn)?;
 
         //? Get the search results for the given page number.
         let results: Vec<Crate> = crates::table
@@ -49,17 +52,17 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             .offset(15 * i64::from(page_number - 1))
             .load(conn)?;
 
-        let results = results
+        let results: Vec<(Crate, Vec<String>)> = results
             .into_iter()
             .map(|result| {
                 let keywords = crate_keywords::table
                     .inner_join(keywords::table)
                     .select(keywords::name)
                     .filter(crate_keywords::crate_id.eq(result.id))
-                    .load::<String>(conn)?;
+                    .load(conn)?;
                 Ok((result, keywords))
             })
-            .collect::<Result<Vec<(Crate, Vec<String>)>, Error>>()?;
+            .collect::<Result<_, Error>>()?;
 
         //? Make page number starts counting from 1 (instead of 0).
         let page_count = (total_results / 15
@@ -82,7 +85,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 
         let engine = &state.frontend.handlebars;
         let context = json!({
-            "user": user,
+            "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "total_results": total_results,
             "pagination": {
@@ -114,9 +117,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                 }))
             }).collect::<Result<Vec<_>, Error>>()?,
         });
-        Ok(utils::response::html(
-            engine.render("last-updated", &context)?,
-        ))
+
+        let rendered = engine.render("last-updated", &context)?;
+
+        Ok(Either::E1(Html(rendered)))
     });
 
     transaction.await

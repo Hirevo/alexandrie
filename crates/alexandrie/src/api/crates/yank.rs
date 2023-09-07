@@ -1,49 +1,41 @@
+use std::sync::Arc;
+
+use axum::extract::{Path, State};
+use axum::Json;
 use diesel::prelude::*;
 use json::json;
 use semver::Version;
-use tide::{Request, StatusCode};
 
 use alexandrie_index::Indexer;
 
+use crate::config::AppState;
 use crate::db::schema::crates;
-use crate::error::AlexError;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
+use crate::utils::auth::api::Auth;
 
-pub(crate) async fn delete(req: Request<State>) -> tide::Result {
-    let name = req.param("name")?.to_string();
-    let version: Version = req.param("version")?.parse()?;
-
+pub(crate) async fn delete(
+    State(state): State<Arc<AppState>>,
+    Auth(author): Auth,
+    Path((name, version)): Path<(String, Version)>,
+) -> Result<Json<json::Value>, ApiError> {
     let name = utils::canonical_name(name);
 
-    let state = req.state().clone();
     let db = &state.db;
-
+    let state = Arc::clone(&state);
     let transaction = db.transaction(move |conn| {
-        let state = req.state();
-
-        let headers = req
-            .header(utils::auth::AUTHORIZATION_HEADER)
-            .ok_or(AlexError::InvalidToken)?;
-        let header = headers.last().to_string();
-        let author = utils::checks::get_author(conn, header).ok_or(AlexError::InvalidToken)?;
-
         //? Does this crate exists?
         let exists = utils::checks::crate_exists(conn, name.as_str())?;
         if !exists {
-            return Ok(utils::response::error(
-                StatusCode::NotFound,
-                format!("no crates named '{0}' could be found", name),
-            ));
+            return Err(ApiError::msg(format!(
+                "no crates named '{name}' could be found"
+            )));
         }
 
         //? Is the user an author of this crate?
         let is_author = utils::checks::is_crate_author(conn, name.as_str(), author.id)?;
         if !is_author {
-            return Ok(utils::response::error(
-                StatusCode::Forbidden,
-                "you are not an author of this crate",
-            ));
+            return Err(ApiError::msg("you are not an author of this crate"));
         }
 
         //? Get the non-canonical crate name from the canonical one.
@@ -54,14 +46,13 @@ pub(crate) async fn delete(req: Request<State>) -> tide::Result {
 
         state.index.yank_record(name.as_str(), version.clone())?;
 
-        let msg = format!("Yanking crate `{0}#{1}`", name.as_str(), version);
+        let msg = format!("Yanking crate `{name}#{version}`");
         state.index.commit_and_push(msg.as_str())?;
 
-        let data = json!({
+        Ok(Json(json!({
             "ok": true
-        });
-        Ok(utils::response::json(&data))
+        })))
     });
 
-    transaction.await
+    transaction.await.map_err(ApiError::from)
 }

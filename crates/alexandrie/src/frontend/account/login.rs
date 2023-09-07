@@ -1,17 +1,25 @@
 use std::num::NonZeroU32;
+use std::sync::Arc;
 use std::time::Duration;
 
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::Redirect;
+use axum::Form;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
+use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 use json::json;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
+use crate::config::AppState;
 use crate::db::schema::*;
+use crate::error::FrontendError;
 use crate::utils;
-use crate::utils::auth::AuthExt;
+use crate::utils::auth::frontend::Auth;
 use crate::utils::response::common;
-use crate::State;
 
 const LOGIN_FLASH: &'static str = "login.flash";
 
@@ -24,24 +32,26 @@ enum LoginFlashMessage {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-struct LoginForm {
+pub(crate) struct LoginForm {
     pub email: String,
     pub password: String,
     pub remember: Option<String>,
 }
 
-pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
-    if let Some(author) = req.get_author() {
-        let state = req.state().as_ref();
-        return common::already_logged_in(state, author);
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Auth>,
+    mut session: WritableSession,
+) -> Result<(StatusCode, Html<String>), FrontendError> {
+    if let Some(Auth(author)) = maybe_author {
+        return common::already_logged_in(state.as_ref(), author);
     }
 
-    let flash_message: Option<LoginFlashMessage> = req.session().get(LOGIN_FLASH);
+    let flash_message: Option<LoginFlashMessage> = session.get(LOGIN_FLASH);
     if flash_message.is_some() {
-        req.session_mut().remove(LOGIN_FLASH);
+        session.remove(LOGIN_FLASH);
     }
 
-    let state = req.state();
     let engine = &state.frontend.handlebars;
     let auth = &state.frontend.config.auth;
 
@@ -60,76 +70,64 @@ pub(crate) async fn get(mut req: Request<State>) -> tide::Result {
         "local_registration_enabled": local_registration_enabled,
         "has_separator": has_separator,
     });
-    Ok(utils::response::html(
-        engine.render("account/login", &context)?,
-    ))
+
+    let rendered = engine.render("account/login", &context)?;
+    Ok((StatusCode::OK, Html(rendered)))
 }
 
-pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
-    if req.is_authenticated() {
-        return Ok(utils::response::redirect("/"));
+pub(crate) async fn post(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Auth>,
+    mut session: WritableSession,
+    Form(form): Form<LoginForm>,
+) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
+    if maybe_author.is_some() {
+        return Ok(Either::E2(Redirect::to("/")));
     }
 
-    if !req.state().frontend.config.auth.local.enabled {
-        return utils::response::error_html(
-            req.state(),
+    if !state.frontend.config.auth.local.enabled {
+        let rendered = utils::response::error_html(
+            state.as_ref(),
             None,
-            StatusCode::BadRequest,
             "local authentication is not allowed on this instance",
-        );
+        )?;
+        return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     }
 
-    //? Deserialize form data.
-    let form: LoginForm = match req.body_form().await {
-        Ok(form) => form,
-        Err(_) => {
-            return utils::response::error_html(
-                req.state(),
-                None,
-                StatusCode::BadRequest,
-                "could not deseriailize form data",
-            );
-        }
-    };
-
-    let state = req.state().clone();
     let db = &state.db;
 
     let transaction = db.transaction(move |conn| {
         //? Get the users' salt and expected hash.
-        let results = salts::table
+        let maybe_results: Option<(i64, String, Option<String>)> = salts::table
             .inner_join(authors::table)
             .select((authors::id, salts::salt, authors::passwd))
             .filter(authors::email.eq(form.email.as_str()))
-            .first::<(i64, String, Option<String>)>(conn)
+            .first(conn)
             .optional()?;
 
         //? Does the user exist?
-        let (author_id, encoded_salt, encoded_expected_hash) = match results {
+        let (author_id, encoded_salt, encoded_expected_hash) = match maybe_results {
             Some((id, salt, Some(passwd))) => (id, salt, passwd),
             _ => {
                 let message = String::from("invalid email/password combination.");
                 let flash_message = LoginFlashMessage::Error { message };
-                req.session_mut().insert(LOGIN_FLASH, &flash_message)?;
-                return Ok(utils::response::redirect("/account/login"));
+                session.insert(LOGIN_FLASH, &flash_message)?;
+                return Ok(Either::E2(Redirect::to("/account/login")));
             }
         };
 
         //? Decode hex-encoded hashes.
-        let decode_results = hex::decode(encoded_salt.as_str())
+        let maybe_results = hex::decode(encoded_salt.as_str())
             .and_then(|fst| hex::decode(form.password.as_str()).map(move |snd| (fst, snd)))
             .and_then(|(fst, snd)| {
                 hex::decode(encoded_expected_hash.as_str()).map(move |trd| (fst, snd, trd))
             });
 
-        let (decoded_salt, decoded_password, decoded_expected_hash) = match decode_results {
-            Ok(results) => results,
-            Err(_) => {
-                let message = String::from("password/salt decoding issue.");
-                let flash_message = LoginFlashMessage::Error { message };
-                req.session_mut().insert(LOGIN_FLASH, &flash_message)?;
-                return Ok(utils::response::redirect("/account/login"));
-            }
+        let Ok((decoded_salt, decoded_password, decoded_expected_hash)) = maybe_results else {
+            let message = String::from("password/salt decoding issue.");
+            let flash_message = LoginFlashMessage::Error { message };
+            session.insert(LOGIN_FLASH, &flash_message)?;
+            return Ok(Either::E2(Redirect::to("/account/login")));
         };
 
         //? Verify client password against the expected hash (through PBKDF2).
@@ -148,8 +146,8 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         if !password_match {
             let message = String::from("invalid email/password combination.");
             let flash_message = LoginFlashMessage::Error { message };
-            req.session_mut().insert(LOGIN_FLASH, &flash_message)?;
-            return Ok(utils::response::redirect("/account/login"));
+            session.insert(LOGIN_FLASH, &flash_message)?;
+            return Ok(Either::E2(Redirect::to("/account/login")));
         }
 
         //? Get the maximum duration of the session.
@@ -159,10 +157,10 @@ pub(crate) async fn post(mut req: Request<State>) -> tide::Result {
         };
 
         //? Set the user's session.
-        req.session_mut().insert("author.id", author_id)?;
-        req.session_mut().expire_in(expiry);
+        session.insert("author.id", author_id)?;
+        session.expire_in(expiry);
 
-        Ok(utils::response::redirect("/"))
+        Ok(Either::E2(Redirect::to("/")))
     });
 
     transaction.await

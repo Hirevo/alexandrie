@@ -1,42 +1,45 @@
 use std::num::NonZeroUsize;
+use std::sync::Arc;
 
+use axum::extract::Query;
+use axum::extract::State;
+use axum::response::Redirect;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::Request;
 
 use alexandrie_index::Indexer;
 
+use crate::config::AppState;
 use crate::db::models::Crate;
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
-use crate::error::Error;
+use crate::error::{Error, FrontendError};
 use crate::frontend::helpers;
-use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
+use crate::utils::auth::frontend::Auth;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct SearchParams {
+pub(crate) struct QueryParams {
     pub q: String,
     pub page: Option<NonZeroUsize>,
 }
 
 /// Route to search through crates (used by `cargo search`) using tantivy index
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let params = req.query::<SearchParams>().unwrap();
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<QueryParams>,
+    user: Option<Auth>,
+) -> Result<Either<Html<String>, Redirect>, FrontendError> {
     let searched_text = params.q.clone();
     let page_number = params.page.map_or_else(|| 1, |page| page.get());
 
     let offset = (page_number - 1) * crate::fts::DEFAULT_RESULT_PER_PAGE;
 
-    let user = req.get_author();
-    if req.state().is_login_required() && user.is_none() {
-        return Ok(utils::response::redirect("/account/login"));
+    if state.is_login_required() && user.is_none() {
+        return Ok(Either::E2(Redirect::to("/account/login")));
     }
-
-    let state = req.state().clone();
-    let repo = &state.db;
 
     let (count, results) = state.search.search(
         searched_text.clone(),
@@ -51,9 +54,10 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             1
         };
 
-    let transaction = repo.transaction(move |conn| {
-        let state = req.state();
+    let repo = &state.db;
+    let state = Arc::clone(&state);
 
+    let transaction = repo.transaction(move |conn| {
         let results: Vec<(Crate, Vec<String>)> = results
             .into_iter()
             .map(|v| {
@@ -94,7 +98,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 
         let engine = &state.frontend.handlebars;
         let context = json!({
-            "user": user,
+            "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "searched_text": searched_text,
             "total_results": count,
@@ -127,9 +131,9 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
                 }))
             }).collect::<Result<Vec<_>, Error>>()?,
         });
-        Ok(utils::response::html(
-            engine.render("search", &context)?,
-        ))
+
+        let rendered = engine.render("search", &context)?;
+        Ok(Either::E1(Html(rendered)))
     });
 
     transaction.await

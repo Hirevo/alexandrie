@@ -1,14 +1,12 @@
 use ring::digest as hasher;
 use ring::rand::{SecureRandom, SystemRandom};
 
-#[cfg(feature = "frontend")]
-mod frontend;
+/// Useful authorization-related types for the programmatic API.
+pub mod api;
 
+/// Useful authorization-related types for the frontend.
 #[cfg(feature = "frontend")]
-pub use self::frontend::*;
-
-/// Authorization header's name.
-pub const AUTHORIZATION_HEADER: &str = "authorization";
+pub mod frontend;
 
 /// Generates a new random registry token (as a hex-encoded SHA-512 digest).
 pub fn generate_token() -> String {

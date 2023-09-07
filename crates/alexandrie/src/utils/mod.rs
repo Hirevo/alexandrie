@@ -4,8 +4,6 @@ pub mod auth;
 pub mod build;
 /// Various utilities to check for common properties.
 pub mod checks;
-/// Utilities to issue logs about requests.
-pub mod request_log;
 /// Various utilities to assist building HTTP responses.
 pub mod response;
 /// Various session-related utilities.

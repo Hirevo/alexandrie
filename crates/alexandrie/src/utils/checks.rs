@@ -35,12 +35,12 @@ pub fn is_crate_author(
 }
 
 /// Determines the author from the request's headers.
-pub fn get_author(conn: &mut Connection, token: String) -> Option<Author> {
+pub fn get_author(conn: &mut Connection, token: String) -> QueryResult<Option<Author>> {
     //? Get the author associated to this token.
     author_tokens::table
         .inner_join(authors::table)
         .select(authors::all_columns)
         .filter(author_tokens::token.eq(token))
         .first::<Author>(conn)
-        .ok()
+        .optional()
 }

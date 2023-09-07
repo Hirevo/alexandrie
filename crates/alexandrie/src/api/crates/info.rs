@@ -1,11 +1,15 @@
+use std::sync::Arc;
+
+use axum::extract::{Path, State};
+use axum::Json;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
+use crate::config::AppState;
 use crate::db::models::Crate;
 use crate::db::schema::*;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
 
 /// Response body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -31,16 +35,16 @@ pub struct ResponseBody {
 }
 
 /// Route to get information about a crate.
-pub async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param("name")?.to_string();
-
+pub async fn get(
+    State(state): State<Arc<AppState>>,
+    Path(name): Path<String>,
+) -> Result<Json<ResponseBody>, ApiError> {
     let name = utils::canonical_name(name);
 
-    let state = req.state().clone();
     let db = &state.db;
 
     //? Fetch the crate data from the database.
-    let krate = db
+    let maybe_krate = db
         .run(move |conn| {
             crates::table
                 .filter(crates::canon_name.eq(name.as_str()))
@@ -50,14 +54,8 @@ pub async fn get(req: Request<State>) -> tide::Result {
         .await?;
 
     //? Was a crate found ?
-    let krate = match krate {
-        Some(krate) => krate,
-        None => {
-            return Ok(utils::response::error(
-                StatusCode::NotFound,
-                "the crate could not be found",
-            ))
-        }
+    let Some(krate) = maybe_krate else {
+        return Err(ApiError::msg("the crate could not be found"));
     };
 
     //? Fetch the crate's keywords
@@ -84,7 +82,7 @@ pub async fn get(req: Request<State>) -> tide::Result {
         })
         .await?;
 
-    let response = ResponseBody {
+    Ok(Json(ResponseBody {
         keywords,
         categories,
         name: krate.name,
@@ -94,6 +92,5 @@ pub async fn get(req: Request<State>) -> tide::Result {
         downloads: krate.downloads,
         created_at: krate.created_at,
         updated_at: krate.updated_at,
-    };
-    Ok(utils::response::json(&response))
+    }))
 }

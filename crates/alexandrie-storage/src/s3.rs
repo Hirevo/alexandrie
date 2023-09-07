@@ -2,8 +2,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::io::{self, Read};
 
-use async_std::task;
-
 use rusoto_core::Region;
 use rusoto_s3::{GetObjectOutput, GetObjectRequest, PutObjectRequest, S3Client, StreamingBody, S3};
 use semver::Version;
@@ -59,7 +57,7 @@ impl S3Storage {
             key,
             ..Default::default()
         };
-        Ok(task::block_on(self.client.get_object(request))?)
+        Ok(tokio::task::block_on(self.client.get_object(request))?)
     }
 
     // NOTE: S3 requests can succeed but then give us a body of `None`. I'm not sure

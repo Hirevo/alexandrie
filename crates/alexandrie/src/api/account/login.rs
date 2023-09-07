@@ -1,15 +1,19 @@
 use std::num::NonZeroU32;
+use std::sync::Arc;
 
+use axum::extract::State;
+use axum::Json;
 use diesel::prelude::*;
 use ring::digest as hasher;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
+use crate::config::AppState;
 use crate::db::models::NewAuthorToken;
 use crate::db::schema::*;
+use crate::error::ApiError;
 use crate::utils;
-use crate::State;
+use crate::utils::auth::api::Auth;
 
 /// Request body for this route.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -28,27 +32,19 @@ pub struct ResponseBody {
 }
 
 /// Route to log in to an account.
-pub async fn post(mut req: Request<State>) -> tide::Result {
-    let state = req.state().clone();
+pub async fn post(
+    State(state): State<Arc<AppState>>,
+    maybe_author: Option<Auth>,
+    Json(body): Json<RequestBody>,
+) -> Result<Json<ResponseBody>, ApiError> {
     let db = &state.db;
 
     //? Is the author logged in ?
-    let author = if let Some(headers) = req.header(utils::auth::AUTHORIZATION_HEADER) {
-        let header = headers.last().to_string();
-        db.run(move |conn| utils::checks::get_author(conn, header))
-            .await
-    } else {
-        None
-    };
-    if author.is_some() {
-        return Ok(utils::response::error(
-            StatusCode::Unauthorized,
-            "please log out first to register as a new author",
+    if maybe_author.is_some() {
+        return Err(ApiError::msg(
+            "please log out first to login as a new author",
         ));
     }
-
-    //? Parse request body.
-    let body: RequestBody = req.body_json().await?;
 
     let transaction = db.transaction(move |conn| {
         //? Get the users' salt and expected hash.
@@ -63,10 +59,7 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
         let (author_id, encoded_salt, encoded_expected_hash) = match results {
             Some((author_id, salt, Some(passwd))) => (author_id, salt, passwd),
             _ => {
-                return Ok(utils::response::error(
-                    StatusCode::Forbidden,
-                    "invalid email/password combination.",
-                ));
+                return Err(ApiError::msg("invalid email/password combination."));
             }
         };
 
@@ -77,10 +70,7 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
         let (decoded_salt, decoded_expected_hash) = match decode_results {
             Ok(results) => results,
             Err(_) => {
-                return Ok(utils::response::error(
-                    StatusCode::InternalServerError,
-                    "an author already exists for this email.",
-                ));
+                return Err(ApiError::msg("an author already exists for this email."));
             }
         };
 
@@ -112,10 +102,7 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
         };
 
         if !password_match {
-            return Ok(utils::response::error(
-                StatusCode::Forbidden,
-                "invalid email/password combination.",
-            ));
+            return Err(ApiError::msg("invalid email/password combination."));
         }
 
         //? Generate new registry token.
@@ -143,9 +130,8 @@ pub async fn post(mut req: Request<State>) -> tide::Result {
             .select(author_tokens::token)
             .first(conn)?;
 
-        let response = ResponseBody { token };
-        Ok(utils::response::json(&response))
+        Ok(Json(ResponseBody { token }))
     });
 
-    transaction.await
+    transaction.await.map_err(ApiError::from)
 }

@@ -1,18 +1,25 @@
+use std::sync::Arc;
+
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::Redirect;
+use axum_extra::either::Either;
+use axum_extra::response::Html;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
-use tide::{Request, StatusCode};
 
 use alexandrie_index::Indexer;
 use alexandrie_storage::Store;
 
+use crate::config::AppState;
 use crate::db::models::{Badge, Crate, CrateAuthor, CrateCategory, CrateKeyword, Keyword};
 use crate::db::schema::*;
 use crate::db::DATETIME_FORMAT;
+use crate::error::FrontendError;
 use crate::frontend::helpers;
 use crate::utils;
-use crate::utils::auth::AuthExt;
-use crate::State;
+use crate::utils::auth::frontend::Auth;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct BadgeRepr {
@@ -21,37 +28,34 @@ struct BadgeRepr {
     href: Option<String>,
 }
 
-pub(crate) async fn get(req: Request<State>) -> tide::Result {
-    let name = req.param("crate")?.to_string();
+pub(crate) async fn get(
+    State(state): State<Arc<AppState>>,
+    Path(crate_name): Path<String>,
+    user: Option<Auth>,
+) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
+    let canon_name = utils::canonical_name(crate_name);
 
-    let canon_name = utils::canonical_name(name);
-
-    let user = req.get_author();
-    if req.state().is_login_required() && user.is_none() {
-        return Ok(utils::response::redirect("/account/login"));
+    if state.is_login_required() && user.is_none() {
+        return Ok(Either::E2(Redirect::to("/account/login")));
     }
 
-    let state = req.state().clone();
     let db = &state.db;
+    let state = Arc::clone(&state);
 
     let transaction = db.transaction(move |conn| {
-        let state = req.state();
-
         //? Get this crate's data.
-        let crate_desc = crates::table
+        let maybe_crate_desc: Option<Crate> = crates::table
             .filter(crates::canon_name.eq(canon_name.as_str()))
-            .first::<Crate>(conn)
+            .first(conn)
             .optional()?;
-        let crate_desc = match crate_desc {
-            Some(crate_desc) => crate_desc,
-            None => {
-                return utils::response::error_html(
-                    state.as_ref(),
-                    user,
-                    StatusCode::NotFound,
-                    format!("No crate named '{0}' has been found.", canon_name),
-                );
-            }
+
+        let Some(crate_desc) = maybe_crate_desc else {
+            let rendered = utils::response::error_html(
+                state.as_ref(),
+                user.map(|it| it.into_inner()),
+                format!("No crate named '{0}' has been found.", canon_name),
+            )?;
+            return Ok(Either::E1((StatusCode::NOT_FOUND, Html(rendered))));
         };
         let krate = state.index.latest_record(&crate_desc.name)?;
 
@@ -62,22 +66,22 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             .ok();
 
         //? Get the authors' names of this crate.
-        let authors = CrateAuthor::belonging_to(&crate_desc)
+        let authors: Vec<String> = CrateAuthor::belonging_to(&crate_desc)
             .inner_join(authors::table)
             .select(authors::name)
-            .load::<String>(conn)?;
+            .load(conn)?;
 
         //? Get the keywords for this crate.
-        let keywords = CrateKeyword::belonging_to(&crate_desc)
+        let keywords: Vec<Keyword> = CrateKeyword::belonging_to(&crate_desc)
             .inner_join(keywords::table)
             .select(keywords::all_columns)
-            .load::<Keyword>(conn)?;
+            .load(conn)?;
 
         //? Get the categories of this crate.
-        let categories = CrateCategory::belonging_to(&crate_desc)
+        let categories: Vec<String> = CrateCategory::belonging_to(&crate_desc)
             .inner_join(categories::table)
             .select(categories::name)
-            .load::<String>(conn)?;
+            .load(conn)?;
 
         //? Get the badges of this crate.
         let badges = Badge::belonging_to(&crate_desc).load::<Badge>(conn)?;
@@ -332,7 +336,7 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
 
         let engine = &state.frontend.handlebars;
         let context = json!({
-            "user": user,
+            "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "crate": {
                 "id": crate_desc.id,
@@ -352,7 +356,9 @@ pub(crate) async fn get(req: Request<State>) -> tide::Result {
             "keywords": keywords,
             "categories": categories,
         });
-        Ok(utils::response::html(engine.render("crate", &context)?))
+
+        let rendered = engine.render("crate", &context)?;
+        Ok::<_, FrontendError>(Either::E1((StatusCode::OK, Html(rendered))))
     });
 
     transaction.await

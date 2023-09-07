@@ -20,11 +20,11 @@ RUN \
     fi && \
     if [ "${DATABASE}" = "postgres" ]; then \
         apt install -y  libpq-dev; \
-        cargo install diesel_cli --no-default-features --features "postgres"; \
+        cargo install --locked diesel_cli --no-default-features --features "postgres"; \
     fi && \
     if [ "${DATABASE}" = "mysql" ]; then \
         apt install -y default-libmysqlclient-dev; \
-        cargo install diesel_cli --no-default-features --features "mysql"; \
+        cargo install --locked diesel_cli --no-default-features --features "mysql"; \
     fi
 
 WORKDIR /alexandrie
