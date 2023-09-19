@@ -1,6 +1,6 @@
 [general]
 bind_address = "127.0.0.1:3000"
-max_crate_size = "50 MB"
+max_crate_size = "2000 MB"
 
 [frontend]
 enabled = true
