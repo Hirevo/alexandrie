@@ -5,7 +5,7 @@ use axum::http::StatusCode;
 use axum::response::Redirect;
 use axum_extra::either::Either;
 use axum_extra::response::Html;
-use axum_sessions::extractors::WritableSession;
+use tower_sessions::Session;
 use oauth2::{CsrfToken, Scope};
 
 use crate::config::AppState;
@@ -17,7 +17,7 @@ use crate::utils::auth::frontend::Auth;
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
     let Some(Auth(author)) = maybe_author else {
         return Ok(Either::E2(Redirect::to("/account/manage")));

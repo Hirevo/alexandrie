@@ -25,7 +25,6 @@ alexandrie-rendering = { path = "../alexandrie-rendering", version = "0.1.0" }
 tokio = { workspace = true, features = ["rt-multi-thread", "fs", "macros"] }
 axum = { version = "0.6.19", features = ["http2", "headers"] }
 axum-extra = "0.7.5"
-axum-sessions = "0.5.0"
 
 # command-line interface
 clap = { version = "4.2.2", features = ["string", "derive"] }
@@ -64,6 +63,7 @@ tantivy-analysis-contrib = { version = "0.9", default-features = false, features
 futures-util = "0.3.28"
 tower = "0.4.13"
 tower-http = { version = "0.4.1", features = ["trace", "fs"] }
+tower-sessions = "0.1.0"
 
 # error handling
 thiserror = { workspace = true }

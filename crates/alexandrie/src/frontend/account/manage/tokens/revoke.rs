@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::Redirect;
-use axum_sessions::extractors::WritableSession;
+use tower_sessions::Session;
 use diesel::prelude::*;
 
 use crate::config::AppState;
@@ -16,7 +16,7 @@ pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     Path(id): Path<i64>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
 ) -> Result<Redirect, FrontendError> {
     let Some(Auth(author)) = maybe_author else {
         return Ok(Redirect::to("/account/manage"));

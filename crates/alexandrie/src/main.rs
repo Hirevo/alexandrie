@@ -25,6 +25,7 @@ use std::sync::Arc;
 
 use tokio::fs;
 
+use axum::http::StatusCode;
 use axum::routing::{delete, get, post, put};
 use axum::{Router, Server};
 use clap::Parser;
@@ -33,9 +34,11 @@ use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
 
 #[cfg(feature = "frontend")]
-use axum_sessions::{SameSite, SessionLayer};
-#[cfg(feature = "frontend")]
 use tower_http::services::ServeDir;
+#[cfg(feature = "frontend")]
+use tower_sessions::cookie::SameSite;
+#[cfg(feature = "frontend")]
+use tower_sessions::SessionManagerLayer;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -70,10 +73,19 @@ pub type State = Arc<AppState>;
 
 #[cfg(feature = "frontend")]
 fn frontend_routes(state: Arc<AppState>, frontend_config: FrontendConfig) -> Router<Arc<AppState>> {
+    use axum::error_handling::HandleErrorLayer;
+    use axum::BoxError;
+    use tower::ServiceBuilder;
+
     let store = SqlStore::new(state.db.clone());
-    let session_layer = SessionLayer::new(store, frontend_config.sessions.secret.as_bytes())
-        .with_cookie_name(frontend_config.sessions.cookie_name.as_str())
-        .with_same_site_policy(SameSite::Lax);
+    let session_layer = SessionManagerLayer::new(store)
+        .with_name(frontend_config.sessions.cookie_name.as_str())
+        .with_same_site(SameSite::Lax);
+    let session_service = ServiceBuilder::new()
+        .layer(HandleErrorLayer::new(|_: BoxError| async {
+            StatusCode::BAD_REQUEST
+        }))
+        .layer(session_layer);
 
     Router::new()
         .route("/", get(frontend::index::get))
@@ -134,7 +146,7 @@ fn frontend_routes(state: Arc<AppState>, frontend_config: FrontendConfig) -> Rou
             "/assets",
             ServeDir::new(frontend_config.assets.path).append_index_html_on_directories(false),
         )
-        .layer(session_layer)
+        .layer(session_service)
 }
 
 fn api_routes() -> Router<Arc<AppState>> {

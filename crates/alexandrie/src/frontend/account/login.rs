@@ -1,6 +1,5 @@
 use std::num::NonZeroU32;
 use std::sync::Arc;
-use std::time::Duration;
 
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -8,7 +7,7 @@ use axum::response::Redirect;
 use axum::Form;
 use axum_extra::either::Either;
 use axum_extra::response::Html;
-use axum_sessions::extractors::WritableSession;
+use tower_sessions::Session;
 use diesel::prelude::*;
 use json::json;
 use ring::pbkdf2;
@@ -41,16 +40,13 @@ pub(crate) struct LoginForm {
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
 ) -> Result<(StatusCode, Html<String>), FrontendError> {
     if let Some(Auth(author)) = maybe_author {
         return common::already_logged_in(state.as_ref(), author);
     }
 
-    let flash_message: Option<LoginFlashMessage> = session.get(LOGIN_FLASH);
-    if flash_message.is_some() {
-        session.remove(LOGIN_FLASH);
-    }
+    let flash_message: Option<LoginFlashMessage> = session.remove(LOGIN_FLASH)?;
 
     let engine = &state.frontend.handlebars;
     let auth = &state.frontend.config.auth;
@@ -78,7 +74,7 @@ pub(crate) async fn get(
 pub(crate) async fn post(
     State(state): State<Arc<AppState>>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
     Form(form): Form<LoginForm>,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
     if maybe_author.is_some() {
@@ -152,8 +148,8 @@ pub(crate) async fn post(
 
         //? Get the maximum duration of the session.
         let expiry = match form.remember.as_deref() {
-            Some("on") => Duration::from_secs(2_592_000), // 30 days
-            _ => Duration::from_secs(86_400),             // 1 day / 24 hours
+            Some("on") => time::Duration::seconds(2_592_000), // 30 days
+            _ => time::Duration::seconds(86_400),             // 1 day / 24 hours
         };
 
         //? Set the user's session.
