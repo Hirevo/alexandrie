@@ -5,8 +5,8 @@ use axum::http::StatusCode;
 use axum::response::Redirect;
 use axum_extra::either::Either;
 use axum_extra::response::Html;
-use tower_sessions::Session;
 use oauth2::{CsrfToken, Scope};
+use tower_sessions::Session;
 
 use crate::config::AppState;
 use crate::error::FrontendError;

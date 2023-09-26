@@ -5,13 +5,13 @@ use axum::http::StatusCode;
 use axum::response::Redirect;
 use axum_extra::either::Either;
 use axum_extra::response::Html;
-use tower_sessions::Session;
 use diesel::prelude::*;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthorizationCode, TokenResponse};
 use ring::digest as hasher;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 use crate::config::frontend::auth::github::GithubAuthOrganizationConfig;
 use crate::config::AppState;

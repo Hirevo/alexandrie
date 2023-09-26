@@ -3,9 +3,9 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::response::Redirect;
 use axum::Form;
-use tower_sessions::Session;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 /// Token revocation routes (eg. "/account/manage/tokens/5/revoke").
 pub mod revoke;

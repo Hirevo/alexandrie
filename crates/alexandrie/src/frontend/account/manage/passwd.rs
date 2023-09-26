@@ -4,11 +4,11 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::response::Redirect;
 use axum::Form;
-use tower_sessions::Session;
 use diesel::prelude::*;
 use ring::digest as hasher;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 use crate::config::AppState;
 use crate::db::schema::*;

@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use axum::extract::{Path, State};
 use axum::response::Redirect;
-use tower_sessions::Session;
 use diesel::prelude::*;
+use tower_sessions::Session;
 
 use crate::config::AppState;
 use crate::db::schema::*;

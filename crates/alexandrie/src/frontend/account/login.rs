@@ -7,11 +7,11 @@ use axum::response::Redirect;
 use axum::Form;
 use axum_extra::either::Either;
 use axum_extra::response::Html;
-use tower_sessions::Session;
 use diesel::prelude::*;
 use json::json;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 use crate::config::AppState;
 use crate::db::schema::*;

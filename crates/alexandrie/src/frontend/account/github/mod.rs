@@ -5,9 +5,9 @@ use axum::http::StatusCode;
 use axum::response::Redirect;
 use axum_extra::either::Either;
 use axum_extra::response::Html;
-use tower_sessions::Session;
 use oauth2::{CsrfToken, Scope};
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 /// Endpoint to attach to an existing Alexandrie account.
 pub mod attach;
