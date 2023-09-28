@@ -127,7 +127,8 @@ impl SessionStore for SqlStore {
         };
 
         let session_id = SessionId::try_from(entry.id)?;
-        let expiration_time = time::OffsetDateTime::parse(&entry.expiry, SESSION_DATE_FORMAT)?;
+        let expiration_time =
+            time::PrimitiveDateTime::parse(&entry.expiry, SESSION_DATE_FORMAT)?.assume_utc();
         let data = json::from_str(&entry.data)?;
         let session_record = SessionRecord::new(session_id, Some(expiration_time), data);
 

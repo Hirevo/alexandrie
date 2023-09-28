@@ -25,7 +25,6 @@ use std::sync::Arc;
 
 use tokio::fs;
 
-use axum::http::StatusCode;
 use axum::routing::{delete, get, post, put};
 use axum::{Router, Server};
 use clap::Parser;
@@ -33,6 +32,8 @@ use diesel_migrations::MigrationHarness;
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
 
+#[cfg(feature = "frontend")]
+use axum::http::StatusCode;
 #[cfg(feature = "frontend")]
 use tower_http::services::ServeDir;
 #[cfg(feature = "frontend")]
@@ -80,7 +81,8 @@ fn frontend_routes(state: Arc<AppState>, frontend_config: FrontendConfig) -> Rou
     let store = SqlStore::new(state.db.clone());
     let session_layer = SessionManagerLayer::new(store)
         .with_name(frontend_config.sessions.cookie_name.as_str())
-        .with_same_site(SameSite::Lax);
+        .with_same_site(SameSite::Lax)
+        .with_max_age(time::Duration::days(1));
     let session_service = ServiceBuilder::new()
         .layer(HandleErrorLayer::new(|_: BoxError| async {
             StatusCode::BAD_REQUEST

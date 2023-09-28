@@ -154,7 +154,7 @@ pub(crate) async fn post(
 
         //? Set the user's session.
         session.insert("author.id", author_id)?;
-        session.expire_in(expiry);
+        session.set_expiration_time_from_max_age(expiry);
 
         Ok(Either::E2(Redirect::to("/")))
     });
