@@ -70,7 +70,7 @@ flate2 = "1.0.25"
 tar = "0.4.38"
 
 # frontend
-tower-sessions = { git = "https://github.com/maxcountryman/tower-sessions", branch = "main", optional = true }
+tower-sessions = { version = "0.2.0", optional = true }
 handlebars = { version = "4.3.6", features = ["dir_source"], optional = true }
 time = { version = "0.3.20", optional = true }
 num-format = { version = "0.4.4", optional = true }
