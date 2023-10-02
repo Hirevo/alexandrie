@@ -1,7 +1,7 @@
 use axum::response::Redirect;
-use axum_sessions::extractors::WritableSession;
+use tower_sessions::Session;
 
-pub(crate) async fn get(mut session: WritableSession) -> Redirect {
-    session.remove("author.id");
+pub(crate) async fn get(session: Session) -> Redirect {
+    session.remove_value("author.id");
     Redirect::to("/")
 }

@@ -4,11 +4,11 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::response::Redirect;
 use axum::Form;
-use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 use ring::digest as hasher;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 use crate::config::AppState;
 use crate::db::schema::*;
@@ -28,7 +28,7 @@ pub(crate) struct ChangePasswordForm {
 pub(crate) async fn post(
     State(state): State<Arc<AppState>>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
     Form(form): Form<ChangePasswordForm>,
 ) -> Result<Redirect, FrontendError> {
     let Some(Auth(author)) = maybe_author else {

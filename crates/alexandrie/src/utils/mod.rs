@@ -6,7 +6,9 @@ pub mod build;
 pub mod checks;
 /// Various utilities to assist building HTTP responses.
 pub mod response;
+
 /// Various session-related utilities.
+#[cfg(feature = "frontend")]
 pub mod sessions;
 
 /// Transforms a crate name to its canonical form.

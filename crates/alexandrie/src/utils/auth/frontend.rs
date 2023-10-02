@@ -5,8 +5,8 @@ use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::{async_trait, RequestPartsExt};
-use axum_sessions::extractors::ReadableSession;
 use diesel::prelude::*;
+use tower_sessions::Session;
 
 use crate::config::AppState;
 use crate::db::models::Author;
@@ -53,11 +53,14 @@ impl FromRequestParts<Arc<AppState>> for Auth {
         state: &Arc<AppState>,
     ) -> Result<Self, Self::Rejection> {
         let session = parts
-            .extract::<ReadableSession>()
+            .extract::<Session>()
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-        let author_id: i64 = session.get("author.id").ok_or(StatusCode::BAD_REQUEST)?;
+        let author_id: i64 = session
+            .get("author.id")
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            .ok_or(StatusCode::BAD_REQUEST)?;
 
         let author = state
             .db

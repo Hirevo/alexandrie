@@ -1,18 +1,17 @@
 use std::sync::Arc;
-use std::time::Duration;
 
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::Redirect;
 use axum_extra::either::Either;
 use axum_extra::response::Html;
-use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthorizationCode, TokenResponse};
 use ring::digest as hasher;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 use crate::config::frontend::auth::github::GithubAuthOrganizationConfig;
 use crate::config::AppState;
@@ -70,9 +69,9 @@ pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     Query(query): Query<CallbackQueryData>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
 ) -> Result<Either<(StatusCode, Html<String>), Redirect>, FrontendError> {
-    let Some(data): Option<GithubLoginState> = session.get(GITHUB_LOGIN_STATE_KEY) else {
+    let Some(data): Option<GithubLoginState> = session.remove(GITHUB_LOGIN_STATE_KEY)? else {
         let rendered = utils::response::error_html(
             state.as_ref(),
             None,
@@ -80,7 +79,6 @@ pub(crate) async fn get(
         )?;
         return Ok(Either::E1((StatusCode::BAD_REQUEST, Html(rendered))));
     };
-    session.remove("login.github");
 
     let current_author = match (data.attach, maybe_author) {
         (true, Some(author)) => Some(author),
@@ -265,11 +263,11 @@ pub(crate) async fn get(
         };
 
         //? Get the maximum duration of the session.
-        let expiry = Duration::from_secs(86_400); // 1 day / 24 hours
+        let expiry = time::Duration::seconds(86_400); // 1 day / 24 hours
 
         //? Set the user's session.
         session.insert("author.id", author_id)?;
-        session.expire_in(expiry);
+        session.set_expiration_time_from_max_age(expiry);
 
         return Ok(Either::E2(Redirect::to("/")));
     });

@@ -3,11 +3,11 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum_extra::response::Html;
-use axum_sessions::extractors::WritableSession;
 use diesel::dsl as sql;
 use diesel::prelude::*;
 use json::json;
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 /// Password management routes (eg. "/account/manage/password").
 pub mod passwd;
@@ -43,7 +43,7 @@ enum ManageFlashMessage {
 pub(crate) async fn get(
     State(state): State<Arc<AppState>>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
 ) -> Result<(StatusCode, Html<String>), FrontendError> {
     let Some(Auth(author)) = maybe_author else {
         let state = state.as_ref();
@@ -71,10 +71,7 @@ pub(crate) async fn get(
             .filter(author_tokens::author_id.eq(author.id))
             .load::<AuthorToken>(conn)?;
 
-        let flash_message: Option<ManageFlashMessage> = session.get(ACCOUNT_MANAGE_FLASH);
-        if flash_message.is_some() {
-            session.remove(ACCOUNT_MANAGE_FLASH);
-        }
+        let flash_message: Option<ManageFlashMessage> = session.remove(ACCOUNT_MANAGE_FLASH)?;
 
         let engine = &state.frontend.handlebars;
         let context = json!({

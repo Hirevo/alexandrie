@@ -3,9 +3,9 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::response::Redirect;
 use axum::Form;
-use axum_sessions::extractors::WritableSession;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
 /// Token revocation routes (eg. "/account/manage/tokens/5/revoke").
 pub mod revoke;
@@ -28,7 +28,7 @@ pub(crate) struct CreateTokenForm {
 pub(crate) async fn post(
     State(state): State<Arc<AppState>>,
     maybe_author: Option<Auth>,
-    mut session: WritableSession,
+    session: Session,
     Form(form): Form<CreateTokenForm>,
 ) -> Result<Redirect, FrontendError> {
     let Some(Auth(author)) = maybe_author else {

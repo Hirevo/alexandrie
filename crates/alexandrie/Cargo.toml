@@ -25,13 +25,9 @@ alexandrie-rendering = { path = "../alexandrie-rendering", version = "0.1.0" }
 tokio = { workspace = true, features = ["rt-multi-thread", "fs", "macros"] }
 axum = { version = "0.6.19", features = ["http2", "headers"] }
 axum-extra = "0.7.5"
-axum-sessions = "0.5.0"
 
 # command-line interface
 clap = { version = "4.2.2", features = ["string", "derive"] }
-
-# session handling
-async-session = "3.0.0"
 
 # data types
 url = "2.3.1"
@@ -61,7 +57,7 @@ tantivy = "0.20"
 tantivy-analysis-contrib = { version = "0.9", default-features = false, features = ["commons"] }
 
 # async primitives
-futures-util = "0.3.28"
+futures-util = { version = "0.3.28", features = ["io"] }
 tower = "0.4.13"
 tower-http = { version = "0.4.1", features = ["trace", "fs"] }
 
@@ -74,6 +70,7 @@ flate2 = "1.0.25"
 tar = "0.4.38"
 
 # frontend
+tower-sessions = { version = "0.2.1", optional = true }
 handlebars = { version = "4.3.6", features = ["dir_source"], optional = true }
 time = { version = "0.3.20", optional = true }
 num-format = { version = "0.4.4", optional = true }
@@ -91,12 +88,31 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 default = ["frontend", "sqlite"]
 # default = ["frontend", "mysql"]
 # default = ["frontend", "postgres"]
+
+# database vendors
 mysql = ["diesel/mysql", "diesel_migrations/mysql"]
 sqlite = ["diesel/sqlite", "diesel_migrations/sqlite"]
 postgres = ["diesel/postgres", "diesel_migrations/postgres"]
+
+# crate index management strategies
 git2 = ["alexandrie-index/git2"]
+
+# crate stores
 s3 = ["alexandrie-storage/s3"]
-frontend = ["dep:handlebars", "dep:oauth2", "dep:once_cell", "dep:regex", "dep:reqwest", "dep:num-format", "dep:bigdecimal", "dep:time", "diesel/numeric"]
+
+# integrated frontend
+frontend = [
+    "dep:tower-sessions",
+    "dep:handlebars",
+    "dep:oauth2",
+    "dep:once_cell",
+    "dep:regex",
+    "dep:reqwest",
+    "dep:num-format",
+    "dep:bigdecimal",
+    "dep:time",
+    "diesel/numeric",
+]
 
 [build-dependencies]
 built = { version = "0.6.0", features = ["git2", "chrono"] }
