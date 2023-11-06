@@ -28,6 +28,20 @@ pub struct AuthConfig {
     pub gitlab: GitlabAuthConfig,
 }
 
+impl AuthConfig {
+    /// return true if at least one configuration is enabled
+    pub fn enabled(&self) -> bool {
+        self.local.enabled || self.github.enabled || self.gitlab.enabled
+    }
+
+    /// return true if at least one registration is allowed
+    pub fn allow_registration(&self) -> bool {
+        (self.local.enabled && self.local.allow_registration)
+            || (self.github.enabled && self.github.allow_registration)
+            || (self.gitlab.enabled && self.gitlab.allow_registration)
+    }
+}
+
 /// The authentication state, having things like OAuth clients for external authentication.
 pub struct AuthState {
     /// The authentication state for the "local" strategy, if enabled.

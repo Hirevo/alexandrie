@@ -57,7 +57,10 @@ pub(crate) async fn get(
     let local_registration_enabled = auth.local.allow_registration;
     let has_separator = local_enabled && (github_enabled || gitlab_enabled);
 
+    let auth = &state.frontend.config.auth;
     let context = json!({
+        "auth_disabled": !auth.enabled(),
+        "registration_disabled": !auth.allow_registration(),
         "instance": &state.frontend.config,
         "flash": flash_message,
         "local_enabled": local_enabled,

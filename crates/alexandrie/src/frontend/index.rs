@@ -55,8 +55,11 @@ pub(crate) async fn get(
             .limit(10)
             .load(conn)?;
 
+        let auth = &state.frontend.config.auth;
         let engine = &state.frontend.handlebars;
         let context = json!({
+            "auth_disabled": !auth.enabled(),
+            "registration_disabled": !auth.allow_registration(),
             "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "total_downloads": helpers::humanize_number(total_downloads),
