@@ -5,7 +5,7 @@ use semver::{Version, VersionReq};
 
 use crate::error::Error;
 use crate::tree::Tree;
-use crate::{CrateVersion, Indexer};
+use crate::{ConfigFile, CrateVersion, Indexer};
 
 /// The 'git2' crate index management strategy type.
 ///
@@ -133,6 +133,10 @@ impl Indexer for Git2Index {
         remote.push::<&'static str>(&[], None)?;
 
         Ok(())
+    }
+
+    fn configuration(&self) -> Result<ConfigFile, Error> {
+        self.tree.configuration()
     }
 
     fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {

@@ -31,6 +31,8 @@ use clap::Parser;
 use diesel_migrations::MigrationHarness;
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 #[cfg(feature = "frontend")]
 use axum::http::StatusCode;
@@ -40,8 +42,6 @@ use tower_http::services::ServeDir;
 use tower_sessions::cookie::SameSite;
 #[cfg(feature = "frontend")]
 use tower_sessions::SessionManagerLayer;
-use tracing_subscriber::filter::LevelFilter;
-use tracing_subscriber::EnvFilter;
 
 /// API endpoints definitions.
 pub mod api;
@@ -185,6 +185,9 @@ fn api_routes() -> Router<Arc<AppState>> {
             "/crates/:name/:version/download",
             get(api::crates::download::get),
         )
+        .route("/sparse/:fst/:snd/:crate", get(api::sparse::get))
+        .route("/sparse/:fst/:snd", get(api::sparse::get))
+        .route("/sparse/config.json", get(api::sparse::get_config))
 }
 
 #[derive(Debug, Parser)]

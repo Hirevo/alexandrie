@@ -5,7 +5,7 @@ use semver::{Version, VersionReq};
 
 use crate::error::Error;
 use crate::tree::Tree;
-use crate::{CrateVersion, Indexer};
+use crate::{ConfigFile, CrateVersion, Indexer};
 
 /// The 'command-line' crate index management strategy type.
 ///
@@ -37,6 +37,10 @@ impl Indexer for CommandLineIndex {
 
     fn commit_and_push(&self, msg: &str) -> Result<(), Error> {
         self.repo.commit_and_push(msg)
+    }
+
+    fn configuration(&self) -> Result<ConfigFile, Error> {
+        self.tree.configuration()
     }
 
     fn match_record(&self, name: &str, req: VersionReq) -> Result<CrateVersion, Error> {
