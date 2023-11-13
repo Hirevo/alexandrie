@@ -308,15 +308,19 @@
             </div>
         </form>
     </div>
+    {{#unless auth_disabled}}
     <div class="navbar-login-container">
         {{#if user}}
         <a href="/account/manage" class="navbar-tag">Manage account</a>
         <a href="/account/logout" class="navbar-tag">Logout</a>
         {{else}}
         <a href="/account/login" class="navbar-tag">Login</a>
+        {{#unless registration_disabled}}
         <a href="/account/register" class="navbar-tag">Register</a>
+        {{/unless}}
         {{/if}}
     </div>
+    {{/unless}}
     <div class="navbar-burger-container">
         <label class="navbar-burger-icon fas" for="burger-checkbox"></label>
     </div>

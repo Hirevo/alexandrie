@@ -83,8 +83,11 @@ pub(crate) async fn get(
             None
         };
 
+        let auth = &state.frontend.config.auth;
         let engine = &state.frontend.handlebars;
         let context = json!({
+            "auth_disabled": !auth.enabled(),
+            "registration_disabled": !auth.allow_registration(),
             "user": user.map(|it| it.into_inner()),
             "instance": &state.frontend.config,
             "total_results": total_results,
