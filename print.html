@@ -1,0 +1,1250 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Alexandrie</title>
+        
+        <meta name="robots" content="noindex" />
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="installation-script.html"><strong aria-hidden="true">3.</strong> Installation script</a></li><li class="chapter-item expanded "><a href="concepts/mod.html"><strong aria-hidden="true">4.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="concepts/crate-index.html"><strong aria-hidden="true">4.1.</strong> Crate index</a></li><li class="chapter-item expanded "><a href="concepts/crate-storage.html"><strong aria-hidden="true">4.2.</strong> Crate storage</a></li></ol></li><li class="chapter-item expanded "><a href="whats-available/mod.html"><strong aria-hidden="true">5.</strong> What's available ?</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="whats-available/index-management-strategies.html"><strong aria-hidden="true">5.1.</strong> Index management strategies</a></li><li class="chapter-item expanded "><a href="whats-available/crate-stores.html"><strong aria-hidden="true">5.2.</strong> Crate stores</a></li><li class="chapter-item expanded "><a href="whats-available/docker.html"><strong aria-hidden="true">5.3.</strong> Docker</a></li><li class="chapter-item expanded "><a href="whats-available/authentication-strategies.html"><strong aria-hidden="true">5.4.</strong> Authentication Strategies</a></li></ol></li><li class="chapter-item expanded "><a href="programmatic-api/mod.html"><strong aria-hidden="true">6.</strong> Programmatic API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="programmatic-api/authentication.html"><strong aria-hidden="true">6.1.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="programmatic-api/account/mod.html"><strong aria-hidden="true">6.2.</strong> Account Management section</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="programmatic-api/account/login/post.html"><strong aria-hidden="true">6.2.1.</strong> Account Login</a></li><li class="chapter-item expanded "><a href="programmatic-api/account/register/post.html"><strong aria-hidden="true">6.2.2.</strong> Account Registration</a></li><li class="chapter-item expanded "><a href="programmatic-api/account/tokens/get.html"><strong aria-hidden="true">6.2.3.</strong> Token Information (from name)</a></li><li class="chapter-item expanded "><a href="programmatic-api/account/tokens/post.html"><strong aria-hidden="true">6.2.4.</strong> Token Information (from token)</a></li><li class="chapter-item expanded "><a href="programmatic-api/account/tokens/put.html"><strong aria-hidden="true">6.2.5.</strong> Token Generation</a></li><li class="chapter-item expanded "><a href="programmatic-api/account/tokens/delete.html"><strong aria-hidden="true">6.2.6.</strong> Token Revocation</a></li></ol></li><li class="chapter-item expanded "><a href="programmatic-api/crates/mod.html"><strong aria-hidden="true">6.3.</strong> Crates section</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="programmatic-api/crates/search/get.html"><strong aria-hidden="true">6.3.1.</strong> Crate Search</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/info/get.html"><strong aria-hidden="true">6.3.2.</strong> Crate Information</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/owners/get.html"><strong aria-hidden="true">6.3.3.</strong> Crate Owner Listing</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/owners/put.html"><strong aria-hidden="true">6.3.4.</strong> Crate Owner Addition</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/owners/delete.html"><strong aria-hidden="true">6.3.5.</strong> Crate Owner Removal</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/download/get.html"><strong aria-hidden="true">6.3.6.</strong> Crate Archive Download</a></li><li class="chapter-item expanded "><a href="programmatic-api/categories/get.html"><strong aria-hidden="true">6.3.7.</strong> Crate Categories Listing</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/publish/put.html"><strong aria-hidden="true">6.3.8.</strong> Crate Publication</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/yank/delete.html"><strong aria-hidden="true">6.3.9.</strong> Crate Version Yanking</a></li><li class="chapter-item expanded "><a href="programmatic-api/crates/unyank/put.html"><strong aria-hidden="true">6.3.10.</strong> Crate Version Unyanking</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="database-layout.html"><strong aria-hidden="true">7.</strong> Database layout</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Alexandrie</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#welcome-to-alexandrie" id="welcome-to-alexandrie">Welcome to Alexandrie</a></h1>
+<p><a href="https://github.com/Hirevo/alexandrie"><img src="https://img.shields.io/badge/GitHub-Hirevo%2Falexandrie-brightgreen" alt="github-badge" /></a>
+<img src="https://img.shields.io/crates/l/alexandrie" alt="license-badge" /></p>
+<p><strong>Alexandrie</strong> is a modular alternative crate registry for Rust crates.</p>
+<p><img src="./frontend-capture.png" alt="frontend-capture" /></p>
+<p>It implements the Rust's <a href="https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md"><strong>Alternative Crate Registries RFC</strong></a> in order to be usable with <a href="https://doc.rust-lang.org/cargo"><strong>Cargo</strong></a>.<br />
+It seeks to be <strong>modular</strong>, <strong>extensible</strong> and <strong>configurable</strong> to be usable in many different environments, from a openly-accessible crate store to a private registry in a company's toolchain.</p>
+<p>It includes both a <strong>programmatic API</strong> and an optional <strong>server-rendered frontend</strong>.</p>
+<h1><a class="header" href="#getting-started" id="getting-started">Getting started</a></h1>
+<h2><a class="header" href="#how-to-build" id="how-to-build">How to build</a></h2>
+<p>Before anything, keep in mind that the current minimum supported Rust version for Alexandrie is <code>1.68</code> (on stable), make sure to check if your local Rust version is adequate by running <code>rustc -V</code>.</p>
+<p>Alexandrie offers multiple options to be used as its database, so before building Alexandrie, you'll need to pick which supported database vendor you wish to use.<br />
+The currently supported vendors are:</p>
+<ul>
+<li><strong><code>sqlite</code></strong>: for SQLite</li>
+<li><strong><code>mysql</code></strong>: for MySQL (including MariaDB)</li>
+<li><strong><code>postgres</code></strong>: for PostgreSQL</li>
+</ul>
+<p>To build, you can then run:</p>
+<pre><code class="language-bash"># navigate to the `crates/alexandrie/` subfolder
+cd crates/alexandrie
+
+# build the binary
+# (replace `(foo|bar)` occurences by one of `foo` or `bar`)
+# (replace `[foo]` occurences by either `foo` or nothing)
+cargo build [--release] \
+    --no-default-features \
+    --features &quot;[frontend] (sqlite|mysql|postgres)&quot;
+</code></pre>
+<p>Before running Alexandrie, you'll need to configure your instance in the <code>alexandrie.toml</code> file.</p>
+<p>The database is configured through the <code>[database]</code> table:</p>
+<pre><code class="language-toml">[database]
+# Replace the '&lt;...&gt;' placeholders by their real actual values.
+
+# For MySQL
+url = &quot;mysql://&lt;user&gt;:&lt;password&gt;@&lt;hostname&gt;:&lt;port&gt;/&lt;database&gt;&quot;
+
+# For PostgreSQL
+url = &quot;postgresql://&lt;user&gt;:&lt;password&gt;@&lt;hostname&gt;:&lt;port&gt;/&lt;database&gt;&quot;
+
+# For SQLite
+url = &quot;&lt;path-to-sqlite-database-file&gt;&quot;
+# or:
+url = &quot;:memory:&quot; # ephemeral in-memory database, doesn't persists between restarts
+</code></pre>
+<p>Then, you can configure the crates' tarballs storage strategy and the crate index management strategy that you want to use.</p>
+<p>Here is an example of how to do it:</p>
+<pre><code class="language-toml">[index]
+type = &quot;command-line&quot;
+path = &quot;crate-index&quot;
+
+[storage]
+type = &quot;disk&quot;
+path = &quot;crate-storage&quot;
+</code></pre>
+<p>You can find more information about crate index management and crate stores in the <strong>'What's available'</strong> section of this book.</p>
+<p>You can also configure things like the address and port of the server:</p>
+<pre><code class="language-toml">[general]
+bind_address = &quot;127.0.0.1:3000&quot;  # The endpoint and port on which to serve the service.
+</code></pre>
+<p>Then, you need to configure a crate index.<br />
+A crate index is simply a git repository that the registry uses to keep metadata information about each crate and their individual versions.<br />
+The repository can be created on any machine you want, as long as it is reachable from the current machine as a git remote in a clone of that repository.<br />
+The remote can be specified using either an HTTPS or SSH link.</p>
+<p><em>If you're using SSH for the remote link, Cargo might have an issue where it can't fetch from the registry's index when doing <code>cargo search</code> or <code>cargo build</code>.</em><br />
+<em>This is because Cargo uses <code>libgit2</code> to fetch from remotes and fails to find the SSH credentials needed to do so.</em><br />
+<em>To work around this issue, you may need to set the <code>CARGO_NET_GIT_FETCH_WITH_CLI</code> environment variable to <code>true</code>, so that Cargo will offload the fetching from remotes operation to the <code>git</code> command-line utility.</em><br />
+<em>See <a href="https://github.com/Hirevo/alexandrie/issues/44">issue #44</a> for a previous occurence of this exact issue.</em></p>
+<p>To run the registry with the configuration above, be sure to clone your crate index at the location designated by the <code>path</code> key in <code>[index]</code>.<br />
+In this case, it is <code>./crate-index</code>.<br />
+To clone an existing crate index, you can run:</p>
+<pre><code class="language-bash"># Replace the '&lt;...&gt;' placeholders by their real actual values.
+git clone &lt;url-of-the-crate-index&gt; &lt;path-from-config&gt;
+
+# &lt;url-of-the-crate-index&gt;: URL to the git repository serving as the registry's crate index.
+# &lt;path-from-config&gt;: Path to the same directory as the one specified as `index.path` in the `alexandrie.toml`.
+
+# Example:
+git clone 'https://github.com/Hirevo/alexandrie-index' 'crate-index'
+</code></pre>
+<p>If you want to create one, you can refer to the <a href="https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification"><strong>Cargo's Alternative Registries RFC</strong></a> to learn about the layout of such an index.<br />
+You can also visit the <a href="https://github.com/rust-lang/crates.io-index"><strong>crates.io index</strong></a> or the <a href="https://github.com/Hirevo/alexandrie-index"><strong>crates.polomack.eu index</strong></a> as deployed examples.</p>
+<h2><a class="header" href="#how-to-run" id="how-to-run">How to run</a></h2>
+<p>Once everything is configured, you can run with: <code>cargo run [--release]</code>.</p>
+<p>Then, if you want to use this index with Cargo, you can follow these steps:</p>
+<ul>
+<li>Edit or create the <code>~/.cargo/config</code> file, and add the following code:
+<pre><code class="language-toml"># Replace the '&lt;...&gt;' placeholders by their real actual values.
+[registries.&lt;name-of-your-registry&gt;]
+index = &quot;&lt;url-of-the-crate-index&gt;&quot;
+
+# &lt;name-of-your-registry&gt;: A name of your choosing, that you'll be using to refer to it in `cargo` commands.
+# &lt;url-of-the-crate-index&gt;: URL to the git repository serving as the registry's crate index.
+#                           BE CAREFUL: this is not the URL to the registry's API or frontend.
+</code></pre>
+</li>
+<li>Then, run <code>cargo login --registry &lt;name-of-your-registry&gt;</code> and enter your author token.<br />
+To generate a token, you need to register as an author first.
+You can do this using the frontend by:
+<ul>
+<li>Registering at <code>/account/register</code>.</li>
+<li>Generating a token at <code>/account/manage</code>.</li>
+</ul>
+</li>
+<li>You can now use the registry using <code>cargo [search|publish] --registry &lt;name-of-your-registry&gt;</code></li>
+</ul>
+<h2><a class="header" href="#installation-script" id="installation-script">Installation script</a></h2>
+<p>If you wish to have a more concrete resource to learn how to setup an Alexandrie instance, like a shell script, you may refer to an example installation script which can help you get started:</p>
+<p><strong><a href="https://hirevo.github.io/alexandrie/installation-script.html">https://hirevo.github.io/alexandrie/installation-script.html</a></strong></p>
+<h1><a class="header" href="#installation-script-1" id="installation-script-1">Installation script</a></h1>
+<p>Rather than reading paragraphs of text, you may prefer to learn the steps to setup an Alexandrie instance through a simple shell script.</p>
+<p>Here is such a script that you can use to configure an initial instance of Alexandrie, but keep in mind that:</p>
+<p><strong>This script is not a substitute for the actual documentation.</strong><br />
+<strong>You may need to configure/change a few things, even after running the script.</strong><br />
+<strong>It is only there to help you get started and/or be a more concrete documentation resource.</strong></p>
+<pre><code class="language-bash">#!/bin/bash
+
+# function to run when an error is encountered
+function setup_error {
+    echo &quot;-------- An error occurred during configuration --------&quot;
+    exit 1
+}
+
+# exit on error
+trap 'setup_error' ERR
+
+# directory to clone Alexandrie into:
+ALEXANDRIE_DIR=&quot;&quot;;
+
+# URL to the crate index repository.
+CRATE_INDEX_GIT_URL=&quot;$1&quot;;
+
+while [ -z &quot;$ALEXANDRIE_DIR&quot; ]; then
+    read -p 'Directory to clone/find Alexandrie into: ' ALEXANDRIE_DIR;
+fi
+
+while ! git ls-remote -h $CRATE_INDEX_GIT_URL; do
+    read -p 'CRATE_INDEX_GIT_URL: ' CRATE_INDEX_GIT_URL;
+done
+
+if ! cargo -V; then
+    echo;
+    echo &quot;In order to build an instance of Alexandrie, you need to have Rust installed on your system&quot;;
+    echo &quot;You can learn how to install Rust on your system on the official Rust website:&quot;;
+    echo &quot;https://www.rust-lang.org/tools/install&quot;;
+    echo;
+    ! :;    # trigger error trap
+fi
+
+if [ -d &quot;$ALEXANDRIE_DIR&quot; ]; then
+    echo
+    echo &quot;'$ALEXANDRIE_DIR' (ALEXANDRIE_DIR) is an existing directory, pulling latest changes ...&quot;;
+    cd &quot;$ALEXANDRIE_DIR&quot;;
+    git pull;
+    echo &quot;Changes have been pulled successfully !&quot;;
+    echo;
+else
+    echo;
+    echo &quot;Cloning Alexandrie in '$ALEXANDRIE_DIR' ...&quot;;
+    git clone https://github.com/Hirevo/alexandrie.git &quot;$ALEXANDRIE_DIR&quot;;
+    cd &quot;$ALEXANDRIE_DIR&quot;;
+    echo &quot;Successfully cloned Alexandrie !&quot;;
+    echo;
+fi
+
+echo &quot;Building Alexandrie (using the default features)...&quot;;
+echo &quot;(keep in mind that the default features may not fit your use-case, be sure to review them before deplying it to production)&quot;;
+cargo build -p alexandrie;
+echo &quot;Alexandrie has been built successfully !&quot;;
+
+# create the directory serving as the storage of crate archives.
+mkdir -p crate-storage;
+
+# setup the crate index.
+if [ -d crate-index ]; then
+    echo;
+    echo &quot;'${ALEXANDRIE_DIR}/crate-index' is an existing directory, pulling latest changes ...&quot;;
+    cd crate-index;
+    git pull;
+    echo &quot;Changes have been pulled successfully !&quot;;
+    echo;
+else
+    echo;
+    echo &quot;Cloning crate index in '${ALEXANDRIE_DIR}/crate-index' ...&quot;;
+    git clone &quot;$CRATE_INDEX_GIT_URL&quot; crate-index;
+    cd crate-index;
+    echo &quot;Successfully cloned the crate index !&quot;;
+    echo;
+fi
+
+# configure the crate index
+if [ ! -f config.json ]; then
+    echo &quot;The crate index does not have a 'config.json' file.&quot;;
+    echo &quot;Creating an initial one (please also review it before deploying the registry in production) ...&quot;
+    cat &gt; config.json &lt;&lt; EOF;
+{
+    &quot;dl&quot;: &quot;http://$(hostname):3000/api/v1/crates/{crate}/{version}/download&quot;,
+    &quot;api&quot;: &quot;http://$(hostname):3000&quot;,
+    &quot;allowed-registries&quot;: [&quot;https://github.com/rust-lang/crates.io-index&quot;]
+}
+EOF
+    git add config.json;
+    git commit -m 'Added `config.json`';
+    git push -u origin master;
+    echo &quot;Initial 'config.json' file has been created and pushed to the crate index !&quot;;
+    echo;
+fi
+
+echo &quot;Alexandrie should be good to go for an initial run.&quot;;
+echo &quot;You can start the Alexandrie instance by:&quot;;
+echo &quot;  - navigating to '${ALEXANDRIE_DIR}'&quot;;
+echo &quot;  - tweaking the 'alexandrie.toml' file&quot;;
+echo &quot;  - run `./target/debug/alexandrie`&quot;;
+echo;
+</code></pre>
+<h1><a class="header" href="#concepts" id="concepts">Concepts</a></h1>
+<p>This sections covers the different concepts that Alexandrie defines and uses.</p>
+<p>The goal of these concepts is to formally define how the different parts of Alexandrie interacts.<br />
+Alexandrie can operate with both its crate index and storage on different remote machines and this brings in the need for a well-defined definition of what each of these parts are responsible for.</p>
+<p>Alexandrie is built around two principal concepts:</p>
+<ul>
+<li><strong>Crate index</strong>: manages metadata about published crates.</li>
+<li><strong>Crate store</strong>: stores actual contents of the published crates (code, assets, etc...).</li>
+</ul>
+<p>A <strong>crate index</strong> is a git repository layed out as specified in <a href="https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md"><strong>Cargo's Alternative Crate Registries RFC</strong></a>.<br />
+It stores metadata about each stored crate and their versions, but not the contents of the crates themselves.</p>
+<p>A <strong>crate store</strong> is what takes care of storing the crate contents themselves and then making them available for download.</p>
+<h1><a class="header" href="#crate-index" id="crate-index">Crate index</a></h1>
+<p>The <strong>crate index</strong> is a git repository where metadata about all the crates managed by a registry is stored.<br />
+In a way, it is a snapshot of a registry's knowledge of every crates.</p>
+<p>The layout of a crate index is specified in <a href="https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md#registry-index-format-specification"><strong>Cargo's Alternative Registries RFC</strong></a>.</p>
+<p>Alexandrie will create the directories needed to store a crate automatically, so it suffices to only manually create the <code>config.json</code> file to get going.</p>
+<!-- TODO: Reformulate RFC's sections about crate index configuration -->
+<p>The way the crate index is accessed is called a <strong>crate index management strategy</strong> (a bit of a mouthful, sorry about that 😅).</p>
+<p>Strategies will allow Alexandrie to interact with crate indices in a variety of ways, not only locally but potentially remotely (using a litte server on another machine to perform the operation) where the registry itself doesn't have full access to the underlying git repository.</p>
+<h1><a class="header" href="#crate-storage" id="crate-storage">Crate storage</a></h1>
+<p>A <strong>crate store</strong> is the place where all the contents of the published crates (the actual code and assets) are stored.</p>
+<p>The contents of crates are stored as TAR archives and compressed using Gzip (basically a <code>.tar.gz</code> blob).<br />
+The store takes that blob, stores it and make it available for download later on.</p>
+<p>Currently, the store is also responsible for storing rendered README pages (which are simple HTML files).</p>
+<p>Because these can amount to a lot of storage space, it can be desirable to separate the crates' metadata (modelled by the crate index) and their actual contents (handled by the crate stores).</p>
+<p>A crate store may be local (as files on disk, for instance) or remote (as blobs in AWS S3, for instance).
+For usage and configuration see <a href="concepts/../whats-available/crate-stores.html">Available crate stores</a>.</p>
+<h1><a class="header" href="#whats-available-" id="whats-available-">What's available ?</a></h1>
+<p>Currently, not many options are implemented yet.</p>
+<p>As index management strategies, we have:</p>
+<ul>
+<li><code>cli</code>: local index clone, managed by invocations of the <code>git</code> shell command.</li>
+<li><code>git2</code>: just like <code>cli</code>, but uses <code>libgit2</code> instead of relying on the <code>git</code> shell command.</li>
+<li><strong>(PLANNED)</strong> <code>remote</code>: remote index clone, managed by a companion server.</li>
+</ul>
+<p>As crate storage strategies, we have:</p>
+<ul>
+<li><code>disk</code>: local on-disk crate storage.</li>
+<li><code>s3</code>: crate storage within an AWS S3 bucket.</li>
+<li><strong>(PLANNED)</strong> <code>remote</code>: just like <code>disk</code>, but on a remote machine, managed by a companion server.</li>
+</ul>
+<p><strong>PSA:</strong><br />
+The 'PLANNED' items are ideas that are possible to implement but no guarantees or deadline as to when they would actually land.<br />
+Any help on these items are greatly welcome.</p>
+<h1><a class="header" href="#available-index-management-strategies" id="available-index-management-strategies">Available index management strategies</a></h1>
+<h2><a class="header" href="#command-line-using-the-shell-git-command" id="command-line-using-the-shell-git-command">'command-line': using the shell 'git' command</a></h2>
+<p>This index management strategy invokes the shell 'git' command to manage a local clone of the index's repository.</p>
+<p>A limitation of this strategy is that it requires the host machine to have the <code>git</code> command installed and available.</p>
+<p>Here is an example and description of a configuration using this index management strategy:</p>
+<pre><code class="language-toml">[index]
+type = &quot;command-line&quot; # required.
+path = &quot;crate-index&quot;  # required: path of the index's local clone.
+</code></pre>
+<p><strong>NOTE:</strong><br />
+The local clone must be present and up-to-date before launching Alexandrie.<br />
+Today, Alexandrie won't pull or clone on its own on startup.</p>
+<h2><a class="header" href="#git2-using-the-libgit2-library" id="git2-using-the-libgit2-library">'git2': using the <code>libgit2</code> library</a></h2>
+<p>This index management strategy uses <code>libgit2</code> to manage a local clone of the index's repository.</p>
+<p>The advantage of this strategy over 'command-line' is that it doesn't require <code>git</code> to be installed on the host machine.<br />
+The repository interaction is completely independant of the local <code>git</code> installation.</p>
+<p>Here is an example and description of a configuration using this index management strategy:</p>
+<pre><code class="language-toml">[index]
+type = &quot;git2&quot;         # required.
+path = &quot;crate-index&quot;  # required: path of the index's local clone.
+</code></pre>
+<p><strong>NOTE:</strong><br />
+The local clone must be present and up-to-date before launching Alexandrie.<br />
+Today, Alexandrie won't pull or clone on its own on startup.</p>
+<h1><a class="header" href="#available-crate-stores" id="available-crate-stores">Available crate stores</a></h1>
+<h2><a class="header" href="#disk-local-on-disk-store" id="disk-local-on-disk-store">'disk': Local on-disk store</a></h2>
+<p>This strategy implements simple local storage of crates as files in a given directory.</p>
+<p>Here is an example of configuration to use this storage strategy:</p>
+<pre><code class="language-toml">[storage]
+type = &quot;disk&quot;           # required.
+path = &quot;crate-storage&quot;  # required: path of the directory in which to store the crates.
+</code></pre>
+<h2><a class="header" href="#s3-aws-s3-object-storage" id="s3-aws-s3-object-storage">'s3': AWS S3 object storage</a></h2>
+<p>This strategy stores crate archives and READMEs as objects within an AWS S3 bucket.</p>
+<p>In order to use this storage strategy, the <code>s3</code> feature needs to be enabled when compiling Alexandrie.</p>
+<p>When using Cargo to build, simply add the <code>s3</code> in the list of enabled features, like so:</p>
+<pre><code>cargo build --release --features 's3'
+</code></pre>
+<p>Here is an example of configuration to use this storage strategy:</p>
+<pre><code class="language-toml">[storage]
+type = &quot;s3&quot;                     # required.
+region = [&quot;eu-west-1&quot;]          # required: name of the operating region of the S3 bucket.
+bucket = &quot;eu-polomack-crates&quot;   # required: name of the S3 bucket to use.
+key_prefix = &quot;crates&quot;           # optional: arbitrary prefix to apply on the objects' keys
+                                #           allowing to place them in subdirectories.
+</code></pre>
+<p>You can specify a custom S3 endpoint, instead of the official S3 ones, using the <code>region</code> key, like this:</p>
+<pre><code class="language-toml">region = [&quot;custom&quot;, &quot;https://my.custom.s3.endpoint/&quot;]
+</code></pre>
+<h3><a class="header" href="#s3-authentication" id="s3-authentication">S3 Authentication</a></h3>
+<p>In order to authenticate the registry to S3, you can either:</p>
+<ul>
+<li>define both <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> environment variables when running the registry.</li>
+<li>have a <code>credential_process</code> command specified in <code>~/.aws/config</code>.</li>
+<li>have credentials stored in <code>~/.aws/credentials</code> and giving the registry read permission to it.</li>
+<li>using an IAM instance profile, which will only work if running on an EC2 instance with an instance profile/role assigned.</li>
+</ul>
+<p>These different options are attempted in that same order, whichever is found to have valid credentials first.</p>
+<blockquote>
+<p>For more details on how authentication is resolved, you can refer to the Rusoto's documentation on that matter.</p>
+</blockquote>
+<h1><a class="header" href="#running-alexandrie-with-docker" id="running-alexandrie-with-docker">Running Alexandrie with Docker</a></h1>
+<p>Alexandrie can be run in a Docker container, which can make it easier to start, stop, and build on a non-Linux system.</p>
+<h2><a class="header" href="#dependencies" id="dependencies">Dependencies</a></h2>
+<p>To run Alexandrie in docker, you'll need:</p>
+<ul>
+<li>The <code>Alexandrie</code> source code pulled from GitHub</li>
+<li><a href="https://docs.docker.com/install/">docker</a></li>
+<li><a href="https://docs.docker.com/compose/install/">docker-compose</a></li>
+</ul>
+<p>Make sure that <code>docker</code> and <code>docker-compose</code> are in your system path.</p>
+<h2><a class="header" href="#user-configuration" id="user-configuration">User Configuration</a></h2>
+<p>A small bit of setup is required before you can start the docker containers. First, copy <code>example.env</code> to <code>.env</code> (the filename is important, don't prefix the extension), and modify the values inside:</p>
+<ul>
+<li>Create a new, empty directory where the application can create data, and then set <code>APPDATA</code> to the absolute path to that folder.</li>
+<li>Set <code>CRATE_INDEX</code> to the SSH path of an existing git repository with a valid index <code>config.json</code> file.</li>
+<li>Set <code>GIT_NAME</code> and <code>GIT_EMAIL</code> to valid git values that will be used when Alexandrie commits &amp; pushes those commits to the index.</li>
+<li>Set <code>GIT_SSH_KEY</code> to a new or existing passwordless SSH key. The <code>.pub</code> key associated with this key should be added to github/gitlab/etc. to grant access to clone and push the crate index.</li>
+</ul>
+<p>By default Alexandrie will use SQLite. If you want to use either MySQL or PostgreSQL instead, you'll need to create a file at either <code>docker/mysql/rootpass.txt</code> or <code>docker/postgres/rootpass.txt</code> which contains the password that will be given to the root user of the database.</p>
+<h3><a class="header" href="#additional-configuration" id="additional-configuration">Additional Configuration</a></h3>
+<p>If necessary, <code>alexandrie.toml</code> and even <code>diesel.toml</code> can still be modified, and the docker images can be configured to use those modified files instead. You should read the <a href="whats-available/docker.html#internals">Internals</a> section first, and will likely need to already have docker knowledge. Some other config files and scripts will need to be modified if you change Alexandrie's port or appdata mount location, for example.</p>
+<p>You can also define the environment variables <code>USER_ID</code> and <code>GROUP_ID</code> to specify the UID and GID of the <code>alex</code> user created in the web container.</p>
+<h2><a class="header" href="#usage" id="usage">Usage</a></h2>
+<h3><a class="header" href="#running" id="running">Running</a></h3>
+<p>To run, you can use the <code>run_docker.sh</code> script for easy setup or teardown. See <code>run_docker.sh --help</code> for a list of options.</p>
+<p>By default, Alexandrie will use SQLite and run in the background.</p>
+<p><strong>Bringup:</strong></p>
+<pre><code class="language-bash">./run_docker.sh up
+</code></pre>
+<p>If you want to use MySQL and run in the foreground, here's an example:</p>
+<pre><code class="language-bash">./run_docker.sh up --mysql -f
+</code></pre>
+<p>If you run in the foreground and kill the services with <code>Ctrl+C</code>, the docker containers will stop, but you still may need to run <a href="whats-available/docker.html#stopping-and-cleanup">teardown</a> for the containers to be deleted fully.</p>
+<h3><a class="header" href="#stopping-and-cleanup" id="stopping-and-cleanup">Stopping and Cleanup</a></h3>
+<p>Stopping Alexandrie is as easy as starting it.</p>
+<p><strong>Teardown:</strong></p>
+<pre><code class="language-bash">./run_docker.sh down
+</code></pre>
+<p>To stop, for example, a MySQL setup for Alexandrie, run the following:</p>
+<pre><code class="language-bash">./run_docker.sh down --mysql
+</code></pre>
+<p>If you're not planning on running Alexandrie again or want to do a full clean of the environment, you can disassociate your local appdata storage from the docker volume database by doing <code>docker volume prune</code>, which will delete all unused volumes.</p>
+<h3><a class="header" href="#next-steps" id="next-steps">Next Steps</a></h3>
+<p>As Alexandrie will (by default) serve on port <code>3000</code> (and directly setting that to port <code>80</code> will likely not work for a non-root user and won't allow https), the recommended way to serve the application would be to install &amp; configure <code>nginx</code> or another ingress controller.</p>
+<h2><a class="header" href="#internals" id="internals">Internals</a></h2>
+<p>The <code>run_docker</code> script is using <code>docker-compose</code> under the hood, which is itself just <code>docker</code> instrumentation. <code>docker-compose</code> is configured for this project through a few files:</p>
+<ul>
+<li><code>.env</code>: contains variables that can be changed by the user for easy configuration</li>
+<li><code>docker-compose.yaml</code>: basic setup for docker images, volumes, etc.; should rarely be touched by the user</li>
+<li><code>docker/&lt;database&gt;/&lt;database&gt;-compose.yaml</code>: supplemental and database-dependent; should rarely be touched by the user</li>
+</ul>
+<p>Some additional files are responsible for actually creating the Docker image for Alexandrie, as well as handling starting the application, database, etc.:</p>
+<ul>
+<li><code>Dockerfile</code>: definition for creating the Docker image for Alexandrie itself</li>
+<li><code>docker/startup.sh</code>: ran inside the Docker image to do first-run database initialization with diesel, ssh &amp; git configuration, and start Alexandrie</li>
+<li><code>docker/&lt;database&gt;/alexandrie.toml</code>: application configuration, which has database-dependent features</li>
+</ul>
+<p>Modifying <code>alexandrie.toml</code> may require additional modification of some of these files, for example if the port is modified.</p>
+<p>It's worth mentioning that the Docker image will copy the Alexandrie source contained in the local directory, a.k.a. the source isn't pulled down from the git repo when building the image. If you modifiy the source code, those modifications can be used to make the image for testing, etc.</p>
+<h3><a class="header" href="#example-run" id="example-run">Example Run</a></h3>
+<p>To start Alexandrie in Docker without the <code>run_docker</code> script, you could do:</p>
+<pre><code class="language-bash">export DATABASE=mysql
+docker-compose -f docker-compose.yaml -f docker/mysql/mysql-compose.yaml up
+</code></pre>
+<p>This will use all of the following files, in addition to the Alexandrie source code:</p>
+<ul>
+<li><code>docker-compose.yaml</code></li>
+<li><code>.env</code></li>
+<li><code>diesel.toml</code></li>
+<li><code>Dockerfile</code></li>
+<li><code>docker/startup.sh</code></li>
+<li><code>docker/mysql/mysql-compose.yaml</code></li>
+<li><code>docker/mysql/alexandrie.toml</code></li>
+<li><code>docker/mysql/rootpass.txt</code></li>
+</ul>
+<h3><a class="header" href="#database" id="database">Database</a></h3>
+<p>Databases will put their data in an appropriately named directory inside the user-defined <code>APPDATA</code> directory (see <a href="whats-available/docker.html#user-configuration">User Configuration</a>). If the directory already exists, it must either <strong>(a)</strong> have valid database data inside, or <strong>(b)</strong> be empty. Directly modifying files inside the database directory isn't recommended, and can cause the server to fail to start entirely. Don't add extra files or create a file inside an empty database directory; the database will almost certainly complain.</p>
+<h1><a class="header" href="#authentication-strategies" id="authentication-strategies">Authentication Strategies</a></h1>
+<p>Alexandrie supports authenticating using various methods and services.</p>
+<p>Here are the details about the various means of authentication you can use in Alexandrie.</p>
+<blockquote>
+<p>All of these authentication means currently only apply to the frontend.<br />
+The programmatic API for Alexandrie already uses its own token system for authorization.</p>
+</blockquote>
+<h2><a class="header" href="#local" id="local">Local</a></h2>
+<p>This strategy is the regular email/password combination flow that is already in place, using the input forms.<br />
+This can be disabled, in case you want to exclusively use an alternative authentication strategy, for example.</p>
+<p>Configuration:</p>
+<pre><code class="language-toml"># Omitting this entire section from the configuration counts as being disabled.
+[frontend.auth.local]
+# Whether to enable the use of this strategy.
+enabled = true
+# Whether to allow the registration of new users using this strategy.
+allow_registration = true
+</code></pre>
+<h2><a class="header" href="#github" id="github">GitHub</a></h2>
+<p>This strategy uses OAuth 2 to authenticate the user using its GitHub account.<br />
+Filters on who gets authorized can be added based on organization or team membership.</p>
+<p>You'll need to create a GitHub OAuth App in order to get the required OAuth client credentials (the replacements for <code>GITHUB_OAUTH_CLIENT_ID</code> and <code>GITHUB_OAUTH_CLIENT_SECRET</code> in the example below) necessary for Alexandrie to authenticate users.</p>
+<p>You can create a new GitHub OAuth App by <a href="https://github.com/settings/applications/new"><strong>clicking here (for github.com)</strong></a>.<br />
+You can also simply find it in your account settings, under <code>Developer Settings</code> &gt; <code>OAuth Apps</code> and clicking on the <code>New OAuth App</code> button.</p>
+<p>The homepage URL to use is simply the URL to your Alexandrie instance's homepage.<br />
+The authorization callback URL to use is the homepage URL with <code>/account/github/callback</code> added.</p>
+<p>For example, in the case of the Alexandrie instance hosted at <strong><a href="https://crates.polomack.eu">https://crates.polomack.eu</a></strong>:</p>
+<ul>
+<li>the homepage URL is <code>https://crates.polomack.eu</code>.</li>
+<li>the authorization callback URL is <code>https://crates.polomack.eu/account/github/callback</code>.</li>
+</ul>
+<p>Configuration:</p>
+<pre><code class="language-toml"># Omitting this entire section from the configuration counts as being disabled.
+[frontend.auth.github]
+# Whether to enable the use of this strategy.
+enabled = true
+# The client ID of the GitHub OAuth App to use.
+client_id = &quot;GITHUB_OAUTH_CLIENT_ID&quot;
+# The client secret of the GitHub OAuth App to use.
+client_secret = &quot;GITHUB_OAUTH_CLIENT_SECRET&quot;
+# The organizations of which membership in one of them is required to be authorized.
+# Omit `allowed_organizations` to not require any organization membership.
+allowed_organizations = [
+    # Being a member of this organization will be sufficient to be authorized.
+    { name = &quot;ORG_NAME_1&quot; },
+    # But being a member of this one additionally requires membership in one of the specified teams withing that organization.
+    { name = &quot;ORG_NAME_2&quot;, allowed_teams = [&quot;TEAM_NAME&quot;] },
+]
+# Whether to allow the registration of new users using this strategy.
+allow_registration = true
+</code></pre>
+<h2><a class="header" href="#gitlab" id="gitlab">GitLab</a></h2>
+<p>This uses OAuth 2 to authenticate the user using its GitLab account.<br />
+The remote instance can either be the <a href="https://gitlab.com">public one</a> or a private instance.<br />
+Filters on who gets authorized can be added based on group membership.</p>
+<p>You'll need to create a GitLab Application in order to get the required OAuth client credentials (the replacements for <code>GITLAB_OAUTH_CLIENT_ID</code> and <code>GITLAB_OAUTH_CLIENT_SECRET</code> in the example below) necessary for Alexandrie to authenticate users.</p>
+<p>You can create a new GitLab Application by <a href="https://gitlab.com/-/profile/applications"><strong>clicking here (for gitlab.com)</strong></a>.<br />
+You can also simply find this page within your account settings, under section <code>Applications</code>.</p>
+<p>The authorization callback URL to use is the homepage URL with <code>/account/gitlab/callback</code> added.</p>
+<p>For example, in the case of the Alexandrie instance hosted at <strong><a href="https://crates.polomack.eu">https://crates.polomack.eu</a></strong>:</p>
+<ul>
+<li>the authorization callback URL is <code>https://crates.polomack.eu/account/gitlab/callback</code>.</li>
+</ul>
+<p>The only OAuth scope needed to be granted for Alexandrie's usage is <code>read_api</code>.</p>
+<p>Configuration:</p>
+<pre><code class="language-toml"># Omitting this entire section from the configuration counts as being disabled.
+[frontend.auth.gitlab]
+# Whether to enable the use of this strategy.
+enabled = true
+origin = &quot;https://gitlab.com&quot;
+# The client ID of the GitLab OAuth App to use.
+client_id = &quot;GITLAB_OAUTH_CLIENT_ID&quot;
+# The client secret of the GitLab OAuth App to use.
+client_secret = &quot;GITLAB_OAUTH_CLIENT_SECRET&quot;
+# The groups of which membership in one of them is required to be authorized.
+# Omit `allowed_groups` to not require any group membership.
+allowed_groups = [
+    &quot;GROUP_NAME_1&quot;,
+    # subgroups are specified by their full paths, like this.
+    &quot;GROUP_NAME_2/SUBGROUP_NAME_1&quot;,
+]
+# Whether to allow the registration of new users using this strategy.
+allow_registration = true
+</code></pre>
+<h1><a class="header" href="#the-programmatic-api" id="the-programmatic-api">The Programmatic API</a></h1>
+<p>This section covers the programmatic API that Alexandrie exposes.<br />
+Some of these endpoints are used by <code>cargo</code> itself when running commands like <code>cargo search</code>, <code>cargo publish</code> and some others.</p>
+<h2><a class="header" href="#url-format" id="url-format">URL format</a></h2>
+<p>Before anything, here is a description of the syntax used throughout these pages for writing URLs:</p>
+<ul>
+<li><strong><code>&lt;name&gt;</code></strong>: is either:
+<ul>
+<li>a placeholder for any path segment (when in within the pathname, eg. <code>/crates/&lt;name&gt;</code>)</li>
+<li>a querystring variable (when in querystring position, eg. <code>/search?&lt;q&gt;</code>)</li>
+</ul>
+</li>
+<li><strong><code>[...]</code></strong>: means that the the pattern inside these brackets is optional:
+<ul>
+<li>mostly used for optional querystring variables (eg. <code>/search?&lt;q&gt;[&amp;&lt;page&gt;]</code>)</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#public-endpoints" id="public-endpoints">Public Endpoints</a></h2>
+<p>Public endpoints are accessible without needing to authenticate.</p>
+<p><strong>Crates section:</strong></p>
+<ul>
+<li><a href="programmatic-api/crates/search/get.html"><strong>Search crates</strong></a>: <strong><code>GET /api/v1/crates?&lt;q&gt;[&amp;&lt;page&gt;][&amp;&lt;per_page&gt;]</code></strong></li>
+<li><a href="programmatic-api/crates/info/get.html"><strong>Get crate information</strong></a>: <strong><code>GET /api/v1/crates/&lt;name&gt;</code></strong></li>
+<li><a href="programmatic-api/crates/owners/put.html"><strong>List crate owners</strong></a>: <strong><code>GET /api/v1/crates/&lt;name&gt;/owners</code></strong></li>
+<li><a href="programmatic-api/crates/download/get.html"><strong>Download crate archive</strong></a>: <strong><code>GET /api/v1/crates/&lt;name&gt;/&lt;version&gt;/download</code></strong></li>
+</ul>
+<p><strong>Categories section:</strong></p>
+<ul>
+<li><a href="programmatic-api/categories/get.html"><strong>List crate categories</strong></a>: <strong><code>GET /api/v1/categories</code></strong></li>
+</ul>
+<p><strong>Account management section:</strong></p>
+<ul>
+<li><a href="programmatic-api/account/login/post.html"><strong>Login</strong></a>: <strong><code>POST /api/v1/account/login</code></strong></li>
+<li><a href="programmatic-api/account/register/post.html"><strong>Register</strong></a>: <strong><code>POST /api/v1/account/register</code></strong></li>
+</ul>
+<h2><a class="header" href="#authenticated-endpoints" id="authenticated-endpoints">Authenticated Endpoints</a></h2>
+<p>The following endpoints require a valid token to be specified in the <code>Authorization</code> request header.<br />
+Refer to the <a href="programmatic-api/authentication.html"><strong>Authentication docs</strong></a> to learn how to get one and how to use it.</p>
+<p><strong>Crates section:</strong></p>
+<ul>
+<li><a href="programmatic-api/crates/publish/put.html"><strong>Publish crate</strong></a>: <strong><code>PUT /api/v1/crates/new</code></strong></li>
+<li><a href="programmatic-api/crates/owners/put.html"><strong>Add crate owners</strong></a>: <strong><code>PUT /api/v1/crates/&lt;name&gt;/owners</code></strong></li>
+<li><a href="programmatic-api/crates/owners/delete.html"><strong>Remove crate owners</strong></a>: <strong><code>DELETE /api/v1/crates/&lt;name&gt;/owners</code></strong></li>
+<li><a href="programmatic-api/crates/yank/delete.html"><strong>Yank crate version</strong></a>: <strong><code>DELETE /api/v1/crates/&lt;name&gt;/&lt;version&gt;/yank</code></strong></li>
+<li><a href="programmatic-api/crates/unyank/put.html"><strong>Unyanking crate version</strong></a>: <strong><code>PUT /api/v1/crates/&lt;name&gt;/&lt;version&gt;/unyank</code></strong></li>
+</ul>
+<p><strong>Account management section:</strong></p>
+<ul>
+<li><a href="programmatic-api/account/tokens/get.html"><strong>Get token information (from name)</strong></a>: <strong><code>GET /api/v1/account/tokens/&lt;name&gt;</code></strong></li>
+<li><a href="programmatic-api/account/tokens/post.html"><strong>Get token information (from token)</strong></a>: <strong><code>POST /api/v1/account/tokens</code></strong></li>
+<li><a href="programmatic-api/account/tokens/put.html"><strong>Generate authentication token</strong></a>: <strong><code>PUT /api/v1/account/tokens</code></strong></li>
+<li><a href="programmatic-api/account/tokens/delete.html"><strong>Revoke authentication token</strong></a>: <strong><code>DELETE /api/v1/account/tokens</code></strong></li>
+</ul>
+<h1><a class="header" href="#api-authentication" id="api-authentication">API Authentication</a></h1>
+<p>Authentication in the programmatic API is handled a bit differently than in the frontend.<br />
+While the frontend uses session cookies to authenticate users, the programmatic API relies on a <strong>token</strong> passed using the <strong><code>Authorization</code></strong> HTTP request header.<br />
+This is done as specified by <a href="https://doc.rust-lang.org/cargo/reference/registries.html#web-api"><strong>Cargo's alternative registries documentation</strong></a>.</p>
+<h2><a class="header" href="#how-to-get-a-token" id="how-to-get-a-token">How to get a token</a></h2>
+<p>There are multiple ways to get an authentication token from the registry.</p>
+<p><strong>Using the frontend:</strong></p>
+<p>If you're using Alexandrie with the frontend enabled, you can go to your instance's frontend, log in to your account and go to your Account Management page.<br />
+From there, you have the option to generate an authentication token for your account and/or revoke existing tokens.</p>
+<p><img src="programmatic-api/account-management-page.png" alt="Account Management page" /></p>
+<p><strong>Using the programmatic API:</strong></p>
+<p>There are three ways of getting a token in the programmatic API, depending of what you want to do.</p>
+<p><strong>If you don't have any account yet</strong>, creating an account using the <a href="programmatic-api/account/register/post.html"><strong>Account Registration endpoint</strong></a> will grant you with an authentication token for the newly created account.</p>
+<p><strong>If you already have an account in the registry</strong>, logging in using <a href="programmatic-api/account/login/post.html"><strong>Account Login endpoint</strong></a> will also grant you an authentication token.</p>
+<p><strong>If you are already logged in</strong> (meaning you already have a token), you can ask the registry to issue a new separate token for your account using the <a href="programmatic-api/account/tokens/put.html"><strong>Token Generation endpoint</strong></a>.</p>
+<h2><a class="header" href="#how-to-use-a-token" id="how-to-use-a-token">How to use a token</a></h2>
+<p>To access an authenticated endpoint using a token, all you need to do is to make the request with the token as the <code>Authorization</code> header's value.</p>
+<p>So, if your token is <code>foobar</code>, the request must be made with the <code>Authorization: foobar</code> request header.</p>
+<p><strong>Important note:</strong><br />
+<strong>The <code>Authorization</code> header's value should not contain anything else than the token (no <code>Bearer</code> or <code>Basic</code> should be present before it, just the plain token).</strong></p>
+<h1><a class="header" href="#account-management-endpoints" id="account-management-endpoints">Account Management endpoints</a></h1>
+<p>In this section, you will find documentation about all the account management endpoints of the programmatic API.</p>
+<h2><a class="header" href="#public-endpoints-1" id="public-endpoints-1">Public Endpoints</a></h2>
+<p>Public endpoints are accessible without needing to authenticate.</p>
+<ul>
+<li><a href="programmatic-api/account/login/post.html"><strong>Login</strong></a>: <strong><code>POST /api/v1/account/login</code></strong></li>
+<li><a href="programmatic-api/account/register/post.html"><strong>Register</strong></a>: <strong><code>POST /api/v1/account/register</code></strong></li>
+</ul>
+<h2><a class="header" href="#authenticated-endpoints-1" id="authenticated-endpoints-1">Authenticated Endpoints</a></h2>
+<p>The following endpoints require a valid token to be specified in the <code>Authorization</code> request header.<br />
+Refer to the <a href="programmatic-api/account/../authentication.html"><strong>Authentication docs</strong></a> to learn how to get one and how to use it.</p>
+<ul>
+<li><a href="programmatic-api/account/tokens/get.html"><strong>Get token information (from name)</strong></a>: <strong><code>GET /api/v1/account/tokens/&lt;name&gt;</code></strong></li>
+<li><a href="programmatic-api/account/tokens/post.html"><strong>Get token information (from token)</strong></a>: <strong><code>POST /api/v1/account/tokens</code></strong></li>
+<li><a href="programmatic-api/account/tokens/post.html"><strong>Generate authentication token</strong></a>: <strong><code>POST /api/v1/account/tokens</code></strong></li>
+<li><a href="programmatic-api/account/tokens/delete.html"><strong>Revoke authentication token</strong></a>: <strong><code>DELETE /api/v1/account/tokens</code></strong></li>
+</ul>
+<h1><a class="header" href="#account-login-endpoint" id="account-login-endpoint">Account login endpoint</a></h1>
+<p>This endpoint allows to log in to an account and obtain an authentication token.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/account/login</code><br />
+<strong>HTTP Method</strong>: <code>POST</code><br />
+<strong>Endpoint Type:</strong> Public</p>
+<h2><a class="header" href="#http-request-body" id="http-request-body">HTTP Request Body</a></h2>
+<p>The request body must be a JSON object of the following shape:</p>
+<pre><code class="language-js">{
+    // The account's email.
+    &quot;email&quot;: &quot;john.doe@example.com&quot;,
+    // The password for that account.
+    &quot;passwd&quot;: &quot;my-superb-password&quot;
+}
+</code></pre>
+<h2><a class="header" href="#responses" id="responses">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // An authentication token for that account.
+    &quot;token&quot;: &quot;dfe966790098b9123a098e6a7&quot;
+}
+</code></pre>
+<h1><a class="header" href="#account-registration-endpoint" id="account-registration-endpoint">Account registration endpoint</a></h1>
+<p>This endpoint allows to register for a new account in the registry and obtain an authentication token.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/account/register</code><br />
+<strong>HTTP Method</strong>: <code>POST</code><br />
+<strong>Endpoint Type:</strong> Public</p>
+<h2><a class="header" href="#http-request-body-1" id="http-request-body-1">HTTP Request Body</a></h2>
+<p>The request body must be a JSON object of the following shape:</p>
+<pre><code class="language-js">{
+    // The account's email.
+    &quot;email&quot;: &quot;john.doe@example.com&quot;,
+    // The account's displayable name.
+    &quot;name&quot;: &quot;John Doe&quot;,
+    // The password for that account.
+    &quot;passwd&quot;: &quot;my-superb-password&quot;
+}
+</code></pre>
+<h2><a class="header" href="#responses-1" id="responses-1">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // An authentication token for that account.
+    &quot;token&quot;: &quot;dfe966790098b9123a098e6a7&quot;
+}
+</code></pre>
+<h1><a class="header" href="#token-information-endpoint-from-name" id="token-information-endpoint-from-name">Token information endpoint (from name)</a></h1>
+<p>This endpoint allows to get information about a specific token if issued for the same account.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/account/tokens/&lt;name&gt;</code><br />
+<strong>HTTP Method</strong>: <code>GET</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-path-parameters" id="http-path-parameters">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the token.</li>
+</ul>
+<h2><a class="header" href="#responses-2" id="responses-2">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // The displayable name for the token.
+    &quot;name&quot;: &quot;Continous Integration&quot;
+}
+</code></pre>
+<h1><a class="header" href="#token-information-endpoint-from-token" id="token-information-endpoint-from-token">Token information endpoint (from token)</a></h1>
+<p>This endpoint allows to get information about a specific token if issued for the same account.</p>
+<p>This endpoint gives information about a token from the token itself, so the token is sent as a <code>POST</code> request to avoid exposing the token in the URL.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/account/tokens</code><br />
+<strong>HTTP Method</strong>: <code>POST</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-request-body-2" id="http-request-body-2">HTTP Request Body</a></h2>
+<p>The request body must be a JSON object of the following shape:</p>
+<pre><code class="language-js">{
+    // The authentication token to get information for.
+    &quot;token&quot;: &quot;dfe966790098b9123a098e6a7&quot;
+}
+</code></pre>
+<h2><a class="header" href="#responses-3" id="responses-3">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // The displayable name for the token.
+    &quot;name&quot;: &quot;Continous Integration&quot;
+}
+</code></pre>
+<h1><a class="header" href="#token-generation-endpoint" id="token-generation-endpoint">Token generation endpoint</a></h1>
+<p>This endpoint allows to generate a new authentication token.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/account/tokens</code><br />
+<strong>HTTP Method</strong>: <code>PUT</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-request-body-3" id="http-request-body-3">HTTP Request Body</a></h2>
+<p>The request body must be a JSON object of the following shape:</p>
+<pre><code class="language-js">{
+    // The name for the new authentication token.
+    &quot;name&quot;: &quot;Continuous Integration&quot;
+}
+</code></pre>
+<h2><a class="header" href="#responses-4" id="responses-4">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // The generated authentication token for that account.
+    &quot;token&quot;: &quot;dfe966790098b9123a098e6a7&quot;
+}
+</code></pre>
+<h1><a class="header" href="#token-revocation-endpoint" id="token-revocation-endpoint">Token revocation endpoint</a></h1>
+<p>This endpoint allows to revoke an existing authentication token issued for the same account.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/account/tokens</code><br />
+<strong>HTTP Method</strong>: <code>DELETE</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-request-body-4" id="http-request-body-4">HTTP Request Body</a></h2>
+<p>The request body must be a JSON object of the following shape:</p>
+<pre><code class="language-js">{
+    // The authentication token to revoke.
+    &quot;token&quot;: &quot;dfe966790098b9123a098e6a7&quot;
+}
+</code></pre>
+<h2><a class="header" href="#responses-5" id="responses-5">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Whether the operation went well.
+    &quot;revoked&quot;: true
+}
+</code></pre>
+<h1><a class="header" href="#crate-related-endpoints" id="crate-related-endpoints">Crate-related endpoints</a></h1>
+<p>In this section, you will find documentation about all the crate-related endpoints of the programmatic API.</p>
+<h2><a class="header" href="#public-endpoints-2" id="public-endpoints-2">Public Endpoints</a></h2>
+<p>Public endpoints are accessible without needing to authenticate.</p>
+<ul>
+<li><a href="programmatic-api/crates/search/get.html"><strong>Search crates</strong></a>: <strong><code>POST /api/v1/crates?&lt;q&gt;[&amp;&lt;page&gt;][&amp;&lt;per_page&gt;]</code></strong></li>
+<li><a href="programmatic-api/crates/info/get.html"><strong>Get crate information</strong></a>: <strong><code>GET /api/v1/crates/&lt;name&gt;</code></strong></li>
+<li><a href="programmatic-api/crates/owners/put.html"><strong>List crate owners</strong></a>: <strong><code>GET /api/v1/crates/&lt;name&gt;/owners</code></strong></li>
+<li><a href="programmatic-api/crates/download/get.html"><strong>Download crate archive</strong></a>: <strong><code>GET /api/v1/crates/&lt;name&gt;/&lt;version&gt;/download</code></strong></li>
+<li><a href="programmatic-api/crates/categories/get.html"><strong>List crate categories</strong></a>: <strong><code>GET /api/v1/categories</code></strong></li>
+</ul>
+<h2><a class="header" href="#authenticated-endpoints-2" id="authenticated-endpoints-2">Authenticated Endpoints</a></h2>
+<p>The following endpoints require a valid token to be specified in the <code>Authorization</code> request header.<br />
+Refer to the <a href="programmatic-api/crates/../authentication.html"><strong>Authentication docs</strong></a> to learn how to get one and how to use it.</p>
+<ul>
+<li><a href="programmatic-api/crates/publish/put.html"><strong>Publish crate</strong></a>: <strong><code>PUT /api/v1/crates/new</code></strong></li>
+<li><a href="programmatic-api/crates/owners/put.html"><strong>Add crate owners</strong></a>: <strong><code>PUT /api/v1/crates/&lt;name&gt;/owners</code></strong></li>
+<li><a href="programmatic-api/crates/owners/delete.html"><strong>Remove crate owners</strong></a>: <strong><code>DELETE /api/v1/crates/&lt;name&gt;/owners</code></strong></li>
+<li><a href="programmatic-api/crates/yank/delete.html"><strong>Yank crate version</strong></a>: <strong><code>DELETE /api/v1/crates/&lt;name&gt;/&lt;version&gt;/yank</code></strong></li>
+<li><a href="programmatic-api/crates/unyank/put.html"><strong>Unyanking crate version</strong></a>: <strong><code>PUT /api/v1/crates/&lt;name&gt;/&lt;version&gt;/unyank</code></strong></li>
+</ul>
+<h1><a class="header" href="#crate-search-endpoint" id="crate-search-endpoint">Crate search endpoint</a></h1>
+<p>This endpoint allows to search through all of the crates ever published to the registry.<br />
+This is notably called by the <code>cargo search</code> command.<br />
+Being essential to Cargo and the registry, this endpoint is documented in the <a href="https://doc.rust-lang.org/cargo/reference/registries.html#search"><strong>official Cargo book</strong></a>.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates</code><br />
+<strong>HTTP Method</strong>: <code>GET</code><br />
+<strong>Endpoint Type:</strong> Public</p>
+<h2><a class="header" href="#http-query-parameters" id="http-query-parameters">HTTP Query Parameters</a></h2>
+<p>This endpoint accepts the following query parameters:</p>
+<ul>
+<li><strong>(required)</strong> <code>q</code>: The query string for the search (like <code>serde json</code> to possibly find <code>serde_json</code>).</li>
+<li><code>page</code>: The non-zero page number to retrive (defaults to <code>1</code>).</li>
+<li><code>per_page</code>: The non-zero number of results per page (default to <code>15</code>).</li>
+</ul>
+<h2><a class="header" href="#responses-6" id="responses-6">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>The registry will return an object of the following shape (as specified in <a href="https://doc.rust-lang.org/cargo/reference/registries.html#search"><strong>The Cargo book</strong></a>):</p>
+<pre><code class="language-js">{
+    // Array of results.
+    &quot;crates&quot;: [
+        {
+            // Name of the crate.
+            &quot;name&quot;: &quot;rand&quot;,
+            // The highest version available.
+            &quot;max_version&quot;: &quot;0.6.1&quot;,
+            // Textual description of the crate.
+            &quot;description&quot;: &quot;Random number generators and other randomness functionality.&quot;,
+        }
+    ],
+    &quot;meta&quot;: {
+        // Total number of results available on the server.
+        &quot;total&quot;: 119
+    }
+}
+</code></pre>
+<p>There may be more fields added to each results but be wary of depending on those.</p>
+<h1><a class="header" href="#crate-information-endpoint" id="crate-information-endpoint">Crate information endpoint</a></h1>
+<p>This endpoint allows to get detailed information about a specific crate of the registry.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/&lt;name&gt;</code><br />
+<strong>HTTP Method</strong>: <code>GET</code><br />
+<strong>Endpoint Type:</strong> Public</p>
+<h2><a class="header" href="#http-path-parameters-1" id="http-path-parameters-1">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the crate (like <code>serde_json</code>).</li>
+</ul>
+<h2><a class="header" href="#responses-7" id="responses-7">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Name of the crate.
+    &quot;name&quot;: &quot;rand&quot;,
+    // The highest version available.
+    &quot;max_version&quot;: &quot;0.6.1&quot;,
+    // Textual description of the crate.
+    &quot;description&quot;: &quot;Random number generators and other randomness functionality.&quot;,
+    // Optional link to the development repository of the crate.
+    &quot;repository&quot;: &quot;https://github.com/rust-random/rand&quot;,
+    // Optional link to the documentation of the crate.
+    &quot;documentation&quot;: &quot;https://docs.rs/rand&quot;,
+    // The crate's download count.
+    &quot;downloads&quot;: 34464729,
+    // The crate's creation date (in the 'YY-MM-DD hh:mm:ss' format).
+    &quot;created_at&quot;: &quot;2015-02-03 06:17:14&quot;,
+    // The crate's last modification date (in the 'YY-MM-DD hh:mm:ss' format).
+    &quot;updated_at&quot;: &quot;2020-01-10 21:46:21&quot;,
+    // The crate's keywords.
+    &quot;keywords&quot;: [
+        &quot;rng&quot;,
+        &quot;random&quot;
+    ],
+    // The crate's categories.
+    &quot;categories&quot;: [
+        &quot;no-std&quot;,
+        &quot;algorithms&quot;
+    ],
+}
+</code></pre>
+<h1><a class="header" href="#crate-owners-listing-endpoint" id="crate-owners-listing-endpoint">Crate owners listing endpoint</a></h1>
+<p>This endpoint allows to know who are the owners of a given crate.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/&lt;name&gt;/owners</code><br />
+<strong>HTTP Method</strong>: <code>GET</code><br />
+<strong>Endpoint Type:</strong> Public</p>
+<h2><a class="header" href="#http-path-parameters-2" id="http-path-parameters-2">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the crate (like <code>serde_json</code>).</li>
+</ul>
+<h2><a class="header" href="#responses-8" id="responses-8">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Array of crate owners.
+    &quot;users&quot;: [
+        {
+            // The user ID of the owner.
+            &quot;id&quot;: 63,
+            // The login email of the owner.
+            &quot;login&quot;: &quot;john.doe@example.com&quot;,
+            // The name of the owner.
+            &quot;name&quot;: &quot;John Doe&quot;
+        }
+    ]
+}
+</code></pre>
+<h1><a class="header" href="#crate-owners-addition-endpoint" id="crate-owners-addition-endpoint">Crate owners addition endpoint</a></h1>
+<p>This endpoint allows to grant owner privileges to some authors for a given crate.</p>
+<p>You need to be an owner of that crate in order to use this endpoint.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/&lt;name&gt;/owners</code><br />
+<strong>HTTP Method</strong>: <code>PUT</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-path-parameters-3" id="http-path-parameters-3">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the crate (like <code>serde_json</code>).</li>
+</ul>
+<h2><a class="header" href="#http-request-body-5" id="http-request-body-5">HTTP Request Body</a></h2>
+<p>The request body must be a JSON object of the following shape:</p>
+<pre><code class="language-js">{
+    // Array of user emails
+    &quot;users&quot;: [
+        &quot;john.doe@example.com&quot;,
+        &quot;nicolas@polomack.eu&quot;
+    ]
+}
+</code></pre>
+<h2><a class="header" href="#responses-9" id="responses-9">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Whether the operation went well.
+    &quot;ok&quot;: true,
+    // A human-displayable message describing the operation's outcome.
+    &quot;msg&quot;: &quot;John Doe and Nicolas Polomack has been added as authors&quot;,
+}
+</code></pre>
+<h1><a class="header" href="#crate-owners-removal-endpoint" id="crate-owners-removal-endpoint">Crate owners removal endpoint</a></h1>
+<p>This endpoint allows to remove owner privileges for some authors of a given crate.</p>
+<p>You need to be an owner of that crate in order to use this endpoint.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/&lt;name&gt;/owners</code><br />
+<strong>HTTP Method</strong>: <code>DELETE</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-path-parameters-4" id="http-path-parameters-4">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the crate (like <code>serde_json</code>).</li>
+</ul>
+<h2><a class="header" href="#http-request-body-6" id="http-request-body-6">HTTP Request Body</a></h2>
+<p>The request body must be a JSON object of the following shape:</p>
+<pre><code class="language-js">{
+    // Array of user emails
+    &quot;users&quot;: [
+        &quot;john.doe@example.com&quot;,
+        &quot;nicolas@polomack.eu&quot;
+    ]
+}
+</code></pre>
+<h2><a class="header" href="#responses-10" id="responses-10">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Whether the operation went well.
+    &quot;ok&quot;: true,
+    // A human-displayable message describing the operation's outcome.
+    &quot;msg&quot;: &quot;John Doe and Nicolas Polomack has been removed from authors&quot;,
+}
+</code></pre>
+<h1><a class="header" href="#crate-archive-download-endpoint" id="crate-archive-download-endpoint">Crate archive download endpoint</a></h1>
+<p>This endpoint allows to download the archive of a specific crate version from the registry (as a <code>.tar.gz</code> file).<br />
+This is notably called by the <code>cargo build</code> and <code>cargo fetch</code> commands, when downloading dependencies.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/&lt;name&gt;/&lt;version&gt;/download</code><br />
+<strong>HTTP Method</strong>: <code>GET</code><br />
+<strong>Endpoint Type:</strong> Public</p>
+<h2><a class="header" href="#http-path-parameters-5" id="http-path-parameters-5">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the crate (like <code>serde_json</code>).</li>
+<li><strong>(required)</strong> <code>version</code>: The version of the crate (like <code>3.1.23</code>).</li>
+</ul>
+<h2><a class="header" href="#responses-11" id="responses-11">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>The registry will send back the crate archive as binary data with an <code>application/octet-stream</code> content-type header.<br />
+The binary data is the content of the <code>.tar.gz</code> archive stored for this specific version of the crate.</p>
+<h1><a class="header" href="#categories-listing-endpoint" id="categories-listing-endpoint">Categories listing endpoint</a></h1>
+<p>This endpoint allows to list all the categories known to the registry.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/categories</code><br />
+<strong>HTTP Method</strong>: <code>GET</code><br />
+<strong>Endpoint Type:</strong> Public</p>
+<h2><a class="header" href="#responses-12" id="responses-12">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Array of categories.
+    &quot;categories&quot;: [
+        {
+            // The name of the category.
+            &quot;name&quot;: &quot;Development tools&quot;,
+            // The tag of the category, used to refer to it from `Cargo.toml` files.
+            &quot;tag&quot;: &quot;development-tools&quot;,
+            // A brief description of the category.
+            &quot;description&quot;: &quot;Crates that provide developer-facing features such as testing, debugging, linting, performance profiling, autocompletion, formatting, and more.&quot;
+        }
+    ],
+    &quot;meta&quot;: {
+        // Total number of categories registered in the registry.
+        &quot;total&quot;: 71
+    }
+}
+</code></pre>
+<h1><a class="header" href="#crate-publication-endpoint" id="crate-publication-endpoint">Crate publication endpoint</a></h1>
+<p>This endpoint allows to publish a new crate version to the registry.<br />
+This is notably called by the <code>cargo publish</code> command.<br />
+Being essential to Cargo and the registry, this endpoint is documented in the <a href="https://doc.rust-lang.org/cargo/reference/registries.html#publish"><strong>official Cargo book</strong></a>.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/new</code><br />
+<strong>HTTP Method</strong>: <code>PUT</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-request-body-7" id="http-request-body-7">HTTP Request Body</a></h2>
+<p>The format of the request body expected by this endpoint is a bit special and is not easily constructed manually by humans.<br />
+It is also described in <a href="https://doc.rust-lang.org/cargo/reference/registries.html#publish"><strong>The Cargo book</strong></a>.</p>
+<p>The body is composed of:</p>
+<ul>
+<li>A 32-bit unsigned little-endian integer of the length of the following JSON data.</li>
+<li>A JSON object detailing metadata about the package.</li>
+<li>A 32-bit unsigned little-endian integer of the length of the crate archive.</li>
+<li>The crate archive itself (as a <code>.tar.gz</code> binary file).</li>
+</ul>
+<h2><a class="header" href="#responses-13" id="responses-13">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong><br />
+Currently, the endpoint returns an empty json object as the response body.<br />
+But The Cargo book allows adding an optional <code>warnings</code> object, like so:</p>
+<pre><code class="language-js">{
+    // Optional object of warnings to display to the user.
+    &quot;warnings&quot;: {
+        // Array of strings of categories that are invalid and ignored.
+        &quot;invalid_categories&quot;: [],
+        // Array of strings of badge names that are invalid and ignored.
+        &quot;invalid_badges&quot;: [],
+        // Array of strings of arbitrary warnings to display to the user.
+        &quot;other&quot;: []
+    }
+}
+</code></pre>
+<p>So keep in mind that the registry may make use of this object at any time.</p>
+<h1><a class="header" href="#crate-owners-removal-endpoint-1" id="crate-owners-removal-endpoint-1">Crate owners removal endpoint</a></h1>
+<p>This endpoint allows to declare a specific crate version as yanked.</p>
+<p>You need to be an owner of that crate in order to use this endpoint.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/&lt;name&gt;/yank</code><br />
+<strong>HTTP Method</strong>: <code>DELETE</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-path-parameters-6" id="http-path-parameters-6">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the crate (like <code>serde_json</code>).</li>
+<li><strong>(required)</strong> <code>version</code>: The version of the crate (like <code>3.1.23</code>).</li>
+</ul>
+<h2><a class="header" href="#responses-14" id="responses-14">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Whether the operation went well.
+    &quot;ok&quot;: true,
+}
+</code></pre>
+<h1><a class="header" href="#crate-owners-removal-endpoint-2" id="crate-owners-removal-endpoint-2">Crate owners removal endpoint</a></h1>
+<p>This endpoint allows to declare a specific crate version as no longer being yanked.</p>
+<p>You need to be an owner of that crate in order to use this endpoint.</p>
+<p><strong>Endpoint URL</strong>: <code>/api/v1/crates/&lt;name&gt;/unyank</code><br />
+<strong>HTTP Method</strong>: <code>PUT</code><br />
+<strong>Endpoint Type:</strong> Authenticated</p>
+<h2><a class="header" href="#http-path-parameters-7" id="http-path-parameters-7">HTTP Path Parameters</a></h2>
+<p>This endpoint accepts the following path parameters (as shown in the endpoint's URL):</p>
+<ul>
+<li><strong>(required)</strong> <code>name</code>: The name of the crate (like <code>serde_json</code>).</li>
+<li><strong>(required)</strong> <code>version</code>: The version of the crate (like <code>3.1.23</code>).</li>
+</ul>
+<h2><a class="header" href="#responses-15" id="responses-15">Responses</a></h2>
+<p><strong>Status:</strong> <code>200 OK</code></p>
+<p><strong>Body:</strong></p>
+<p>Currently, the registry will return an object of the following shape:</p>
+<pre><code class="language-js">{
+    // Whether the operation went well.
+    &quot;ok&quot;: true,
+}
+</code></pre>
+<h1><a class="header" href="#database-layout" id="database-layout">Database layout</a></h1>
+<p>This page describes the database tables that Alexandrie uses.</p>
+<p>The types of the tables' fields are chosen to be compatible with all the database vendors supported by Alexandrie.</p>
+<p>Here is a high-level picture of the different tables and their relationships:</p>
+<p><img src="./alexandrie-database-relationships.png" alt="alexandrie-database-relationships" /></p>
+<p>The <strong><code>crates</code></strong> table stores metadata about the latest version of each stored crate.<br />
+It is meant to store the most useful metadata for fast access.<br />
+If more complete metadata is required or metadata about an older version is needed, the crate-index can be queried for this.</p>
+<p>The <strong><code>authors</code></strong> table stores the list of every registered crate authors of the registry.<br />
+It stores details like emails, fullnames and a signature of the author's password.<br />
+Details about what this signature really is, and how to compute it from the users' password is available at:<br />
+<a href="https://polomack.eu/alexandrie-security"><strong>https://polomack.eu/alexandrie-security</strong></a></p>
+<p>The <strong><code>keywords</code></strong> and <strong><code>categories</code></strong> tables store the keywords and categories used by the registry's crates.<br />
+The <strong><code>keywords</code></strong> table can gain new entries as crates makes use of new distinct keywords.<br />
+The <strong><code>categories</code></strong> table, on the other hand, is fixed and not expandable by crates.</p>
+<p>The <strong><code>salts</code></strong> table stores the salts generated for each registered author and used to compute their passwords' signatures.<br />
+The <strong><code>sessions</code></strong> table stores details about the frontend sessions for registered authors.<br />
+Sessions are not automatically deleted when expired, so a cleanup periodic clean may be required to prune expired sessions.<br />
+The <strong><code>author_tokens</code></strong> tables stores the generated Cargo authentication tokens for registered users (used for <code>cargo login</code>).</p>
+<p>The <strong><code>crate_categories</code></strong>, <strong><code>crate_keywords</code></strong> and <strong><code>crate_authors</code></strong> are all one-to-many relationship tables.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        
+        
+        <script type="text/javascript">
+            window.playpen_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Concepts - Alexandrie</title>
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="../installation-script.html"><strong aria-hidden="true">3.</strong> Installation script</a></li><li class="chapter-item expanded "><a href="../concepts/mod.html" class="active"><strong aria-hidden="true">4.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/crate-index.html"><strong aria-hidden="true">4.1.</strong> Crate index</a></li><li class="chapter-item expanded "><a href="../concepts/crate-storage.html"><strong aria-hidden="true">4.2.</strong> Crate storage</a></li></ol></li><li class="chapter-item expanded "><a href="../whats-available/mod.html"><strong aria-hidden="true">5.</strong> What's available ?</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../whats-available/index-management-strategies.html"><strong aria-hidden="true">5.1.</strong> Index management strategies</a></li><li class="chapter-item expanded "><a href="../whats-available/crate-stores.html"><strong aria-hidden="true">5.2.</strong> Crate stores</a></li><li class="chapter-item expanded "><a href="../whats-available/docker.html"><strong aria-hidden="true">5.3.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../whats-available/authentication-strategies.html"><strong aria-hidden="true">5.4.</strong> Authentication Strategies</a></li></ol></li><li class="chapter-item expanded "><a href="../programmatic-api/mod.html"><strong aria-hidden="true">6.</strong> Programmatic API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../programmatic-api/authentication.html"><strong aria-hidden="true">6.1.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../programmatic-api/account/mod.html"><strong aria-hidden="true">6.2.</strong> Account Management section</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../programmatic-api/account/login/post.html"><strong aria-hidden="true">6.2.1.</strong> Account Login</a></li><li class="chapter-item expanded "><a href="../programmatic-api/account/register/post.html"><strong aria-hidden="true">6.2.2.</strong> Account Registration</a></li><li class="chapter-item expanded "><a href="../programmatic-api/account/tokens/get.html"><strong aria-hidden="true">6.2.3.</strong> Token Information (from name)</a></li><li class="chapter-item expanded "><a href="../programmatic-api/account/tokens/post.html"><strong aria-hidden="true">6.2.4.</strong> Token Information (from token)</a></li><li class="chapter-item expanded "><a href="../programmatic-api/account/tokens/put.html"><strong aria-hidden="true">6.2.5.</strong> Token Generation</a></li><li class="chapter-item expanded "><a href="../programmatic-api/account/tokens/delete.html"><strong aria-hidden="true">6.2.6.</strong> Token Revocation</a></li></ol></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/mod.html"><strong aria-hidden="true">6.3.</strong> Crates section</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../programmatic-api/crates/search/get.html"><strong aria-hidden="true">6.3.1.</strong> Crate Search</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/info/get.html"><strong aria-hidden="true">6.3.2.</strong> Crate Information</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/owners/get.html"><strong aria-hidden="true">6.3.3.</strong> Crate Owner Listing</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/owners/put.html"><strong aria-hidden="true">6.3.4.</strong> Crate Owner Addition</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/owners/delete.html"><strong aria-hidden="true">6.3.5.</strong> Crate Owner Removal</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/download/get.html"><strong aria-hidden="true">6.3.6.</strong> Crate Archive Download</a></li><li class="chapter-item expanded "><a href="../programmatic-api/categories/get.html"><strong aria-hidden="true">6.3.7.</strong> Crate Categories Listing</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/publish/put.html"><strong aria-hidden="true">6.3.8.</strong> Crate Publication</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/yank/delete.html"><strong aria-hidden="true">6.3.9.</strong> Crate Version Yanking</a></li><li class="chapter-item expanded "><a href="../programmatic-api/crates/unyank/put.html"><strong aria-hidden="true">6.3.10.</strong> Crate Version Unyanking</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../database-layout.html"><strong aria-hidden="true">7.</strong> Database layout</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Alexandrie</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#concepts" id="concepts">Concepts</a></h1>
+<p>This sections covers the different concepts that Alexandrie defines and uses.</p>
+<p>The goal of these concepts is to formally define how the different parts of Alexandrie interacts.<br />
+Alexandrie can operate with both its crate index and storage on different remote machines and this brings in the need for a well-defined definition of what each of these parts are responsible for.</p>
+<p>Alexandrie is built around two principal concepts:</p>
+<ul>
+<li><strong>Crate index</strong>: manages metadata about published crates.</li>
+<li><strong>Crate store</strong>: stores actual contents of the published crates (code, assets, etc...).</li>
+</ul>
+<p>A <strong>crate index</strong> is a git repository layed out as specified in <a href="https://github.com/rust-lang/rfcs/blob/master/text/2141-alternative-registries.md"><strong>Cargo's Alternative Crate Registries RFC</strong></a>.<br />
+It stores metadata about each stored crate and their versions, but not the contents of the crates themselves.</p>
+<p>A <strong>crate store</strong> is what takes care of storing the crate contents themselves and then making them available for download.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../installation-script.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../concepts/crate-index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../installation-script.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../concepts/crate-index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        
+        
+        <script type="text/javascript">
+            window.playpen_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
