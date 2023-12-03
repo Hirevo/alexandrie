@@ -248,7 +248,7 @@
     {{#if keywords}}
     <div class="keywords-container">
         {{#each keywords}}
-        <div class="keyword">#{{ this.name }}</div>
+        <div class="keyword"><a href="/keywords/{{ this.name }}">#{{ this.name }}</a></div>
         {{/each}}
     </div>
     {{/if}}

@@ -96,6 +96,9 @@ fn frontend_routes(state: Arc<AppState>, frontend_config: FrontendConfig) -> Rou
         .route("/most-downloaded", get(frontend::most_downloaded::get))
         .route("/last-updated", get(frontend::last_updated::get))
         .route("/crates/:crate", get(frontend::krate::get))
+        .route("/keywords", get(frontend::keywords_index::get))
+        .route("/keywords/:keyword", get(frontend::keywords::get))
+        .route("/keywords_search", get(frontend::keywords_search::get))
         .route(
             "/account/login",
             get(frontend::account::login::get).post(frontend::account::login::post),

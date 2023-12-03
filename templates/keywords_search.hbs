@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {{> partials/head}}
+    <style>
+        .hero {
+            width: 100%;
+        }
+
+        .hero-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            padding: 40px 10px 10px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: bolder;
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .stats-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding-top: 10px;
+        }
+
+        .stats {
+            align-items: center;
+            justify-content: center;
+            white-space: normal;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            width: 1400px;
+            border-top: 2px solid var(--fg-color);
+            border-bottom: 2px solid var(--fg-color);
+        }
+
+        .stat {
+            font-size: 17px;
+        }
+
+        .search-results-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin: 10px 0;
+        }
+
+        .search-results {
+            width: 1400px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        @media (max-width: 1400px) {
+            .search-results {
+                width: 100%;
+            }
+
+            .stats {
+                width: 90%;
+            }
+        }
+
+        .search-result {
+            width: 100%;
+            display: grid;
+            grid-template-rows: 1fr;
+            grid-template-columns: 1fr min-content;
+            background-color: var(--lighter-bg-color);
+            color: var(--fg-color);
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            margin-top: 10px;
+        }
+
+        .search-result:first-child {
+            margin-top: 0;
+        }
+
+        .search-result:hover {
+            transform: scale(1.03);
+        }
+
+        .search-result-infos {
+            padding: 10px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .search-result-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .search-result-yank {
+            display: inline;
+            font-size: 11px;
+            vertical-align: 30%;
+            border: 3px solid #F52;
+            padding: 1px 6px;
+            border-radius: 7px;
+            color: #F52;
+        }
+
+        .search-result-desc {
+            font-size: 18px;
+        }
+
+        .search-result-crates {
+            display: flex;
+            margin-top: 2px;
+        }
+
+        .search-result-crate {
+            margin-left: 7px;
+            font-weight: bold;
+        }
+
+        .search-result-crate:first-child {
+            margin-left: 0;
+        }
+
+        .search-result-stats {
+            border-left: solid 2px var(--fg-color);
+            padding: 10px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .search-result-stats-entry {
+            white-space: nowrap;
+        }
+
+        .search-results-empty {
+            font-weight: bold;
+            font-size: 20px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination-container {
+        }
+
+        .pagination {
+            display: grid;
+            grid-template-columns: repeat(3, min-content);
+            grid-template-rows: min-content;
+        }
+
+        .pagination-button {
+            width: 100%;
+            height: 100%;
+        }
+
+        .pagination-prev,
+        .pagination-current,
+        .pagination-next {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            white-space: nowrap;
+            background-color: var(--bg-color);
+        }
+
+        .pagination-prev,
+        .pagination-next {
+            width: 100%;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+            font-weight: bold;
+            text-align: center;
+            color: inherit;
+            background-color: inherit;
+            padding: 5px 10px;
+            border: 2px solid var(--darker-fg-color);
+            transition: background-color 0.15s, border-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination-prev:hover,
+        .pagination-next:hover,
+        .pagination-prev:focus,
+        .pagination-next:focus {
+            border: 2px solid var(--fg-color);
+            background-color: var(--dark-bg-color);
+        }
+
+        .pagination-prev.pagination-disabled,
+        .pagination-next.pagination-disabled {
+            color: var(--dark-fg-color);
+            background-color: var(--dark-bg-color);
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .pagination-prev {
+            border-radius: 5px 0 0 5px;
+        }
+
+        .pagination-current {
+            border-top: 2px solid var(--darker-fg-color);
+            border-bottom: 2px solid var(--darker-fg-color);
+            padding: 5px 10px;
+        }
+
+        .pagination-next {
+            border-radius: 0 5px 5px 0;
+        }
+
+        @media (max-width: 600px) {
+            .search-result-stats {
+                display: none;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .pagination-prev.pagination-disabled,
+            .pagination-next.pagination-disabled {
+                color: var(--fg-color);
+                background-color: var(--lighter-bg-color);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {{> partials/navbar}}
+    <div class="hero">
+        <div style="height: 50px"></div>
+        <div class="hero-content-container">
+            <div class="hero-title">Keywords search results</div>
+            <div class="hero-subtitle">Searched for: {{ searched_text }}</div>
+        </div>
+    </div>
+    <div class="stats-container">
+        <div class="stats">
+            <div class="stats-block">
+                <div class="stat"><b>{{ total_results }}</b>&nbsp;total results</div>
+            </div>
+        </div>
+    </div>
+    <div class="search-results-container">
+        {{> partials/pagination pagination}}
+        <div class="search-results">
+            {{#if results}}
+            {{#each results}}
+            <a class="search-result elevated" href="/keywords/{{ this.name }}">
+                <div class="search-result-infos">
+                    <div class="search-result-title">
+                        #{{ this.name }} 
+                    </div>
+                    <div class="search-result-desc">{{ this.description }}</div>
+                    {{#if this.crates}}
+                    <div class="search-result-crates">
+                        <div class="search-result-crate">{{#each this.crates}}{{#if @index}},&nbsp;{{/if}}{{ this }}{{/each}}</div>
+                    </div>
+                    {{/if}}
+                </div>
+            </a>
+            {{/each}}
+            {{else}}
+            <div class="search-results-empty">No search results...</div>
+            {{/if}}
+        </div>
+        {{> partials/pagination pagination}}
+    </div>
+</body>
+
+</html>
