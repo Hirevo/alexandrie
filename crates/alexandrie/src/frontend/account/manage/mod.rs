@@ -22,7 +22,7 @@ use crate::frontend::helpers;
 use crate::utils::auth::frontend::Auth;
 use crate::utils::response::common;
 
-const ACCOUNT_MANAGE_FLASH: &'static str = "account_manage.flash";
+const ACCOUNT_MANAGE_FLASH: &str = "account_manage.flash";
 
 /// The flash message type used to communicate between the `/account/manage/...` pages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

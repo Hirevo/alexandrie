@@ -24,7 +24,7 @@ use crate::utils;
 use crate::utils::auth::frontend::Auth;
 use crate::utils::response::common;
 
-const REGISTER_FLASH: &'static str = "register.flash";
+const REGISTER_FLASH: &str = "register.flash";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]

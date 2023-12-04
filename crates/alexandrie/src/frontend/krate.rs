@@ -279,7 +279,7 @@ pub(crate) async fn get(
                         "https://isitmaintained.com/badge/resolution/{}.svg",
                         repository
                     );
-                    let alt = format!("Is It Maintained average time to resolve an issue");
+                    let alt = "Is It Maintained average time to resolve an issue".to_string();
                     let href = Some(format!("https://isitmaintained.com/project/{}", repository));
                     Some(BadgeRepr { src, alt, href })
                 }
@@ -293,7 +293,7 @@ pub(crate) async fn get(
                     let repository = params.repository;
 
                     let src = format!("https://isitmaintained.com/badge/open/{}.svg", repository);
-                    let alt = format!("Is It Maintained percentage of issues still open");
+                    let alt = "Is It Maintained percentage of issues still open".to_string();
                     let href = Some(format!("https://isitmaintained.com/project/{}", repository));
                     Some(BadgeRepr { src, alt, href })
                 }
@@ -319,7 +319,7 @@ pub(crate) async fn get(
                         "https://img.shields.io/badge/maintenance-{}-{}.svg",
                         status, color
                     );
-                    let alt = format!("Maintenance intention for this crate");
+                    let alt = "Maintenance intention for this crate".to_string();
                     let href = None;
                     Some(BadgeRepr { src, alt, href })
                 }

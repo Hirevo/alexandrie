@@ -22,9 +22,8 @@ pub struct HeaderRef {
 /// Renders a Markdown document to HTML using the provided configuration.
 pub fn render_readme(config: &SyntectState, contents: &str) -> String {
     let mut highlighter: Option<HighlightLines> = None;
-    let events = Parser::new_ext(contents, Options::all()).collect::<Vec<_>>();
+    let events = Parser::new_ext(contents, Options::all());
     let mut events = events
-        .into_iter()
         .map(|event| match event {
             Event::Text(text) => highlighter
                 .as_mut()
