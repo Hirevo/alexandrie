@@ -14,3 +14,18 @@ pub mod me;
 pub mod most_downloaded;
 /// Search pages (eg. "/search?q=\<term\>").
 pub mod search;
+
+/// Categories page (eq. "/categories").
+pub mod categories_index;
+
+/// Categories page (eq. "/categories/\<name\>").
+pub mod categories;
+
+/// Keywords index page (eq. "/keywords").
+pub mod keywords_index;
+
+/// Keywords page (eq. "/keywords/\<name\>").
+pub mod keywords;
+
+/// Keywords search page (eq. "/keywords_search?q=\<term\>").
+pub mod keywords_search;
